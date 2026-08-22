@@ -1,0 +1,56 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  # 允许在 Actions 页面手动触发
+  workflow_dispatch:
+
+# GITHUB_TOKEN 需要这些权限才能发布到 Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# 新的部署顶掉排队中的旧部署，但不打断正在跑的那次
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # 题库不变量与计分引擎的权威闸门 —— 挂了就不该上线
+      - run: npm test
+
+      # vite.config.ts 里 base 默认为 /yuna_sorting_hat/，与仓库名一致。
+      # 若将来改仓库名，或换成自定义域名（根路径），设 VITE_BASE 覆盖即可。
+      - run: npm run build
+
+      - uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

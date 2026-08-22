@@ -1,0 +1,174 @@
+@import 'tailwindcss';
+
+/* ─────────────────────────────────────────────────────────────
+   设计 token
+   魔法感由排版、夜空质感与花体拉丁字承载 —— 不靠霍格沃兹院色，
+   因为部门主题色跟随四张立绘（蓝/青/琥珀/粉）。
+   ───────────────────────────────────────────────────────────── */
+@theme {
+  /* 展示字（拉丁小标、院名、编号）。'Cinzel' 留在首位：
+     将来自托管该字体后无需改代码即生效；当前回落到系统衬线体。
+     不用 CDN 外链 —— Google Fonts 在中国大陆不可达，见 index.html 的说明。 */
+  --font-display: 'Cinzel', 'Palatino Linotype', 'Book Antiqua', Palatino, Georgia,
+    'Songti SC', 'SimSun', serif;
+  --font-body: 'Songti SC', 'STSong', 'SimSun', 'Source Han Serif SC', Georgia, serif;
+
+  --color-night-900: #08061a;
+  --color-night-800: #100d26;
+  --color-night-700: #1a1638;
+  --color-night-600: #262048;
+  --color-night-500: #362e63;
+
+  --color-parchment: #efe3c8;
+  --color-parchment-dim: #b9aa8b;
+  --color-gold: #d4af37;
+  --color-gold-soft: #e8cf83;
+  --color-ink: #241e14;
+}
+
+/* 四套部门配色：翻 data-dept 一个属性即可整体换肤。
+   零 JS 配色逻辑，将来的分享卡直接复用。
+   --dept-glow 是空格分隔的 RGB，方便写 rgb(var(--dept-glow) / .3)。 */
+:root {
+  /* 缺省（未判定时）用金色，避免变量未定义 */
+  --dept-accent: #d4af37;
+  --dept-soft: #e8cf83;
+  --dept-deep: #3a2c08;
+  --dept-glow: 212 175 55;
+}
+[data-dept='dev'] {
+  --dept-accent: #5b8cff;
+  --dept-soft: #b3caff;
+  --dept-deep: #0d2560;
+  --dept-glow: 91 140 255;
+}
+[data-dept='sec'] {
+  --dept-accent: #22d3ee;
+  --dept-soft: #9aeefb;
+  --dept-deep: #06232e;
+  --dept-glow: 34 211 238;
+}
+[data-dept='ops'] {
+  --dept-accent: #f5b92b;
+  --dept-soft: #fbdf97;
+  --dept-deep: #3d2a06;
+  --dept-glow: 245 185 43;
+}
+[data-dept='pr'] {
+  --dept-accent: #ff6fa5;
+  --dept-soft: #ffb3ce;
+  --dept-deep: #4e1029;
+  --dept-glow: 255 111 165;
+}
+
+/* ───────────────────────────── 基础 ───────────────────────────── */
+
+html {
+  /* 移动端 Safari 横屏后自动放大正文，关掉 */
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background-color: var(--color-night-900);
+  color: var(--color-parchment);
+  font-family: var(--font-body);
+  /* 中文正文行距给足，长选项才好读 */
+  line-height: 1.75;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* 夜空：两层柔光 + 细星点。纯 CSS，不加载图片。 */
+.starfield {
+  background-image:
+    radial-gradient(ellipse 90% 55% at 50% -10%, #2a2358 0%, transparent 70%),
+    radial-gradient(ellipse 70% 50% at 15% 105%, #1d1a42 0%, transparent 72%),
+    radial-gradient(1.4px 1.4px at 18% 22%, #fff 50%, transparent 51%),
+    radial-gradient(1.2px 1.2px at 72% 15%, #f3e9c8 50%, transparent 51%),
+    radial-gradient(1px 1px at 41% 61%, #fff 50%, transparent 51%),
+    radial-gradient(1.6px 1.6px at 87% 47%, #fff 50%, transparent 51%),
+    radial-gradient(1px 1px at 63% 78%, #e8cf83 50%, transparent 51%),
+    radial-gradient(1.2px 1.2px at 29% 87%, #fff 50%, transparent 51%),
+    radial-gradient(1px 1px at 8% 52%, #fff 50%, transparent 51%),
+    radial-gradient(1.3px 1.3px at 94% 82%, #f3e9c8 50%, transparent 51%);
+  background-color: var(--color-night-900);
+}
+
+/* 金色细分隔线，带两端渐隐 */
+.rule-gold {
+  height: 1px;
+  background: linear-gradient(
+    to right,
+    transparent,
+    rgb(212 175 55 / 0.55) 20%,
+    rgb(212 175 55 / 0.55) 80%,
+    transparent
+  );
+}
+
+/* 打字机光标 */
+.caret::after {
+  content: '';
+  display: inline-block;
+  width: 0.5em;
+  height: 1.05em;
+  margin-left: 0.12em;
+  vertical-align: -0.16em;
+  background-color: var(--color-gold-soft);
+  animation: caret-blink 1s step-end infinite;
+}
+@keyframes caret-blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.rise-in {
+  animation: rise-in 0.45s ease-out both;
+}
+
+@keyframes glow-pulse {
+  0%,
+  100% {
+    filter: drop-shadow(0 0 10px rgb(var(--dept-glow) / 0.35));
+  }
+  50% {
+    filter: drop-shadow(0 0 26px rgb(var(--dept-glow) / 0.6));
+  }
+}
+.glow-pulse {
+  animation: glow-pulse 3.4s ease-in-out infinite;
+}
+
+/* 焦点态：键盘操作必须看得见 */
+:where(button, a, [tabindex]):focus-visible {
+  outline: 2px solid var(--color-gold-soft);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+/* 尊重系统的减少动态偏好 */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
