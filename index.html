@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#08061a" />
+    <!-- 以 / 开头，Vite 构建时会自动补上 base，Pages 上不会 404 -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta
+      name="description"
+      content="燕山大学网络与信息协会·分部帽 —— 回答十个问题，看看分部帽把你分到哪个部门。"
+    />
+    <title>燕山大学网络与信息协会·分部帽</title>
+
+    <!-- 刻意不引 Google Fonts。
+         两条理由，都是硬伤：
+         1. fonts.googleapis.com 在中国大陆不可达 —— 而本站受众正是国内高校新生。
+            render-blocking 的外链样式表会把首屏拖到超时，最坏情况白屏。
+         2. 中文衬线体全量是 MB 级，移动端流量不划算。
+         所以拉丁展示字与中文正文都走系统衬线栈（见 index.css 的 --font-display）。
+         之后若要换成 Cinzel 之类，请**自托管 woff2** 打进产物，不要用 CDN 外链；
+         --font-display 里已把 'Cinzel' 放在首位，届时丢进字体文件即可自动生效。 -->
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
