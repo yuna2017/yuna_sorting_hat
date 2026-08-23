@@ -4,7 +4,7 @@ import { OpeningScreen } from './screens/OpeningScreen'
 import { QuizScreen } from './screens/QuizScreen'
 import { RevealScreen } from './screens/RevealScreen'
 import { ResultScreen } from './screens/ResultScreen'
-import { QUESTION_BANK } from './data/questions'
+import { QUESTION_BANK, reportUnfilledOptionDetail } from './data/questions'
 import type { OptionId } from './data/questions'
 import { reportUnfilledCopy } from './data/departments'
 import { assertBankInDev } from './lib/validateBank'
@@ -18,7 +18,7 @@ type Phase = 'cover' | 'opening' | 'quiz' | 'reveal' | 'result'
 
 /* 开发期自检：题库不变量 + 还没填的事实文案，直接打在控制台。
    权威闸门是 vitest；这里是给「改了题但没跑测试」的人兜底。 */
-assertBankInDev(QUESTION_BANK, reportUnfilledCopy())
+assertBankInDev(QUESTION_BANK, [...reportUnfilledCopy(), ...reportUnfilledOptionDetail()])
 
 export default function App() {
   const questions = QUESTION_BANK.questions

@@ -1,12 +1,9 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { OptionButton } from '../components/OptionButton'
+import { OptionDetailCard } from '../components/OptionDetailCard'
 import { ProgressBar } from '../components/ProgressBar'
-import { useTypewriter } from '../hooks/useTypewriter'
 import type { OptionId, Question } from '../data/questions'
 import { seedForQuestion, seededShuffle } from '../lib/seededShuffle'
-
-/** 低语打完后停顿多久自动进入下一题。 */
-const AUTO_ADVANCE_PAUSE = 1100
 
 interface QuizScreenProps {
   question: Question
@@ -33,9 +30,8 @@ export function QuizScreen({
   canGoBack,
   isLast,
 }: QuizScreenProps) {
-  /** 本次访问中刚作答（而非回看已答题目）。决定要不要播打字动画与自动前进。 */
+  /** 本次访问中刚作答（而非回看已答题目）。决定说明卡里的低语要不要播打字动画。 */
   const [justAnswered, setJustAnswered] = useState(false)
-  const advanceTimer = useRef<number | undefined>(undefined)
 
   // 换题时重置
   useEffect(() => {
@@ -49,28 +45,7 @@ export function QuizScreen({
     [question, sessionSeed, questionIndex],
   )
 
-  const selectedOption = question.options.find((o) => o.id === selected)
-  const whisperText = selectedOption?.whisper ?? ''
-
-  const { shown: whisperShown, done: whisperDone } = useTypewriter(whisperText, {
-    speed: 52,
-    enabled: justAnswered,
-    startDelay: 260,
-  })
-
-  // 低语打完 → 短停顿 → 自动进入下一题
-  useEffect(() => {
-    if (advanceTimer.current !== undefined) window.clearTimeout(advanceTimer.current)
-    if (!justAnswered || !whisperDone || selected === undefined) return
-
-    advanceTimer.current = window.setTimeout(onNext, AUTO_ADVANCE_PAUSE)
-    return () => {
-      if (advanceTimer.current !== undefined) window.clearTimeout(advanceTimer.current)
-    }
-  }, [justAnswered, whisperDone, selected, onNext])
-
   function handleSelect(optionId: OptionId) {
-    if (advanceTimer.current !== undefined) window.clearTimeout(advanceTimer.current)
     setJustAnswered(true)
     onSelect(optionId)
   }
@@ -109,47 +84,59 @@ export function QuizScreen({
           </p>
 
           <ul className="mt-7 flex flex-col gap-2.5">
-            {shuffled.map((option, i) => (
-              <li key={option.id}>
-                <OptionButton
-                  index={i}
-                  text={option.text}
-                  selected={selected === option.id}
-                  dimmed={selected !== undefined && selected !== option.id}
-                  disabled={false}
-                  onSelect={() => handleSelect(option.id)}
-                />
-              </li>
-            ))}
+            {shuffled.map((option, i) => {
+              const isSelected = selected === option.id
+              const detailId = `detail-${question.id}-${option.id}`
+              return (
+                <li key={option.id}>
+                  <OptionButton
+                    index={i}
+                    text={option.text}
+                    selected={isSelected}
+                    dimmed={selected !== undefined && !isSelected}
+                    disabled={false}
+                    describedById={isSelected ? detailId : undefined}
+                    onSelect={() => handleSelect(option.id)}
+                  />
+                  {/* 说明卡是按钮的**兄弟**而不是子节点 —— 交互元素不能相互嵌套。
+                      key 绑 option.id：改选即重新挂载，低语的打字机自然重播，
+                      不需要任何手动重置。 */}
+                  {isSelected && (
+                    <OptionDetailCard
+                      id={detailId}
+                      whisper={option.whisper}
+                      detail={option.detail}
+                      animate={justAnswered}
+                    />
+                  )}
+                </li>
+              )
+            })}
           </ul>
-
-          {/* 帽子低语 + 下一步。预留固定高度，避免选完后版面跳动。 */}
-          <div className="mt-6 flex min-h-[5.5rem] flex-col items-center justify-start gap-4">
-            {selectedOption !== undefined && (
-              <>
-                {/* 不用 italic：中文没有真正的斜体，浏览器只能伪斜（合成倾斜），
-                    笔画会被拉歪、更显细。低语的语气交给「」与金色承担。 */}
-                <p className="text-center text-[0.925rem] leading-relaxed text-gold-soft/90">
-                  <span aria-hidden="true" className={whisperDone ? '' : 'caret'}>
-                    {whisperShown}
-                  </span>
-                  <span className="sr-only">{whisperText}</span>
-                </p>
-
-                {whisperDone && (
-                  <button
-                    type="button"
-                    onClick={onNext}
-                    className="rise-in min-h-[2.75rem] rounded-full border border-gold/50 px-7 text-sm tracking-[0.16em] text-gold-soft transition-all duration-300 hover:border-gold hover:bg-gold/12 active:scale-[0.98]"
-                  >
-                    {isLast ? '揭晓结果' : '下一题 →'}
-                  </button>
-                )}
-              </>
-            )}
-          </div>
         </div>
       </main>
+
+      {/* 推进按钮吸底常驻。
+          用 sticky 而不是 fixed：sticky 元素仍占布局空间，滚到底时自然落位，
+          永远不会盖住最后一个选项；fixed 则要给 main 补一个与本栏等高的
+          padding-bottom，而那个高度随安全区变化，猜不准。
+          放在 main **之后** —— DOM 顺序即 Tab 顺序：先选项，再推进。
+          边框、底色、模糊与内边距全部照抄顶部 header，两者视觉上成对。 */}
+      <footer className="sticky bottom-0 z-10 border-t border-night-600/60 bg-night-900/85 px-5 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur-sm sm:px-6">
+        <div className="mx-auto flex max-w-lg justify-center">
+          {/* 未作答时是 disabled 而不是干脆不渲染：零布局跳动，
+              且「按钮在那儿、只是还不能点」本身就是一句提示。
+              与 header 里的返回按钮同一套处理。 */}
+          <button
+            type="button"
+            onClick={onNext}
+            disabled={selected === undefined}
+            className="min-h-[2.75rem] w-full max-w-xs rounded-full border border-gold/50 px-7 text-sm tracking-[0.16em] text-gold-soft transition-all duration-300 enabled:hover:border-gold enabled:hover:bg-gold/12 enabled:active:scale-[0.98] disabled:opacity-30"
+          >
+            {isLast ? '揭晓结果' : '下一题 →'}
+          </button>
+        </div>
+      </footer>
     </div>
   )
 }

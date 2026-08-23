@@ -8,6 +8,16 @@ export interface QuizOption {
   text: string
   /** 分部帽低语：选完后帽子的即时反应。 */
   whisper: string
+  /**
+   * 帽子对这个选择的点评。低语的加长版，语气延续低语，显示在选项下方的说明卡里。
+   *
+   * 写作红线（需求文档 §11.3）：描述这个选择本身，不评价它的高下 ——
+   * 读者应该觉得「我只是选了自己更喜欢的」，而不是「这条明显更强」。
+   * 同样**不能暗示指向哪个部门**，否则等于把答案映射写在卡片上，测试就失去意义了。
+   *
+   * 缺省 = 还没写。开发期会在控制台点名，见 reportUnfilledOptionDetail()。
+   */
+  detail?: string
   /** 主推部门，+PRIMARY_WEIGHT */
   p: DeptId
   /** 副推部门，+SECONDARY_WEIGHT。约束：s !== p，且每题四个 s 构成无固定点置换。 */
@@ -395,4 +405,21 @@ export const QUESTION_BANK: QuestionBank = {
       ],
     },
   ],
+}
+
+/**
+ * 开发期提示：还没写的选项点评。
+ * 与 departments.ts 的 reportUnfilledCopy() 共用同一条上报通道（见 App.tsx）。
+ *
+ * detail 是可选字段 —— 类型系统不会替你记着「这里还空着」，
+ * 所以「未填要吵」这件事交给运行时。
+ */
+export function reportUnfilledOptionDetail(): string[] {
+  const missing = QUESTION_BANK.questions.flatMap((q) =>
+    q.options.filter((o) => o.detail === undefined).map((o) => `${q.id}${o.id}`),
+  )
+  // 聚合成一条 —— 四十处全空时逐条列会刷掉四十行，反而没人看
+  return missing.length === 0
+    ? []
+    : [`选项点评 detail 待填 ${missing.length} 处：${missing.join('、')}`]
 }

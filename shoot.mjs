@@ -38,16 +38,16 @@ async function shot(name) {
   console.log(`  ✓ ${name}.png`)
 }
 
-/** 走完十题。每题点第一个选项，再点推进按钮。 */
+/** 走完十题。每题点第一个选项，说明卡展开后再点吸底的推进按钮。 */
 async function answerAll(p) {
   for (let i = 0; i < 10; i++) {
+    /* 每题都必须显式选 + 显式推进：已经没有自动前进了，
+       而推进按钮改成了常驻（未作答时 disabled），
+       所以不能再用「按钮是否可见」来判断这题答没答。 */
+    await p.locator('main ul li button').first().click()
     const next = p.getByRole('button', { name: /下一题|揭晓结果/ })
-    if (!(await next.isVisible().catch(() => false))) {
-      await p.locator('main ul li button').first().click()
-    }
-    await next.waitFor({ state: 'visible', timeout: 8000 })
     const label = await next.textContent()
-    await next.click()
+    await next.click() // Playwright 会自动等它从 disabled 变为 enabled
     await p.waitForTimeout(250)
     if (label?.includes('揭晓')) return
   }
@@ -71,9 +71,11 @@ await page.getByRole('button', { name: '开始' }).click()
 await page.waitForTimeout(300)
 await shot('3-quiz-unanswered')
 
-// 先看一次「已选 + 低语」的状态
+// 先看一次「已选 + 说明卡展开」的状态。
+// 等 900ms 而不是 400ms：要让展开动画走完、低语大致打出来，
+// 否则截到的是一张半开的卡片。
 await page.locator('main ul li button').first().click()
-await page.waitForTimeout(400)
+await page.waitForTimeout(900)
 await shot('4-quiz-answered')
 
 await answerAll(page)
@@ -145,7 +147,8 @@ const startedAt = Date.now()
 await answerAll(rp)
 await rp.locator('h1').waitFor({ timeout: 8000 })
 const elapsed = Date.now() - startedAt
-// 完整仪式约 5.4s，reduce 分支只留 0.6s，所以这里必须明显短于全程
+// 测的是「十题手动推进 + 被压缩的仪式」。完整仪式约 5.4s，reduce 分支只留 0.6s，
+// 所以全程必须明显短于 5400ms —— 否则说明仪式没被压缩，用户在干等。
 const reducedOk = elapsed < 5400
 console.log(
   `  ${reducedOk ? '✓' : '✗'} 从最后一题到结果页 ${elapsed}ms（reduce 下应远小于 5400ms）`,

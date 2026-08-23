@@ -9,6 +9,10 @@ interface OptionButtonProps {
   /** 已作出选择后，未选中的项淡出，让焦点留在被选的那条上。 */
   dimmed: boolean
   disabled: boolean
+  /** 选中时指向下方说明卡的 id，让读屏在按钮上就念出卡片内容。
+      写成 `| undefined` 而非单纯可选：tsconfig 开了 exactOptionalPropertyTypes，
+      只声明 `?:` 的话调用方不能显式传 undefined。 */
+  describedById?: string | undefined
   onSelect: () => void
 }
 
@@ -24,6 +28,7 @@ export function OptionButton({
   selected,
   dimmed,
   disabled,
+  describedById,
   onSelect,
 }: OptionButtonProps) {
   const letter = DISPLAY_LETTERS[index] ?? '·'
@@ -34,6 +39,7 @@ export function OptionButton({
       onClick={onSelect}
       disabled={disabled}
       aria-pressed={selected}
+      aria-describedby={describedById}
       className={[
         // min-h-[3.5rem] ≈ 56px，稳稳超过 44px 的移动端点击区下限
         'group flex w-full min-h-[3.5rem] items-center gap-3 rounded-lg border px-3.5 py-3',
@@ -45,7 +51,9 @@ export function OptionButton({
         !selected && !disabled
           ? 'hover:border-gold/60 hover:bg-night-700/70 active:scale-[0.995]'
           : '',
-        dimmed ? 'opacity-40' : 'opacity-100',
+        /* opacity-60 而不是更低：选完后不再自动跳题，「留下来重读、随时改选」
+           成了这一屏的主要用途，未选中项必须还读得清。 */
+        dimmed ? 'opacity-60' : 'opacity-100',
         disabled ? 'cursor-default' : 'cursor-pointer',
       ].join(' ')}
     >

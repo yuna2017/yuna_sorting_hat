@@ -164,6 +164,35 @@ body {
   animation: rise-in 0.45s ease-out both;
 }
 
+/* 选项说明卡的展开：高度从 0 长到内容自身的高度。
+   用 grid-template-rows 的 0fr→1fr 而不是 max-height ——
+   max-height 要么猜一个够大的值（展开末段会「悬空」缓动一阵子），
+   要么写死高度，而中文换行行数随文案长短变，写不准。
+   0fr→1fr 让浏览器自己去量内容，文案多长都对。
+   用 animation 而非 transition：卡片是「挂载即展开」，
+   transition 需要先渲染一帧 0fr 再翻到 1fr，还得靠 @starting-style 兜底。
+   老 Safari（<17）不支持 fr 插值，会直接跳到完整高度 —— 只丢动画，不丢内容。 */
+@keyframes card-expand {
+  from {
+    grid-template-rows: 0fr;
+    opacity: 0;
+  }
+  to {
+    grid-template-rows: 1fr;
+    opacity: 1;
+  }
+}
+.card-expand {
+  display: grid;
+  grid-template-rows: 1fr;
+  animation: card-expand 0.34s ease-out both;
+}
+/* grid 子项的 min-height 默认是 auto，会从内部把 0fr 撑破，必须显式归零 */
+.card-expand > * {
+  min-height: 0;
+  overflow: hidden;
+}
+
 @keyframes glow-pulse {
   0%,
   100% {
