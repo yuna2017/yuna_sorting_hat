@@ -17,7 +17,8 @@
          1. fonts.googleapis.com 在中国大陆不可达 —— 而本站受众正是国内高校新生。
             render-blocking 的外链样式表会把首屏拖到超时，最坏情况白屏。
          2. 中文衬线体全量是 MB 级，移动端流量不划算。
-         所以拉丁展示字与中文正文都走系统衬线栈（见 index.css 的 --font-display）。
+         所以两条字栈都只用系统字：拉丁展示字/大标题走衬线，正文走黑体
+         （见 index.css 的 --font-display 与 --font-body）。
          之后若要换成 Cinzel 之类，请**自托管 woff2** 打进产物，不要用 CDN 外链；
          --font-display 里已把 'Cinzel' 放在首位，届时丢进字体文件即可自动生效。 -->
   </head>

@@ -1,6 +1,7 @@
 // 本地视觉验证：用真实浏览器驱动应用。
-//   1) 四屏截图 + 320px 横向溢出检查
-//   2) 用分享链接逐个验四个部门的主题、立绘与判定
+//   1) 全流程截图（含分院仪式）+ 四档窄屏横向溢出检查
+//   2) 结果页新增分层、招新入口与分享交互
+//   3) 用分享链接逐个验四个部门的主题、立绘与判定
 //
 // 需要 Playwright，但不进 package.json（否则 CI 每次都要装）：
 //   npm i --no-save playwright
@@ -10,12 +11,18 @@ import { chromium } from 'playwright'
 const BASE = process.env.TARGET ?? 'http://localhost:5173/yuna_sorting_hat/'
 const OUT = process.env.OUT ?? 'screenshots'
 
+/* 需求文档点名的四档窄屏。320 是下限，412 是主流 Android。
+   只测 390 会漏掉 320 的横向溢出 —— 这是移动端最常见的翻车点。 */
+const VIEWPORTS = [320, 360, 390, 412]
+
 const browser = await chromium.launch({ channel: 'msedge' })
 const context = await browser.newContext({
   viewport: { width: 390, height: 844 }, // iPhone 14 逻辑像素
   deviceScaleFactor: 2,
-  // 让打字机瞬间完成，既加速遍历也顺便验证 reduced-motion 分支
-  reducedMotion: 'reduce',
+  /* 注意：这里**不开** reducedMotion —— 分院仪式在 reduce 下会被压缩掉，
+     开着就永远验不到仪式的真实时序。reduce 分支单独在下面验。
+     代价是打字机不再瞬间完成，所以开场要显式点「跳过」。 */
+  permissions: ['clipboard-read', 'clipboard-write'],
 })
 const page = await context.newPage()
 
@@ -31,6 +38,21 @@ async function shot(name) {
   console.log(`  ✓ ${name}.png`)
 }
 
+/** 走完十题。每题点第一个选项，再点推进按钮。 */
+async function answerAll(p) {
+  for (let i = 0; i < 10; i++) {
+    const next = p.getByRole('button', { name: /下一题|揭晓结果/ })
+    if (!(await next.isVisible().catch(() => false))) {
+      await p.locator('main ul li button').first().click()
+    }
+    await next.waitFor({ state: 'visible', timeout: 8000 })
+    const label = await next.textContent()
+    await next.click()
+    await p.waitForTimeout(250)
+    if (label?.includes('揭晓')) return
+  }
+}
+
 console.log('封面：')
 // 不能用 networkidle —— Vite 的 HMR websocket 常开，网络永远不会 idle
 await page.goto(BASE, { waitUntil: 'domcontentloaded' })
@@ -42,6 +64,7 @@ console.log('开场：')
 await page.getByRole('button', { name: '戴上帽子' }).click()
 await page.waitForTimeout(400)
 await shot('2-opening')
+await page.getByRole('button', { name: '跳过 →' }).click()
 
 console.log('答题：')
 await page.getByRole('button', { name: '开始' }).click()
@@ -53,37 +76,81 @@ await page.locator('main ul li button').first().click()
 await page.waitForTimeout(400)
 await shot('4-quiz-answered')
 
-// 走完 10 题。每题点第一个选项，再点推进按钮。
-for (let i = 0; i < 10; i++) {
-  const next = page.getByRole('button', { name: /下一题|揭晓结果/ })
-  if (!(await next.isVisible().catch(() => false))) {
-    await page.locator('main ul li button').first().click()
-  }
-  await next.waitFor({ state: 'visible', timeout: 8000 })
-  const label = await next.textContent()
-  await next.click()
-  await page.waitForTimeout(250)
-  if (label?.includes('揭晓')) break
-}
+await answerAll(page)
+
+console.log('分院仪式：')
+// 候选部门已经出现、但还没宣判的那一刻
+await page.waitForTimeout(2400)
+const inReveal = await page.getByRole('button', { name: '跳过 →' }).isVisible()
+// 编号用 4b 而不是重排后面的序号 —— screenshots/ 里那几个文件名已被跟踪，
+// 改名只会留下一批再也不会更新的旧图
+await shot('4b-reveal')
+console.log(`  ${inReveal ? '✓' : '✗'} 仪式在最后一题后出现，且可跳过`)
 
 console.log('结果：')
+// 不等满 5.4 秒，直接跳过 —— 顺带验证跳过真的能提前结束仪式
+await page.getByRole('button', { name: '跳过 →' }).click()
+await page.locator('h1').waitFor({ timeout: 8000 })
 await page.waitForTimeout(700)
 await shot('5-result')
 
-// 窄屏复查：雷达图轴标签在 320px 下会不会被裁
-await page.setViewportSize({ width: 320, height: 780 })
-await page.waitForTimeout(400)
-await shot('6-result-320')
-
-const overflow = await page.evaluate(() => ({
-  scrollW: document.documentElement.scrollWidth,
-  clientW: document.documentElement.clientWidth,
-}))
+// 结果页的新增分层是否都在
+const sections = await page.locator('h2').allInnerTexts()
+const wanted = ['帽子为什么这么判？', '四部门契合度', '关于', '感兴趣？', '分享你的结果']
+const missingSections = wanted.filter((w) => !sections.some((s) => s.includes(w)))
 console.log(
-  `\n320px 横向：scrollWidth=${overflow.scrollW} clientWidth=${overflow.clientW}` +
-    (overflow.scrollW > overflow.clientW + 1 ? '  ⚠ 有横向溢出！' : '  ✓ 无横向溢出'),
+  missingSections.length === 0
+    ? `  ✓ 结果页分层齐全（${sections.length} 个区块）`
+    : `  ✗ 结果页缺少区块：${missingSections.join('、')}`,
 )
+
+console.log('分享：')
+await page.getByRole('button', { name: '复制结果链接' }).click()
+await page.waitForTimeout(300)
+const copied = await page.getByRole('button', { name: /已复制链接/ }).isVisible()
+const clipboard = await page.evaluate(() => navigator.clipboard.readText().catch(() => ''))
+const codeOk = /\?a=[abcd]{10}$/.test(clipboard)
+console.log(`  ${copied ? '✓' : '✗'} 复制后按钮变为「已复制」`)
+console.log(`  ${codeOk ? '✓' : '✗'} 剪贴板里是可复现的结果链接：${clipboard || '(空)'}`)
+
+console.log('\n窄屏横向溢出：')
+let overflowFailures = 0
+for (const width of VIEWPORTS) {
+  await page.setViewportSize({ width, height: 780 })
+  await page.waitForTimeout(350)
+  const o = await page.evaluate(() => ({
+    scrollW: document.documentElement.scrollWidth,
+    clientW: document.documentElement.clientWidth,
+  }))
+  const ok = o.scrollW <= o.clientW + 1
+  if (!ok) overflowFailures++
+  console.log(`  ${ok ? '✓' : '✗'} ${width}px  scrollWidth=${o.scrollW} clientWidth=${o.clientW}`)
+  if (width === 320) await shot('6-result-320')
+}
 await page.close()
+
+// ---- 减少动态偏好：仪式必须被压缩，不能让人干等 ----
+
+console.log('\nreduced-motion：')
+const reducedCtx = await browser.newContext({
+  viewport: { width: 390, height: 844 },
+  deviceScaleFactor: 2,
+  reducedMotion: 'reduce',
+})
+const rp = await reducedCtx.newPage()
+await rp.goto(BASE, { waitUntil: 'domcontentloaded' })
+await rp.getByRole('button', { name: '戴上帽子' }).click()
+await rp.getByRole('button', { name: '开始' }).click()
+const startedAt = Date.now()
+await answerAll(rp)
+await rp.locator('h1').waitFor({ timeout: 8000 })
+const elapsed = Date.now() - startedAt
+// 完整仪式约 5.4s，reduce 分支只留 0.6s，所以这里必须明显短于全程
+const reducedOk = elapsed < 5400
+console.log(
+  `  ${reducedOk ? '✓' : '✗'} 从最后一题到结果页 ${elapsed}ms（reduce 下应远小于 5400ms）`,
+)
+await reducedCtx.close()
 
 // ---- 四个部门：用分享链接逐个验主题换肤、立绘加载与判定 ----
 
@@ -117,12 +184,14 @@ for (const c of CASES) {
     .locator('img')
     .first()
     .evaluate((el) => el.complete && el.naturalWidth > 0)
+  // 分享链接直达结果时不该再演一次仪式
+  const noReveal = !(await p.getByRole('button', { name: '跳过 →' }).isVisible())
 
-  const ok = h1 === c.name && themed === c.dept && imgOk && problems.length === 0
+  const ok = h1 === c.name && themed === c.dept && imgOk && noReveal && problems.length === 0
   if (!ok) deptFailures++
   console.log(
     `  ${ok ? '✓' : '✗'} ${c.dept.padEnd(3)} h1=${h1}  data-dept=${themed}  ` +
-      `立绘=${imgOk ? 'ok' : '未加载'}`,
+      `立绘=${imgOk ? 'ok' : '未加载'}  直达结果=${noReveal ? 'ok' : '又演了仪式'}`,
   )
   problems.forEach((x) => console.log(`      ⚠ ${x}`))
 
@@ -134,4 +203,15 @@ console.log(errors.length ? `\n⚠ 页面错误：\n${errors.join('\n')}` : '\n�
 console.log(deptFailures === 0 ? '✓ 四个部门全部通过' : `✗ ${deptFailures} 个部门有问题`)
 
 await browser.close()
-process.exit(errors.length === 0 && deptFailures === 0 ? 0 : 1)
+
+const pass =
+  errors.length === 0 &&
+  deptFailures === 0 &&
+  overflowFailures === 0 &&
+  missingSections.length === 0 &&
+  inReveal &&
+  copied &&
+  codeOk &&
+  reducedOk
+console.log(pass ? '\n全部检查通过' : '\n有检查未通过，见上文 ✗')
+process.exit(pass ? 0 : 1)

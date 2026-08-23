@@ -37,10 +37,11 @@ export function OptionButton({
       className={[
         // min-h-[3.5rem] ≈ 56px，稳稳超过 44px 的移动端点击区下限
         'group flex w-full min-h-[3.5rem] items-center gap-3 rounded-lg border px-3.5 py-3',
-        'text-left text-[0.95rem] leading-relaxed transition-all duration-300 sm:gap-4 sm:px-4 sm:text-base',
+        // 选项是这一屏的主角：字号与字色都压过场景描述，视线才会落在这里
+        'text-left text-base leading-relaxed transition-all duration-300 sm:gap-4 sm:px-4',
         selected
           ? 'border-gold bg-gold/12 text-parchment shadow-[0_0_20px_-4px_rgba(212,175,55,0.45)]'
-          : 'border-night-500/70 bg-night-800/60 text-parchment/85',
+          : 'border-night-500/70 bg-night-800/60 text-parchment',
         !selected && !disabled
           ? 'hover:border-gold/60 hover:bg-night-700/70 active:scale-[0.995]'
           : '',

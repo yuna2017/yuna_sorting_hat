@@ -1,10 +1,17 @@
 import { describe, expect, it } from 'vitest'
 import { DEPT_ORDER } from '../data/constants'
 import type { DeptId } from '../data/constants'
+import { DEPARTMENTS } from '../data/departments'
 import { QUESTION_BANK } from '../data/questions'
 import { isComplete, resolveWinner } from './scoring'
 import type { AnswerMap } from './scoring'
-import { buildShareUrl, decodeAnswers, encodeAnswers, readShareCodeFromUrl } from './shareCode'
+import {
+  buildShareText,
+  buildShareUrl,
+  decodeAnswers,
+  encodeAnswers,
+  readShareCodeFromUrl,
+} from './shareCode'
 
 /** 全选主推某部门的答案。 */
 function answersAllPrimary(dept: DeptId): AnswerMap {
@@ -78,5 +85,36 @@ describe('分享码编解码', () => {
     )
     expect(url).toBe('https://example.github.io/yuna_sorting_hat/?a=dbcacadcba')
     expect(readShareCodeFromUrl(QUESTION_BANK, new URL(url).search)).toEqual(answers)
+  })
+
+  it('分享链接还原后判定完全一致（分享不改结果）', () => {
+    for (const dept of DEPT_ORDER) {
+      const answers = answersAllPrimary(dept)
+      const url = buildShareUrl(
+        QUESTION_BANK,
+        answers,
+        'https://example.github.io',
+        '/yuna_sorting_hat/',
+      )
+      const restored = readShareCodeFromUrl(QUESTION_BANK, new URL(url).search)
+      expect(restored).not.toBeNull()
+      expect(isComplete(QUESTION_BANK, restored!)).toBe(true)
+      expect(resolveWinner(QUESTION_BANK, restored!)).toEqual(
+        resolveWinner(QUESTION_BANK, answers),
+      )
+    }
+  })
+
+  it('分享文案把链接单独放一行，QQ/微信才能完整识别', () => {
+    const url = 'https://example.github.io/yuna_sorting_hat/?a=dbcacadcba'
+    const text = buildShareText(DEPARTMENTS.pr.name, url)
+
+    expect(text).toContain('「组宣部」')
+    const lines = text.split('\n')
+    // 链接必须自己占满一行：夹在中文标点之间会被自动识别吃掉尾字符
+    expect(lines[lines.length - 1]).toBe(url)
+    expect(readShareCodeFromUrl(QUESTION_BANK, new URL(lines[lines.length - 1]!).search)).toEqual(
+      answersAllPrimary('pr'),
+    )
   })
 })

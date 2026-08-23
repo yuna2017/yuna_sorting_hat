@@ -1,5 +1,6 @@
 // 用分享链接逐个访问四个部门的结果页：同时验证
-// ①分享码解码 ②四套主题换肤 ③四张立绘都能加载 ④判定结果正确。
+// ①分享码解码 ②四套主题换肤 ③四张立绘都能加载 ④判定结果正确
+// ⑤每个部门的介绍与招新入口都渲染出来了。
 import { chromium } from 'playwright'
 
 const BASE = process.env.TARGET ?? 'http://localhost:5173/yuna_sorting_hat/'
@@ -40,12 +41,45 @@ for (const c of CASES) {
     .evaluate((el) => el.complete && el.naturalWidth > 0)
   const pct = await page.locator('li span.tabular-nums').first().textContent()
 
-  const ok = h1 === c.name && themed === c.dept && imgOk && problems.length === 0
+  // 招新转化链路：解释 → 介绍 → 行动 → 分享，缺一环用户就不知道下一步去哪
+  const headings = await page.locator('h2').allInnerTexts()
+  const has = (t) => headings.some((h) => h.includes(t))
+  const introOk = has(`关于${c.name}`)
+  const actionOk = has(`对${c.name}感兴趣？`)
+  const explainOk = has('帽子为什么这么判？')
+  const shareOk = has('分享你的结果')
+
+  // 招新按钮若已填真实 URL，必须是 http(s) 外链且带 noopener ——
+  // 这些链接由社团后续填入，不全在我们控制下。
+  const badLinks = await page.evaluate(() => {
+    const out = []
+    for (const a of document.querySelectorAll('section a[href]')) {
+      const rel = a.getAttribute('rel') ?? ''
+      if (!/^https?:/.test(a.href)) out.push(`非 http(s) 链接: ${a.getAttribute('href')}`)
+      else if (!rel.includes('noopener')) out.push(`缺 rel=noopener: ${a.href}`)
+    }
+    return out
+  })
+  problems.push(...badLinks)
+
+  const ok =
+    h1 === c.name &&
+    themed === c.dept &&
+    imgOk &&
+    introOk &&
+    actionOk &&
+    explainOk &&
+    shareOk &&
+    problems.length === 0
   if (!ok) failures++
   console.log(
     `${ok ? '✓' : '✗'} ${c.dept}  h1=${h1}  data-dept=${themed}  ` +
       `立绘=${imgOk ? 'ok' : '未加载'}  首行=${pct?.trim()}`,
   )
+  if (!introOk) console.log('    ⚠ 缺「关于部门」区块')
+  if (!actionOk) console.log('    ⚠ 缺招新入口区块')
+  if (!explainOk) console.log('    ⚠ 缺「帽子为什么这么判」区块')
+  if (!shareOk) console.log('    ⚠ 缺分享区块')
   problems.forEach((p) => console.log(`    ⚠ ${p}`))
 
   await page.screenshot({ path: `screenshots/dept-${c.dept}.png`, fullPage: false })

@@ -17,7 +17,7 @@ export function CoverScreen({ onStart }: CoverScreenProps) {
             燕山大学网络与信息协会
           </p>
 
-          <h1 className="font-body text-[2.6rem] leading-none font-semibold text-parchment sm:text-5xl">
+          <h1 className="font-display text-[2.6rem] leading-none font-semibold text-parchment sm:text-5xl">
             分部帽
           </h1>
 

@@ -6,12 +6,20 @@
    因为部门主题色跟随四张立绘（蓝/青/琥珀/粉）。
    ───────────────────────────────────────────────────────────── */
 @theme {
-  /* 展示字（拉丁小标、院名、编号）。'Cinzel' 留在首位：
-     将来自托管该字体后无需改代码即生效；当前回落到系统衬线体。
+  /* 展示/花体字：拉丁小标、院名、编号，以及两处仪式感大标题
+     （封面「分部帽」、结果页部门名）。魔法感靠它承载 ——
+     'Cinzel' 留在首位，将来自托管该字体后无需改代码即生效；
+     当前拉丁回落到系统衬线体，中文回落到宋体。
+     只用在「大字号、看一眼」的地方：宋体小字发虚，不适合拿来读。
      不用 CDN 外链 —— Google Fonts 在中国大陆不可达，见 index.html 的说明。 */
   --font-display: 'Cinzel', 'Palatino Linotype', 'Book Antiqua', Palatino, Georgia,
     'Songti SC', 'SimSun', serif;
-  --font-body: 'Songti SC', 'STSong', 'SimSun', 'Source Han Serif SC', Georgia, serif;
+  /* 正文/阅读字：题面、选项、开场独白、结果正文都走这里。
+     用黑体而非宋体 —— 宋体横细竖粗，小字号在屏幕上笔画发虚、可读性差；黑体笔画均匀，
+     移动端小字更清晰。按平台优先命中各自的系统黑体，最后回落到通用 sans-serif。 */
+  --font-body: 'PingFang SC', 'HarmonyOS Sans SC', 'Hiragino Sans GB',
+    'Microsoft YaHei', 'Source Han Sans SC', 'Noto Sans CJK SC', 'Heiti SC',
+    system-ui, sans-serif;
 
   --color-night-900: #08061a;
   --color-night-800: #100d26;
@@ -75,7 +83,9 @@ body {
   font-family: var(--font-body);
   /* 中文正文行距给足，长选项才好读 */
   line-height: 1.75;
-  -webkit-font-smoothing: antialiased;
+  /* 刻意**不写** -webkit-font-smoothing: antialiased ——
+     它在 macOS 上会让字重变轻，而本站是浅字压深底（最吃亏的组合），
+     正文因此发虚。交回浏览器默认，笔画保持应有的厚度。 */
   text-rendering: optimizeLegibility;
 }
 
@@ -93,6 +103,18 @@ body {
     radial-gradient(1px 1px at 8% 52%, #fff 50%, transparent 51%),
     radial-gradient(1.3px 1.3px at 94% 82%, #f3e9c8 50%, transparent 51%);
   background-color: var(--color-night-900);
+}
+
+/* 分院仪式专用底：比常规夜空更暗、星点更少。
+   过场需要「灯光暗下来」的感觉，星点密了反而分散注意力。 */
+.starfield-deep {
+  background-image:
+    radial-gradient(ellipse 80% 50% at 50% 40%, #1a1640 0%, transparent 72%),
+    radial-gradient(1.2px 1.2px at 22% 26%, #fff 50%, transparent 51%),
+    radial-gradient(1px 1px at 78% 20%, #f3e9c8 50%, transparent 51%),
+    radial-gradient(1.4px 1.4px at 60% 72%, #fff 50%, transparent 51%),
+    radial-gradient(1px 1px at 33% 80%, #e8cf83 50%, transparent 51%);
+  background-color: #05040f;
 }
 
 /* 金色细分隔线，带两端渐隐 */
@@ -153,6 +175,21 @@ body {
 }
 .glow-pulse {
   animation: glow-pulse 3.4s ease-in-out infinite;
+}
+
+/* 仪式中的帽子：极缓慢的呼吸式浮动，暗示「它在想」。
+   幅度刻意很小 —— 过场只有五秒，大动作会显得吵。 */
+@keyframes hat-ponder {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-1.5deg);
+  }
+  50% {
+    transform: translateY(-7px) rotate(1.5deg);
+  }
+}
+.reveal-hat {
+  animation: hat-ponder 3.6s ease-in-out infinite;
 }
 
 /* 焦点态：键盘操作必须看得见 */

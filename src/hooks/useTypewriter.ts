@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { prefersReducedMotion } from '../lib/motion'
 
 export interface TypewriterOptions {
   /** 每字间隔毫秒。 */
@@ -16,11 +17,6 @@ export interface TypewriterState {
   done: boolean
   /** 立即打完剩余部分。 */
   skip: () => void
-}
-
-function prefersReducedMotion(): boolean {
-  if (typeof window === 'undefined' || !window.matchMedia) return false
-  return window.matchMedia('(prefers-reduced-motion: reduce)').matches
 }
 
 /**

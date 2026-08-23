@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { CoverScreen } from './screens/CoverScreen'
 import { OpeningScreen } from './screens/OpeningScreen'
 import { QuizScreen } from './screens/QuizScreen'
+import { RevealScreen } from './screens/RevealScreen'
 import { ResultScreen } from './screens/ResultScreen'
 import { QUESTION_BANK } from './data/questions'
 import type { OptionId } from './data/questions'
@@ -12,7 +13,8 @@ import { isComplete, resolveWinner } from './lib/scoring'
 import type { AnswerMap } from './lib/scoring'
 import { readShareCodeFromUrl } from './lib/shareCode'
 
-type Phase = 'cover' | 'opening' | 'quiz' | 'result'
+/** 'reveal' 是答完最后一题后的分院仪式，只延迟揭晓，不参与判定。 */
+type Phase = 'cover' | 'opening' | 'quiz' | 'reveal' | 'result'
 
 /* 开发期自检：题库不变量 + 还没填的事实文案，直接打在控制台。
    权威闸门是 vitest；这里是给「改了题但没跑测试」的人兜底。 */
@@ -58,12 +60,17 @@ export default function App() {
   const handleNext = useCallback(() => {
     // 不要把 setPhase 塞进 setIndex 的 updater 里 —— updater 必须是纯函数，
     // StrictMode 会二次调用它来检测副作用。
-    if (index >= questions.length - 1) setPhase('result')
+    // 最后一题不直接进结果页：先过一道分院仪式，把揭晓的停顿做出来。
+    if (index >= questions.length - 1) setPhase('reveal')
     else setIndex(index + 1)
   }, [index, questions.length])
 
   const handleBack = useCallback(() => {
     setIndex((i) => Math.max(0, i - 1))
+  }, [])
+
+  const handleRevealDone = useCallback(() => {
+    setPhase('result')
   }, [])
 
   const handleRestart = useCallback(() => {
@@ -104,5 +111,11 @@ export default function App() {
     )
   }
 
-  return <ResultScreen verdict={verdict} onRestart={handleRestart} />
+  if (phase === 'reveal') {
+    // 分享链接直达结果时不会走到这里 —— 那条路径的初始 phase 就是 'result'，
+    // 别人的结果不需要再演一次仪式。
+    return <RevealScreen verdict={verdict} onDone={handleRevealDone} />
+  }
+
+  return <ResultScreen verdict={verdict} answers={answers} onRestart={handleRestart} />
 }

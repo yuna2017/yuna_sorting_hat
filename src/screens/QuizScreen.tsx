@@ -95,14 +95,20 @@ export function QuizScreen({
 
       <main className="mx-auto flex w-full max-w-lg flex-1 flex-col px-5 py-6 sm:px-6 sm:py-8">
         <div key={question.id} className="rise-in flex flex-1 flex-col">
-          <h2 className="font-body text-[1.15rem] font-semibold text-gold-soft sm:text-xl">
+          {/* 视觉层级刻意做成「标题 → 选项」为主，场景描述为辅：
+              场景是氛围铺垫，不是要读者细品的正文。它此前带一条金色左边线，
+              而深底上的金色 = 「重点框」信号，注意力会被吸在描述上、
+              反而不看选项 —— 所以这里不给它任何强调装饰。
+              弱化靠的是字号与字重的对比，而不是继续调暗：
+              调暗会伤对比度，正文仍需 parchment-dim 这一档（约 8.7:1）。 */}
+          <h2 className="text-[1.28rem] leading-snug font-semibold text-gold-soft sm:text-[1.4rem]">
             {question.title}
           </h2>
-          <p className="mt-2.5 border-l-2 border-gold/25 pl-3 text-[0.9rem] leading-relaxed text-parchment-dim sm:text-[0.95rem]">
+          <p className="mt-2 text-[0.875rem] leading-relaxed text-parchment-dim sm:text-[0.9rem]">
             {question.scene}
           </p>
 
-          <ul className="mt-6 flex flex-col gap-2.5">
+          <ul className="mt-7 flex flex-col gap-2.5">
             {shuffled.map((option, i) => (
               <li key={option.id}>
                 <OptionButton
@@ -121,7 +127,9 @@ export function QuizScreen({
           <div className="mt-6 flex min-h-[5.5rem] flex-col items-center justify-start gap-4">
             {selectedOption !== undefined && (
               <>
-                <p className="text-center text-[0.9rem] leading-relaxed text-gold-soft/90 italic">
+                {/* 不用 italic：中文没有真正的斜体，浏览器只能伪斜（合成倾斜），
+                    笔画会被拉歪、更显细。低语的语气交给「」与金色承担。 */}
+                <p className="text-center text-[0.925rem] leading-relaxed text-gold-soft/90">
                   <span aria-hidden="true" className={whisperDone ? '' : 'caret'}>
                     {whisperShown}
                   </span>

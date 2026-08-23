@@ -67,3 +67,11 @@ export function buildShareUrl(
   const params = new URLSearchParams({ [SHARE_PARAM]: encodeAnswers(bank, answers) })
   return `${origin}${pathname}?${params.toString()}`
 }
+
+/**
+ * 分享文案。链接单独一行 —— QQ/微信的自动识别按空白切分，
+ * 把 URL 夹在中文标点之间会被吃掉尾字符。
+ */
+export function buildShareText(deptName: string, url: string): string {
+  return `我在 YUNA 分部帽里被分到了「${deptName}」。\n你会被分到哪个部门？\n${url}`
+}
