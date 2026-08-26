@@ -18,6 +18,11 @@ dist/
 *.swo
 *~
 
+# Local AI/tool configuration
+.claude/
+.codex/
+.agents/
+
 # OS generated
 .DS_Store
 Thumbs.db

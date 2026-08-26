@@ -30,7 +30,7 @@ npm run preview    # 按 base 路径预览产物，部署前用这个复核
 
 | 关注点 | 位置 |
 | --- | --- |
-| 四屏流程与阶段状态机 | [src/App.tsx](src/App.tsx) |
+| 五阶段流程与状态机 | [src/App.tsx](src/App.tsx) |
 | 分院仪式（揭晓前的过场） | [src/screens/RevealScreen.tsx](src/screens/RevealScreen.tsx) |
 | 结果页九层信息 | [src/screens/ResultScreen.tsx](src/screens/ResultScreen.tsx) |
 | 题库（题面／选项／低语／权重指针） | [src/data/questions.ts](src/data/questions.ts) |
@@ -93,7 +93,7 @@ npm run preview    # 按 base 路径预览产物，部署前用这个复核
 > （官网、公众号、报名表、公开仓库）。不要写个人手机号、私人 QQ/微信、群管理链接、
 > 内网地址或任何凭据。
 
-当前四个部门的介绍是**占位草稿**（`contentDraft: true`），上线前必须由社团核对替换。
+当前四个部门的介绍是**占位草稿**（`contentDraft: true`）。正式资料即将加入；部门详细介绍将优先链接到社团官网，结果页只保留必要摘要和行动入口。
 开发模式下控制台会逐条列出还缺什么。
 
 ## 分享
@@ -126,8 +126,9 @@ npm run preview    # 按 base 路径预览产物，部署前用这个复核
 已完成：封面 → 开场独白 → 答题 → **分院仪式** → 结果（解释 + 雷达图 + 部门介绍 +
 招新入口 + 分享链接）。
 
-**未做（留了接缝）**：部门真实项目展示（缺截图与授权）、分享图片与二维码、
-音效、访问统计。题目本轮**未改动** —— 改题会影响已发出的分享链接，需单独排期。
+**下一阶段**：接入部门正式资料和社团官网链接；设计分享卡、二维码与保存图片。
+分享卡中的雷达图计划突出并标注 **50 分辅助线**，帮助用户直观看出兴趣倾向。
+音效和访问统计暂缓。题目本轮**未改动** —— 改题会影响已发出的分享链接，需单独排期。
 
 ## 本地视觉验证（可选）
 
@@ -143,4 +144,4 @@ node check-depts.mjs                # 逐个验四个部门的主题、立绘、
 `shoot.mjs` 还会检查：仪式能否跳过、`prefers-reduced-motion` 下是否被压缩、
 复制的链接是否真的可复现、外链是否带 `rel=noopener`。输出在 `screenshots/`（已 gitignore）。
 
-真机层面的 iOS Safari 与微信内置浏览器**未覆盖**，需要设备时另行人工验收。
+部分移动端尺寸已验证可正常使用；iOS Safari、Android Chrome 与微信内置浏览器仍需继续完成真机验收。
