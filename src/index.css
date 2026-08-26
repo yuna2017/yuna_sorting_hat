@@ -238,3 +238,28 @@ body {
     transition-duration: 0.001ms !important;
   }
 }
+
+/* 分院仪式：阶段切换保持固定空间，避免文字出现时页面跳动。 */
+.reveal-screen {
+  overflow: hidden;
+}
+
+.reveal-stage {
+  min-height: 18rem;
+  justify-content: center;
+}
+
+@keyframes reveal-hat-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.reveal-hat-enter {
+  animation: reveal-hat-enter 0.55s ease-out both;
+}

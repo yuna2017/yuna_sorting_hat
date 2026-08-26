@@ -15,11 +15,32 @@ interface ResultScreenProps {
   onRestart: () => void
 }
 
-/** 判定强度 → 一句话。陈述用户做过的选择，不宣称测评准确度。 */
-const STRENGTH_COPY = {
-  decisive: '你的选择相当集中，几乎一路指向同一个方向。',
-  clear: '你的选择整体偏向明显，帽子没怎么犹豫。',
-  narrow: '你的几个方向咬得很紧，帽子是在细微差别里做的决定。',
+/**
+ * 用分部帽的口吻解释结果，不把内部计分过程直接暴露给用户。
+ * 证据仍来自用户刚才选过的选项，但呈现为性格倾向和瞬间回忆，
+ * 而不是“答了几题、命中了多少次”的测评报告。
+ */
+const REASON_COPY = {
+  dev: {
+    decisive: '你总是愿意先动手，把一个想法推到真的能用。',
+    clear: '遇到问题时，你更倾向于自己试着拆开、修好，再把它做出来。',
+    narrow: '你一边想把事情做成，一边也在意它能不能稳稳地跑下去。',
+  },
+  sec: {
+    decisive: '你很少满足于“能用”，总想再往下追一层，弄清它为什么成立。',
+    clear: '你会被没想明白的问题勾住，愿意把线索一点点追到底。',
+    narrow: '你在求真和动手之间来回权衡，帽子花了点时间才听清你的方向。',
+  },
+  ops: {
+    decisive: '你会自然地接住那些不能出错的事，并把它们安稳地守下去。',
+    clear: '比起一时的漂亮结果，你更在意事情能不能一直可靠地运转。',
+    narrow: '你既有解决问题的冲劲，也有把细节收好的耐心。',
+  },
+  pr: {
+    decisive: '你总能先看到人群、节奏和那句该被听见的话。',
+    clear: '你习惯把人和事组织起来，让一个想法真正抵达别人。',
+    narrow: '你既在意事情本身，也在意它如何被看见、被记住。',
+  },
 } as const
 
 /** 招新入口的排序与主次。join 是转化终点，永远排第一且用主按钮。 */
@@ -82,25 +103,19 @@ export function ResultScreen({ verdict, answers, onRestart }: ResultScreenProps)
             此前结果页从部门名直接跳到雷达图，用户拿不到「为什么是我」。
             证据全部来自刚才自己的选择，不引入新判定。 */}
         <section className="mt-8 w-full rounded-2xl border border-night-600/70 bg-night-800/40 p-5">
-          <h2 className="text-sm tracking-[0.16em] text-parchment-dim">帽子为什么这么判？</h2>
+          <h2 className="text-sm tracking-[0.16em] text-parchment-dim">帽子在你身上看见了什么？</h2>
 
           <p className="mt-2.5 text-sm leading-relaxed text-parchment/90">
-            {STRENGTH_COPY[strength]}
+            {REASON_COPY[dept.id][strength]}
           </p>
 
-          {explanation.primaryPicks > 0 && (
-            <p className="mt-1.5 text-sm leading-relaxed text-parchment/90">
-              {QUESTION_BANK.questions.length} 道题里有
-              <span className="mx-1 tabular-nums text-gold-soft">
-                {explanation.primaryPicks}
-              </span>
-              次，你选的正是{dept.name}最看重的那条路。
-            </p>
-          )}
-
           {explanation.evidence.length > 0 && (
-            <ul className="mt-3.5 flex flex-col gap-2.5">
-              {explanation.evidence.map((e) => (
+            <>
+              <p className="mt-4 text-[0.78rem] leading-relaxed text-parchment-dim/80">
+                帽子记住了这些瞬间：
+              </p>
+              <ul className="mt-2.5 flex flex-col gap-2.5">
+                {explanation.evidence.map((e) => (
                 <li
                   key={e.questionId}
                   className="border-l-2 pl-3"
@@ -114,8 +129,9 @@ export function ResultScreen({ verdict, answers, onRestart }: ResultScreenProps)
                     {e.choice}
                   </p>
                 </li>
-              ))}
-            </ul>
+                ))}
+              </ul>
+            </>
           )}
 
           {hesitated ? (
@@ -130,7 +146,7 @@ export function ResultScreen({ verdict, answers, onRestart }: ResultScreenProps)
           ) : (
             explanation.gap > 0 && (
               <p className="mt-3.5 text-[0.8rem] leading-relaxed text-parchment-dim/85">
-                离你第二近的是{DEPARTMENTS[explanation.runnerUp].name}。
+                不过，{DEPARTMENTS[explanation.runnerUp].name}也曾让帽子犹豫了一会儿。
               </p>
             )
           )}
@@ -258,7 +274,7 @@ export function ResultScreen({ verdict, answers, onRestart }: ResultScreenProps)
                       )}
                     </a>
                   </li>
-                ))}
+                  ))}
               </ul>
             )}
 
@@ -302,7 +318,7 @@ export function ResultScreen({ verdict, answers, onRestart }: ResultScreenProps)
         {/* 免责一句：雷达图 + 百分比很容易被读成心理测评，
             这里明确它只是娱乐，压掉「伪科学感」。 */}
         <p className="mt-6 max-w-xs text-center text-[0.72rem] leading-relaxed text-parchment-dim/55">
-          本结果只根据你刚才的选择生成，仅用于娱乐与自我探索。想去哪个部门，最终还是你自己定。
+          分部帽看见的是你此刻流露出的倾向。它可以给出一个方向，但真正想去哪里，仍由你自己决定。
         </p>
 
         <p className="font-display mt-6 text-[0.6rem] tracking-[0.3em] text-parchment-dim/45">
