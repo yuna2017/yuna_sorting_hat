@@ -6,7 +6,7 @@ import { chromium } from 'playwright'
 const BASE = process.env.TARGET ?? 'http://localhost:5173/yuna_sorting_hat/'
 const CASES = [
   { dept: 'dev', code: 'acbddbabad', name: '开发部' },
-  { dept: 'sec', code: 'cadbbdcadb', name: '网安部' },
+  { dept: 'sec', code: 'cadbbdcadb', name: '网络安全部' },
   { dept: 'ops', code: 'bdacacbdcc', name: '运维部' },
   { dept: 'pr', code: 'dbcacadcba', name: '组宣部' },
 ]
@@ -46,7 +46,7 @@ for (const c of CASES) {
   const has = (t) => headings.some((h) => h.includes(t))
   const introOk = has(`关于${c.name}`)
   const actionOk = has(`对${c.name}感兴趣？`)
-  const explainOk = has('帽子为什么这么判？')
+  const explainOk = has('帽子在你身上看见了什么？')
   const shareOk = has('分享你的结果')
 
   // 招新按钮若已填真实 URL，必须是 http(s) 外链且带 noopener ——
@@ -78,7 +78,7 @@ for (const c of CASES) {
   )
   if (!introOk) console.log('    ⚠ 缺「关于部门」区块')
   if (!actionOk) console.log('    ⚠ 缺招新入口区块')
-  if (!explainOk) console.log('    ⚠ 缺「帽子为什么这么判」区块')
+  if (!explainOk) console.log('    ⚠ 缺「帽子在你身上看见了什么」区块')
   if (!shareOk) console.log('    ⚠ 缺分享区块')
   problems.forEach((p) => console.log(`    ⚠ ${p}`))
 

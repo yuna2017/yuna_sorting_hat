@@ -16,7 +16,7 @@ export interface CampaignConfig {
 export const CAMPAIGN: CampaignConfig = {
   year: '2026',
   label: '2026 招新季',
-  status: 'pending',
-  publicJoinUrl: null,
-  siteUrl: null,
+  status: 'open',
+  publicJoinUrl: 'https://qm.qq.com/q/1DSuxKBV5a',
+  siteUrl: 'https://www.yuna.team',
 }

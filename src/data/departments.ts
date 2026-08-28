@@ -1,5 +1,6 @@
 import type { DeptId } from './constants'
 import { DEPT_ORDER } from './constants'
+import { CAMPAIGN } from './campaign'
 import devImg from '../assets/dept/dev.webp'
 import secImg from '../assets/dept/sec.webp'
 import opsImg from '../assets/dept/ops.webp'
@@ -72,18 +73,23 @@ export interface Department {
   contentDraft: boolean
 }
 
-/**
- * 占位招新入口。四个部门共用同一套 label 与语义，只是**都还没有 URL**。
- *
- * 为什么先放没有 href 的条目：结果页的「行动」这一层是招新转化的终点，
- * 它必须先在版式与流程里占好位置、被移动端一起验收；等社团给出真实公开链接后
- * 只改这一处数据即可，不用回头动组件。
- */
-function draftActions(deptName: string): DeptAction[] {
+
+function departmentActions(
+  deptName: string,
+  detailUrl: string,
+  articlesUrl: string,
+  worksLabel = '查看部门文章',
+): DeptAction[] {
   return [
-    { kind: 'join', label: `加入${deptName}招新`, href: null, status: 'pending', note: '招新期开放' },
-    { kind: 'more', label: `了解${deptName}`, href: null, status: 'pending' },
-    { kind: 'works', label: '看看做过的项目', href: null, status: 'pending' },
+    {
+      kind: 'join',
+      label: `加入${deptName}招新`,
+      href: CAMPAIGN.publicJoinUrl,
+      status: CAMPAIGN.status,
+      note: `${CAMPAIGN.year} 届招新 QQ 群`,
+    },
+    { kind: 'more', label: `了解${deptName}`, href: detailUrl, status: 'open' },
+    { kind: 'works', label: worksLabel, href: articlesUrl, status: 'open' },
   ]
 }
 
@@ -97,32 +103,52 @@ export const DEPARTMENTS: Record<DeptId, Department> = {
     keywords: ['冒险', '领导力', '现场应变'],
     image: devImg,
     slogan: '从零到一的那一步，你从不犹豫。',
-    tagline: '把想法做成真的能用的东西。',
+    tagline: '负责协会站点、校园工具、全栈开发和技术探索，推动项目落地与团队协作，让代码从学习实践走向真实应用。',
     intro:
-      '我们负责协会对内对外的网站、小程序与各类工具，从需求聊起，一直做到上线和后续维护。' +
-      '不要求你进来就会写代码，要求你愿意把一个东西做完。',
-    doing: ['做协会官网、招新页这类真实上线的项目', '学前后端与 Git 协作流程', '把学长学姐的旧项目接过来继续迭代'],
-    suitedFor: '喜欢动手、能忍受反复调试、想看到自己写的东西被别人用的人。',
-    actions: draftActions('开发部'),
-    contentDraft: true,
+      'YUNA 开发部：聚焦 Web 全栈、网络基建与前沿技术。推崇“项目驱动”，从零基础到极客皆可加入。' +
+      '参与竞赛孵化，实战 Git 协作与部署。拒绝枯燥作业，打造真正有人用的产品，用代码构建世界！',
+    doing: [
+      '学习 HTML、CSS、JavaScript 以及 Vue、React 等现代前端框架',
+      '接触服务端开发、数据库管理和 RESTful API 设计',
+      '使用 Git 进行版本控制、协同开发与代码审查',
+      '实践 CI/CD、部署上线以及各类竞赛与孵化项目',
+    ],
+    suitedFor: '行动派与实践者。',
+    actions: departmentActions(
+      '开发部',
+      'https://www.yuna.team/department-dev',
+      'https://www.yuna.team/articles?tag=%E5%BC%80%E5%8F%91%E9%83%A8',
+      '查看开发部文章',
+    ),
+    contentDraft: false,
   },
   sec: {
     id: 'sec',
-    name: '网安部',
+    name: '网络安全部',
     latinName: 'cyber security',
     house: '拉文克劳',
     houseLatin: 'Ravenclaw',
     keywords: ['研究', '创新', '逻辑'],
     image: secImg,
     slogan: '你要的从来不是答案，是它为什么成立。',
-    tagline: '把系统拆开，看清它为什么安全。',
+    tagline: '组织网络安全基础训练与 CTF 竞赛实践，覆盖多类安全方向，并通过赛题复盘沉淀可继续学习的技术路线。',
     intro:
-      '我们做安全方向的学习与竞赛，也帮协会自己的系统做检查。' +
-      '入门看的是好奇心和肯查资料的耐心，不是已经会多少工具。',
-    doing: ['打 CTF、复盘赛题', '学 Web、逆向、密码学等方向的基础', '给协会自己的项目做安全检查'],
-    suitedFor: '遇到「为什么会这样」就一定要弄明白的人。',
-    actions: draftActions('网安部'),
-    contentDraft: true,
+      'YUNA 网络安全部：协会最早创立的部门之一，围绕网络安全基础和 CTF 竞赛开展培训、研究与实战，' +
+      '接触漏洞分析、攻防思维和安全知识传播，在解题与复盘中逐步建立完整的计算机与网络安全知识体系。',
+    doing: [
+      '学习 Linux、Kali Linux、Python 脚本与常用安全工具',
+      '接触信息搜集、密码学与 Web 安全',
+      '学习软件逆向、Pwn 与 Android 安全',
+      '参加 CTF 竞赛并进行赛题分析与复盘',
+    ],
+    suitedFor: '喜欢解谜与钻研、对攻防原理充满好奇、愿意持续学习和复盘的人。',
+    actions: departmentActions(
+      '网络安全部',
+      'https://www.yuna.team/department-security',
+      'https://www.yuna.team/articles?tag=%E7%BD%91%E5%AE%89%E9%83%A8',
+      '查看训练资料与文章',
+    ),
+    contentDraft: false,
   },
   ops: {
     id: 'ops',
@@ -133,14 +159,23 @@ export const DEPARTMENTS: Record<DeptId, Department> = {
     keywords: ['协作', '细致', '服务精神'],
     image: opsImg,
     slogan: '你守着的东西不出声，所以没人知道你在守。',
-    tagline: '让协会的服务一直开着。',
+    tagline: '维护站点服务、部署流程、域名证书和校园工具运行环境，保障协会项目稳定上线并长期可访问。',
     intro:
-      '我们管服务器、部署和日常值守，也处理同学报上来的各种故障。' +
-      '这里的成就感不来自上线那一刻，来自很长时间里什么都没出事。',
-    doing: ['管理服务器与部署流程', '排查网络与服务故障', '做备份、监控和交接文档'],
-    suitedFor: '做事稳、愿意收尾、不嫌琐碎的人。',
-    actions: draftActions('运维部'),
-    contentDraft: true,
+      'YUNA 运维部：负责把开发成果从“代码能跑”推进到“大家能用”。围绕服务器、网络、部署、监控和自动化开展实践，' +
+      '为校园工具与协会平台搭建稳定底座，并在故障排查、版本迭代和跨部门协作中保障服务持续运行。',
+    doing: [
+      '学习 Linux、服务器部署、权限管理与进程监控',
+      '处理故障排查、域名解析与网络配置',
+      '使用 Docker、CI/CD、Shell 和 Python 实现自动化',
+      '接触云计算、DevOps 与容器编排',
+    ],
+    suitedFor: '做事稳、注重细节、愿意排查问题并承担长期维护和收尾工作的人。',
+    actions: departmentActions(
+      '运维部',
+      'https://www.yuna.team/department-ops',
+      'https://www.yuna.team/articles?tag=%E8%BF%90%E7%BB%B4%E9%83%A8',
+    ),
+    contentDraft: false,
   },
   pr: {
     id: 'pr',
@@ -151,14 +186,23 @@ export const DEPARTMENTS: Record<DeptId, Department> = {
     keywords: ['资源整合', '影响力', '策略'],
     image: prImg,
     slogan: '你不站上台，你决定谁站上去。',
-    tagline: '让该被看到的事被看到。',
+    tagline: '负责协会形象建设、文化运营、活动记录、图文传播和事务管理，连接组织内部成员与外部受众。',
     intro:
-      '我们负责活动策划、宣传物料与对外联络，把协会在做的事讲清楚、传出去。' +
-      '写文案、拍照排版、跟人打交道，都会碰到。',
-    doing: ['策划招新与技术分享活动', '做海报、视频与公众号内容', '对接其他社团和校内单位'],
-    suitedFor: '会张罗事、愿意跟人沟通、对表达有要求的人。',
-    actions: draftActions('组宣部'),
-    contentDraft: true,
+      'YUNA 组宣部：融合原组宣部与秘书处的核心工作，承担协会形象建设、内容传播、文化运营和事务管理。' +
+      '通过官方账号、视觉物料、活动策划、成员资料与会议档案，让协会对外表达更清晰、内部协作更有秩序。',
+    doing: [
+      '运营官方账号，参与内容策划、品牌传播与对外沟通',
+      '制作视觉物料并学习 Adobe 等设计工具',
+      '撰写策划书、组织活动并建设团队文化',
+      '维护成员资料、会议档案和协会日常流程',
+    ],
+    suitedFor: '喜欢沟通、组织与表达，对文字和视觉内容敏感，愿意协调资源并推动活动落地的人。',
+    actions: departmentActions(
+      '组宣部',
+      'https://www.yuna.team/department-publicity',
+      'https://www.yuna.team/articles?tag=%E7%BB%84%E5%AE%A3%E9%83%A8',
+    ),
+    contentDraft: false,
   },
 }
 
