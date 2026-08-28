@@ -99,6 +99,7 @@ describe('并列决胜', () => {
   it('决胜题层：同分同主选次数时由决胜题定胜负', () => {
     // 造一个 2 题的合成题库，两题分别用不同置换，好精确控制并列
     const bank: QuestionBank = {
+      version: 1,
       questions: [
         {
           id: 'a1',
@@ -137,6 +138,7 @@ describe('并列决胜', () => {
 
   it('固定顺序层：决胜题主推不在并列集合时按 dev>sec>ops>pr', () => {
     const bank: QuestionBank = {
+      version: 1,
       questions: [
         {
           id: 'b1',

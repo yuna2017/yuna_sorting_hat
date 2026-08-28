@@ -7,6 +7,7 @@ import prImg from '../assets/dept/pr.webp'
 
 /** 招新入口的语义类别。决定结果页按钮的主次与排序，不参与判定。 */
 export type DeptActionKind = 'join' | 'more' | 'works'
+export type DeptActionStatus = 'open' | 'closed' | 'pending'
 
 export interface DeptAction {
   kind: DeptActionKind
@@ -22,6 +23,8 @@ export interface DeptAction {
    * 这一页是公开部署且会被分享出去的。
    */
   href: string | null
+  /** 入口状态；pending / closed 时即使有旧 URL 也不渲染为可点击链接。 */
+  status?: DeptActionStatus
   /** 可选小字，如「招新期开放」。同样不要写个人联系方式。 */
   note?: string
 }
@@ -78,9 +81,9 @@ export interface Department {
  */
 function draftActions(deptName: string): DeptAction[] {
   return [
-    { kind: 'join', label: `加入${deptName}招新`, href: null, note: '招新期开放' },
-    { kind: 'more', label: `了解${deptName}`, href: null },
-    { kind: 'works', label: '看看做过的项目', href: null },
+    { kind: 'join', label: `加入${deptName}招新`, href: null, status: 'pending', note: '招新期开放' },
+    { kind: 'more', label: `了解${deptName}`, href: null, status: 'pending' },
+    { kind: 'works', label: '看看做过的项目', href: null, status: 'pending' },
   ]
 }
 

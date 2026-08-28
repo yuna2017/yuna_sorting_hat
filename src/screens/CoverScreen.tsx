@@ -1,4 +1,5 @@
 import { SortingHat } from '../components/SortingHat'
+import { CAMPAIGN } from '../data/campaign'
 
 interface CoverScreenProps {
   onStart: () => void
@@ -44,7 +45,7 @@ export function CoverScreen({ onStart }: CoverScreenProps) {
       </div>
 
       <p className="font-display text-[0.62rem] tracking-[0.3em] text-parchment-dim/55">
-        YUNA 社团 · 2026 招新季
+        YUNA 社团 · {CAMPAIGN.label}
       </p>
     </div>
   )

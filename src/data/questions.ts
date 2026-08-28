@@ -38,7 +38,9 @@ export interface Question {
   options: QuizOption[]
 }
 
+/** 题库协议版本。分享链接用它选择兼容的解码与判定规则。 */
 export interface QuestionBank {
+  version: number
   questions: Question[]
 }
 
@@ -52,6 +54,7 @@ export interface QuestionBank {
  * 由此每个部门理论满分 = 题数 × 3。
  */
 export const QUESTION_BANK: QuestionBank = {
+  version: 1,
   questions: [
     {
       id: 'q1',

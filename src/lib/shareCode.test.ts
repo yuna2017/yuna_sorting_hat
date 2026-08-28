@@ -8,6 +8,7 @@ import type { AnswerMap } from './scoring'
 import {
   buildShareText,
   buildShareUrl,
+  readSharePayloadFromUrl,
   decodeAnswers,
   encodeAnswers,
   readShareCodeFromUrl,
@@ -71,8 +72,10 @@ describe('分享码编解码', () => {
     const answers = answersAllPrimary('ops')
     const code = encodeAnswers(QUESTION_BANK, answers)
     expect(readShareCodeFromUrl(QUESTION_BANK, `?a=${code}`)).toEqual(answers)
+    expect(readSharePayloadFromUrl(QUESTION_BANK, `?v=1&a=${code}`)).toEqual({ version: 1, answers })
     expect(readShareCodeFromUrl(QUESTION_BANK, '')).toBeNull()
     expect(readShareCodeFromUrl(QUESTION_BANK, '?a=nonsense')).toBeNull()
+    expect(readShareCodeFromUrl(QUESTION_BANK, `?v=2&a=${code}`)).toBeNull()
   })
 
   it('生成的链接带 base 路径且可被解析回来', () => {
@@ -83,7 +86,7 @@ describe('分享码编解码', () => {
       'https://example.github.io',
       '/yuna_sorting_hat/',
     )
-    expect(url).toBe('https://example.github.io/yuna_sorting_hat/?a=dbcacadcba')
+    expect(url).toBe('https://example.github.io/yuna_sorting_hat/?v=1&a=dbcacadcba')
     expect(readShareCodeFromUrl(QUESTION_BANK, new URL(url).search)).toEqual(answers)
   })
 
@@ -106,8 +109,8 @@ describe('分享码编解码', () => {
   })
 
   it('分享文案把链接单独放一行，QQ/微信才能完整识别', () => {
-    const url = 'https://example.github.io/yuna_sorting_hat/?a=dbcacadcba'
-    const text = buildShareText(DEPARTMENTS.pr.name, url)
+    const url = 'https://example.github.io/yuna_sorting_hat/?v=1&a=dbcacadcba'
+    const text = buildShareText(DEPARTMENTS.pr.name, '校园叙述者', url)
 
     expect(text).toContain('「组宣部」')
     const lines = text.split('\n')

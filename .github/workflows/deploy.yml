@@ -33,7 +33,10 @@ jobs:
       # 题库不变量与计分引擎的权威闸门 —— 挂了就不该上线
       - run: npm test
 
-      # vite.config.ts 里 base 默认为 /yuna_sorting_hat/，与仓库名一致。
+      # 部门资料、行动入口和公开 URL 的结构检查
+      - run: npm run check:content
+
+      # 资源与页面 base 默认为 /yuna_sorting_hat/，与仓库名一致。
       # 若将来改仓库名，或换成自定义域名（根路径），设 VITE_BASE 覆盖即可。
       - run: npm run build
 

@@ -28,7 +28,7 @@ for (const c of CASES) {
     if (r.status() >= 400) problems.push(`HTTP ${r.status()}: ${r.url()}`)
   })
 
-  await page.goto(`${BASE}?a=${c.code}`, { waitUntil: 'domcontentloaded' })
+  await page.goto(`${BASE}?v=1&a=${c.code}`, { waitUntil: 'domcontentloaded' })
   await page.locator('h1').waitFor({ timeout: 15000 })
   await page.waitForTimeout(700)
 

@@ -7,7 +7,9 @@ import { ResultScreen } from './screens/ResultScreen'
 import { QUESTION_BANK, reportUnfilledOptionDetail } from './data/questions'
 import type { OptionId } from './data/questions'
 import { reportUnfilledCopy } from './data/departments'
+import { CAMPAIGN } from './data/campaign'
 import { assertBankInDev } from './lib/validateBank'
+import { formatContentViolations, validateDepartmentContent } from './lib/validateContent'
 import { createSessionSeed } from './lib/seededShuffle'
 import { isComplete, resolveWinner } from './lib/scoring'
 import type { AnswerMap } from './lib/scoring'
@@ -20,10 +22,21 @@ type Phase = 'cover' | 'opening' | 'quiz' | 'reveal' | 'result'
    权威闸门是 vitest；这里是给「改了题但没跑测试」的人兜底。 */
 assertBankInDev(QUESTION_BANK, [...reportUnfilledCopy(), ...reportUnfilledOptionDetail()])
 
+if (import.meta.env.DEV) {
+  const contentViolations = validateDepartmentContent()
+  if (contentViolations.length > 0) {
+    console.error(`[分部帽] 部门内容结构校验失败：\n${formatContentViolations(contentViolations)}`)
+  }
+}
+
+if (import.meta.env.DEV && CAMPAIGN.status === 'open' && CAMPAIGN.publicJoinUrl === null) {
+  console.warn('[分部帽] 招新入口标记为 open，但 publicJoinUrl 为空。请更新 src/data/campaign.ts。')
+}
+
 export default function App() {
   const questions = QUESTION_BANK.questions
 
-  /* 分享链接接缝：URL 带合法 ?a= 时直接落到结果页。
+  /* 分享链接接缝：URL 带合法 ?v=1&a= 时直接落到结果页。
      不引路由 —— 四屏是线性流程，而 GH Pages 是纯静态无 rewrite，
      BrowserRouter 的深链/刷新会 404。 */
   const shared = useMemo(

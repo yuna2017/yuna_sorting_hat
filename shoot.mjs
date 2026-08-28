@@ -111,7 +111,7 @@ await page.getByRole('button', { name: '复制结果链接' }).click()
 await page.waitForTimeout(300)
 const copied = await page.getByRole('button', { name: /已复制链接/ }).isVisible()
 const clipboard = await page.evaluate(() => navigator.clipboard.readText().catch(() => ''))
-const codeOk = /\?a=[abcd]{10}$/.test(clipboard)
+const codeOk = /\?v=1&a=[abcd]{10}$/.test(clipboard)
 console.log(`  ${copied ? '✓' : '✗'} 复制后按钮变为「已复制」`)
 console.log(`  ${codeOk ? '✓' : '✗'} 剪贴板里是可复现的结果链接：${clipboard || '(空)'}`)
 
@@ -176,7 +176,7 @@ for (const c of CASES) {
     if (r.status() >= 400) problems.push(`HTTP ${r.status()}: ${r.url()}`)
   })
 
-  await p.goto(`${BASE}?a=${c.code}`, { waitUntil: 'domcontentloaded' })
+  await p.goto(`${BASE}?v=1&a=${c.code}`, { waitUntil: 'domcontentloaded' })
   await p.locator('h1').waitFor({ timeout: 15000 })
   await p.waitForTimeout(700)
 

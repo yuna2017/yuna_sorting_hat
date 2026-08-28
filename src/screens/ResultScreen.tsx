@@ -2,9 +2,12 @@ import { DeptCard } from '../components/DeptCard'
 import { RadarChart } from '../components/RadarChart'
 import { ScoreBars } from '../components/ScoreBars'
 import { ShareBar } from '../components/ShareBar'
+import { DepartmentStoryPanel } from '../components/DepartmentStoryPanel'
 import { DEPARTMENTS } from '../data/departments'
+import { CAMPAIGN } from '../data/campaign'
 import { QUESTION_BANK } from '../data/questions'
 import { explainVerdict, verdictStrength } from '../lib/explain'
+import { deriveBehaviorIdentity } from '../lib/identity'
 import type { AnswerMap, Verdict } from '../lib/scoring'
 import { buildShareText, buildShareUrl } from '../lib/shareCode'
 
@@ -56,13 +59,28 @@ export function ResultScreen({ verdict, answers, onRestart }: ResultScreenProps)
   const hesitated = verdict.tiedWith.length > 0
   const explanation = explainVerdict(QUESTION_BANK, answers, verdict)
   const strength = verdictStrength(QUESTION_BANK, explanation)
+  const identity = deriveBehaviorIdentity(QUESTION_BANK, answers, verdict, explanation)
 
   const shareUrl = shareUrlOf(answers)
   const actions = [...dept.actions].sort(
     (a, b) => ACTION_ORDER.indexOf(a.kind) - ACTION_ORDER.indexOf(b.kind),
   )
-  const liveActions = actions.filter((a) => a.href !== null)
-  const pendingActions = actions.filter((a) => a.href === null)
+  const actionIsOpen = (action: (typeof actions)[number]) => {
+    if (action.status === 'closed') return false
+    if (action.href !== null) return action.status === undefined || action.status === 'open'
+    if (action.kind === 'join') return CAMPAIGN.status === 'open' && CAMPAIGN.publicJoinUrl !== null
+    if (action.kind === 'more') return CAMPAIGN.siteUrl !== null && CAMPAIGN.status !== 'closed'
+    return false
+  }
+  const liveActions = actions.filter(actionIsOpen)
+  const pendingActions = actions.filter((a) => !liveActions.includes(a))
+  const actionHref = (action: (typeof actions)[number]) => {
+    if (action.href !== null) return action.href
+    if (action.kind === 'join') return CAMPAIGN.publicJoinUrl
+    if (action.kind === 'more') return CAMPAIGN.siteUrl
+    return null
+  }
+  const pendingLabel = CAMPAIGN.status === 'closed' ? '本期暂未开放' : '入口待公布'
 
   return (
     // data-dept 一翻，雷达多边形／量条／辉光／边框整体换肤，零 JS 配色逻辑
@@ -108,6 +126,12 @@ export function ResultScreen({ verdict, answers, onRestart }: ResultScreenProps)
           <p className="mt-2.5 text-sm leading-relaxed text-parchment/90">
             {REASON_COPY[dept.id][strength]}
           </p>
+
+          <div className="mt-4 rounded-xl border border-gold/25 bg-gold/5 px-3.5 py-3">
+            <p className="text-[0.72rem] tracking-[0.12em] text-gold-soft/80">你的行为身份</p>
+            <p className="mt-1 text-base font-medium text-gold-soft">{identity.name}</p>
+            <p className="mt-1 text-[0.8rem] leading-relaxed text-parchment-dim">{identity.desc}</p>
+          </div>
 
           {explanation.evidence.length > 0 && (
             <>
@@ -241,8 +265,10 @@ export function ResultScreen({ verdict, answers, onRestart }: ResultScreenProps)
           </section>
         )}
 
-        {/* ── 第七层：行动。招新转化的终点，不能让用户看完不知道去哪。
-            第六层「真实项目展示」需要截图与授权，留到内容齐备后再加。 ── */}
+        {/* 可选体验：只读自己的选择，不参与计分和分享。 */}
+        <DepartmentStoryPanel department={dept.id} />
+
+        {/* ── 第七层：行动。招新转化的终点，不能让用户看完不知道去哪。 ── */}
         {actions.length > 0 && (
           <section
             className="mt-6 w-full rounded-2xl border p-5"
@@ -257,7 +283,7 @@ export function ResultScreen({ verdict, answers, onRestart }: ResultScreenProps)
                 {liveActions.map((action) => (
                   <li key={action.label}>
                     <a
-                      href={action.href ?? undefined}
+                      href={actionHref(action) ?? undefined}
                       target="_blank"
                       /* noopener 必须显式写：新窗口拿到 window.opener 就能篡改本页，
                          而这些 URL 由社团后续填入、不全在我们控制下。 */
@@ -289,7 +315,7 @@ export function ResultScreen({ verdict, answers, onRestart }: ResultScreenProps)
                       className="flex min-h-[2.75rem] flex-wrap items-center justify-center rounded-lg border border-dashed border-night-500/60 px-4 text-center text-[0.82rem] leading-snug text-parchment-dim/70"
                     >
                       <span className="break-words">{action.label}</span>
-                      <span className="ml-1.5 text-[0.72rem]">（入口待补充）</span>
+                      <span className="ml-1.5 text-[0.72rem]">（{action.status === 'closed' ? '本期暂未开放' : pendingLabel}）</span>
                     </li>
                   ))}
                 </ul>
@@ -303,7 +329,7 @@ export function ResultScreen({ verdict, answers, onRestart }: ResultScreenProps)
 
         {/* ── 第八层：传播 ── */}
         {shareUrl !== '' && (
-          <ShareBar url={shareUrl} text={buildShareText(dept.name, shareUrl)} />
+          <ShareBar url={shareUrl} text={buildShareText(dept.name, identity.name, shareUrl)} />
         )}
 
         {/* ── 第九层：重新体验 ── */}
@@ -322,7 +348,7 @@ export function ResultScreen({ verdict, answers, onRestart }: ResultScreenProps)
         </p>
 
         <p className="font-display mt-6 text-[0.6rem] tracking-[0.3em] text-parchment-dim/45">
-          YUNA 社团 · 2026 招新季
+          YUNA 社团 · {CAMPAIGN.label}
         </p>
       </div>
     </div>
