@@ -47,3 +47,6 @@ coverage/
 # 本地验证脚本的输出（shoot.mjs / check-depts.mjs 生成）
 screenshots/
 screenshots-prod/
+
+# 立绘评审素材：提示词、参考图与验证截图，体积大且只在本地用
+review-assets/

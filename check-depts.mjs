@@ -13,10 +13,10 @@ const BASE = process.env.TARGET ?? 'http://localhost:5173/yuna_sorting_hat/'
 const BANK_VERSION = 3
 const DRAW_SEED = 1
 const CASES = [
-  { dept: 'dev', code: 'aba', name: '开发部' },
-  { dept: 'sec', code: 'ddc', name: '网络安全部' },
-  { dept: 'ops', code: 'bad', name: '运维部' },
-  { dept: 'pr', code: 'ccb', name: '组宣部' },
+  { dept: 'dev', code: 'abaccdabccaa', name: '开发部' },
+  { dept: 'sec', code: 'ddcdacbadbbc', name: '网络安全部' },
+  { dept: 'ops', code: 'badbbaccbadd', name: '运维部' },
+  { dept: 'pr', code: 'ccbadbddadcb', name: '组宣部' },
 ]
 
 const browser = await chromium.launch({ channel: 'msedge' })

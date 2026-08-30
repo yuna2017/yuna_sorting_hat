@@ -45,10 +45,10 @@ name: TODO
 
 ### 题库版本与兼容
 
-- [x] 定义当前题库为 `v1`
-- [x] 在 `src/data/campaign.ts` 中记录 `bankVersion` 与 `releaseDate`（`campaign.test.ts` 强制 `bankVersion === QUESTION_BANK.version`）
-- [ ] 确保题目、选项 ID、权重、决胜规则在**整个招新期**都不改动
-- [ ] 如招新期后要改题库，必须分配新的版本号并保留 v1 的兼容解码逻辑
+- [x] 定义当前题库为 `v3`（槽位化：12 槽 × 2 候选，每场抽 12 题）
+- [x] 在 `src/data/campaign.ts` 中记录 `bankVersion` 与 `releaseDate`（`campaign.test.ts` 强制 `bankVersion === QUESTION_POOL.version`）
+- [ ] 确保槽位数、选项 ID、权重、决胜规则在**整个招新期**都不改动
+- [x] ~~保留 v1 的兼容解码逻辑~~ —— 已废除：v1/v2 都没正式发布过，v3 直接拒绝旧链接
 
 ---
 
@@ -57,7 +57,7 @@ name: TODO
 ### 分享卡设计与发布
 
 - [ ] 设计结果分享卡：包含部门名称、立绘、关键词、结果文案
-- [ ] 展示雷达图并标注 50 分参考线（用于阅读，不参与计算）
+- [ ] ~~展示雷达图并标注 50 分参考线~~ —— 待作废：雷达图将从 4 部门轴改为 5 特质轴，`RADAR_REFERENCE_MAX` 一并重定
 - [ ] 分享卡二维码优先指向可复现结果链接或官网测试入口
 - [ ] 公共招新二维码作为第二行动入口，不使用个人邀请链接
 - [ ] 支持保存图片；剪贴板受限时提供下载降级
@@ -77,8 +77,9 @@ name: TODO
 - [x] 检查部门字段结构；草稿状态作为上线提示
 - [x] 检查已填写入口是否为公开 http(s) URL
 - [x] 检查题目、选项、部门、行动 ID 的唯一性（`validateBank.ts` + `validateContent.ts`）
-- [x] 检查题目数（10）、满分（30）、决胜题（q10）与代码一致（`validateBank.test.ts`）
-- [x] 检查文档声明的版本号与代码版本配置一致（`campaign.test.ts` 对比 `CAMPAIGN.bankVersion` 与 `QUESTION_BANK.version`）
+- [x] 检查抽题数（12）、满分（36）、决胜槽（q12）与代码一致（`validateBank.test.ts`）
+- [x] 穷举全部抽题组合（≤4096），确保任何一组抽法都满足题库不变量（`validateQuestionPool` 的 `subset-*` 规则）
+- [x] 检查文档声明的版本号与代码版本配置一致（`campaign.test.ts` 对比 `CAMPAIGN.bankVersion` 与 `QUESTION_POOL.version`）
 - [x] 将内容检查接入 CI（测试 → 内容检查 → 构建）
 
 ---

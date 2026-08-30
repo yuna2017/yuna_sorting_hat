@@ -18,7 +18,7 @@ const VIEWPORTS = [320, 360, 390, 412]
 /* 必须跟 src/data/questions.ts 对齐：抽题数（槽位数）= 分享码长度，v = QUESTION_POOL.version。
    当前 v3 槽位化阶段共 3 槽（q1/q2/q12），补齐到 12 槽时改这两个数。
    DRAW_SEED 是抽题种子：v3 起分享链接必须带 &s=，否则无法重建对方做过的那组题。 */
-const QUESTION_COUNT = 3
+const QUESTION_COUNT = 12
 const BANK_VERSION = 3
 const DRAW_SEED = 1
 
@@ -170,10 +170,10 @@ await reducedCtx.close()
 // ---- 四个部门：用分享链接逐个验主题换肤、立绘加载与判定 ----
 
 const CASES = [
-  { dept: 'dev', code: 'aba', name: '开发部' },
-  { dept: 'sec', code: 'ddc', name: '网络安全部' },
-  { dept: 'ops', code: 'bad', name: '运维部' },
-  { dept: 'pr', code: 'ccb', name: '组宣部' },
+  { dept: 'dev', code: 'abaccdabccaa', name: '开发部' },
+  { dept: 'sec', code: 'ddcdacbadbbc', name: '网络安全部' },
+  { dept: 'ops', code: 'badbbaccbadd', name: '运维部' },
+  { dept: 'pr', code: 'ccbadbddadcb', name: '组宣部' },
 ]
 
 console.log('\n四个部门：')
