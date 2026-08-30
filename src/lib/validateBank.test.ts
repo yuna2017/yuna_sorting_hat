@@ -1,18 +1,60 @@
 import { describe, expect, it } from 'vitest'
 import { OPTION_TRAIT_BUDGET, TRAIT_ORDER } from '../data/constants'
-import { QUESTION_BANK, reportUnfilledOptionDetail } from '../data/questions'
-import type { QuestionBank } from '../data/questions'
-import { formatViolations, validateQuestionBank } from './validateBank'
+import { QUESTION_POOL, poolQuestions, reportUnfilledOptionDetail } from '../data/questions'
+import type { QuestionBank, QuestionPool } from '../data/questions'
+import { drawBank } from './drawQuestions'
+import { formatViolations, validateQuestionBank, validateQuestionPool } from './validateBank'
+
+/** 固定种子抽出一场题目，让「一场题」的断言可复现。 */
+const QUESTION_BANK = drawBank(1)
 
 /**
  * 基线从题库自身派生，不写死 10/40 之类的数字 ——
  * v1→v2 那次改题正是因为这些常量散在各个测试里，改一次要追七处。
  */
 const QUESTION_COUNT = QUESTION_BANK.questions.length
-const OPTION_COUNT = QUESTION_COUNT * 4
+const POOL_OPTION_COUNT = poolQuestions().length * 4
 
-describe('题库不变量', () => {
-  it('现有题库零违规', () => {
+describe('题池不变量', () => {
+  it('现有题池零违规（含所有可能的抽题组合）', () => {
+    // 这条是题池化后最重要的一条：validateQuestionPool 会穷举每一种抽法，
+    // 「碰巧抽到一组失衡的题」这种偶发失败必须在测试里就被摁死。
+    const violations = validateQuestionPool(QUESTION_POOL)
+    expect(violations, `\n${formatViolations(violations)}`).toEqual([])
+  })
+
+  it('题池版本为 3', () => {
+    // 分享链接的 ?v= 用的就是这个值。改题库不改版本，旧链接会被新题库误读。
+    expect(QUESTION_POOL.version).toBe(3)
+  })
+
+  it('恰好一个决胜槽，且排在最后', () => {
+    const deciderSlots = QUESTION_POOL.slots.filter((s) => s.kind === 'decider')
+    expect(deciderSlots).toHaveLength(1)
+    expect(deciderSlots[0]?.id).toBe(QUESTION_POOL.slots.at(-1)?.id)
+  })
+
+  it('每槽候选数一致 —— 否则某些槽的题被抽中的概率不同', () => {
+    const counts = new Set(QUESTION_POOL.slots.map((s) => s.candidates.length))
+    expect(counts.size).toBe(1)
+  })
+
+  it(`${POOL_OPTION_COUNT} 处选项点评已全部补齐`, () => {
+    expect(reportUnfilledOptionDetail()).toEqual([])
+  })
+
+  it('每个选项的特质权重和恒为预算值', () => {
+    for (const q of poolQuestions()) {
+      for (const o of q.options) {
+        const sum = TRAIT_ORDER.reduce((acc, t) => acc + (o.traits[t] ?? 0), 0)
+        expect(sum, `${q.id}${o.id}`).toBe(OPTION_TRAIT_BUDGET)
+      }
+    }
+  })
+})
+
+describe('抽出的一场题', () => {
+  it('零违规', () => {
     const violations = validateQuestionBank(QUESTION_BANK)
     expect(violations, `\n${formatViolations(violations)}`).toEqual([])
   })
@@ -24,32 +66,58 @@ describe('题库不变量', () => {
     }
   })
 
-  it('恰好标记了一道决胜题，且是最后一题', () => {
+  it('恰好带一道决胜题，且是最后一题', () => {
     const deciders = QUESTION_BANK.questions.filter((q) => q.decider)
     expect(deciders).toHaveLength(1)
     expect(deciders[0]?.id).toBe(QUESTION_BANK.questions.at(-1)?.id)
   })
-
-  it('题库版本为 2', () => {
-    // 分享链接的 ?v= 用的就是这个值。改题库不改版本，旧链接会被新题库误读。
-    expect(QUESTION_BANK.version).toBe(2)
-  })
-
-  it(`${OPTION_COUNT} 处选项点评已全部补齐`, () => {
-    expect(reportUnfilledOptionDetail()).toEqual([])
-  })
-
-  it('每个选项的特质权重和恒为预算值', () => {
-    for (const q of QUESTION_BANK.questions) {
-      for (const o of q.options) {
-        const sum = TRAIT_ORDER.reduce((acc, t) => acc + (o.traits[t] ?? 0), 0)
-        expect(sum, `${q.id}${o.id}`).toBe(OPTION_TRAIT_BUDGET)
-      }
-    }
-  })
 })
 
 // ---- 校验器本身必须真的能抓出坏题库 ----
+
+/** 深拷贝一份可以随便改坏的题池。 */
+function clonePool(): QuestionPool {
+  return structuredClone(QUESTION_POOL)
+}
+
+/** 改坏题池之后触发了哪些规则。 */
+function poolRulesOf(pool: QuestionPool): string[] {
+  return validateQuestionPool(pool).map((v) => v.rule)
+}
+
+describe('校验器能抓出坏题池：槽位结构', () => {
+  it('抓出空槽', () => {
+    const pool = clonePool()
+    pool.slots[0]!.candidates = []
+    expect(poolRulesOf(pool)).toContain('slot-not-empty')
+  })
+
+  it('抓出槽位 id 重复', () => {
+    const pool = clonePool()
+    pool.slots[1]!.id = pool.slots[0]!.id
+    expect(poolRulesOf(pool)).toContain('unique-slot-id')
+  })
+
+  it('抓出决胜标记落在普通槽上', () => {
+    const pool = clonePool()
+    pool.slots[0]!.candidates[0]!.decider = true
+    expect(poolRulesOf(pool)).toContain('slot-decider-consistent')
+  })
+
+  it('抓出候选题没覆盖本槽的观察轴', () => {
+    const pool = clonePool()
+    const slot = pool.slots.find((s) => s.axis !== null)!
+    // 把整槽的特质全压到一个轴上 → 这个槽不再能分辨它声明的两个特质
+    for (const q of slot.candidates) {
+      for (const o of q.options) {
+        o.traits = { [slot.axis![0]]: OPTION_TRAIT_BUDGET }
+      }
+    }
+    expect(poolRulesOf(pool)).toContain('slot-axis-consistent')
+  })
+})
+
+// ---- 单场题库层的规则 ----
 
 /** 深拷贝一份可以随便改坏的题库。 */
 function cloneBank(): QuestionBank {

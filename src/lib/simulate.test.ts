@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import { DEPT_ORDER, PRIMARY_WEIGHT, SECONDARY_WEIGHT } from '../data/constants'
-import { QUESTION_BANK } from '../data/questions'
+import { drawBank } from './drawQuestions'
 import { formatSimulationReport, simulateBank } from './simulate'
+
+/** 固定种子抽出一场题目，让均分基线可复现。 */
+const QUESTION_BANK = drawBank(1)
 
 /**
  * 随机作答下每个部门的理论均分：每题四选项里有一个主推它、一个副推它，

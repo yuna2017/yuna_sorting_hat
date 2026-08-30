@@ -1,11 +1,14 @@
 import { describe, expect, it } from 'vitest'
 import { DEPT_ORDER } from '../data/constants'
 import type { DeptId } from '../data/constants'
-import { QUESTION_BANK } from '../data/questions'
+import { drawBank } from './drawQuestions'
 import { explainVerdict } from './explain'
 import { deriveBehaviorIdentity } from './identity'
 import { resolveWinner } from './scoring'
 import type { AnswerMap } from './scoring'
+
+/** 固定种子抽出一场题目，让断言可复现。 */
+const QUESTION_BANK = drawBank(1)
 
 function answersAllPrimary(dept: DeptId): AnswerMap {
   const answers: AnswerMap = {}

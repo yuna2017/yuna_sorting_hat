@@ -1,6 +1,6 @@
 import { SortingHat } from '../components/SortingHat'
 import { CAMPAIGN } from '../data/campaign'
-import { QUESTION_BANK } from '../data/questions'
+import { drawSize } from '../lib/drawQuestions'
 
 interface CoverScreenProps {
   onStart: () => void
@@ -31,8 +31,9 @@ export function CoverScreen({ onStart }: CoverScreenProps) {
         </div>
 
         <p className="max-w-xs text-sm leading-relaxed text-parchment-dim">
-          {/* 题数从题库派生 —— 写死「十个问题」的那版在题库换成 12 题后就开始骗人了。 */}
-          {QUESTION_BANK.questions.length} 个问题，没有对错。
+          {/* 报的是**抽题数**，不是题池总量 —— 池子里有几十道题，但用户只会答其中 12 道。
+              写死「十个问题」的那版在题库换成 12 题后就开始骗人了。 */}
+          {drawSize()} 个问题，没有对错。
           <br />
           回答完，帽子会告诉你该去哪。
         </p>

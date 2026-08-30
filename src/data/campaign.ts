@@ -8,7 +8,7 @@ export interface CampaignConfig {
   publicJoinUrl: string | null
   siteUrl: string | null
   /**
-   * 本届招新使用的题库版本，必须等于 QUESTION_BANK.version。
+   * 本届招新使用的题库版本，必须等于 QUESTION_POOL.version。
    * 分享链接的 ?v= 用的是题库版本，这里再记一次是为了让「本届跑的是哪版题」
    * 有一处人读得懂的记录 —— 不一致会被 campaign.test.ts 拦下。
    */
@@ -27,6 +27,6 @@ export const CAMPAIGN: CampaignConfig = {
   status: 'open',
   publicJoinUrl: 'https://qm.qq.com/q/1DSuxKBV5a',
   siteUrl: 'https://www.yuna.team',
-  bankVersion: 2,
+  bankVersion: 3,
   releaseDate: '2026-08-30',
 }

@@ -5,10 +5,13 @@ import { chromium } from 'playwright'
 
 const BASE = process.env.TARGET ?? 'http://localhost:5173/yuna_sorting_hat/'
 
-/* 分享码必须跟 src/data/questions.ts 对齐：码长 = 题数，v = QUESTION_BANK.version。
+/* 分享码必须跟 src/data/questions.ts 对齐：码长 = 抽题数（槽位数），v = QUESTION_POOL.version。
    题库一改这里就得重算 —— 每位是「该题主推目标部门的那个选项 id」。
-   当前 v2 样题阶段共 3 题（q1/q2/q12）。 */
-const BANK_VERSION = 2
+   s = 抽题种子：v3 起题目从池子里抽，没有种子就不知道对方做的是哪几道题。
+   当前 v3 槽位化阶段共 3 槽（q1/q2/q12），每槽只有 1 道候选，所以任何种子抽出的
+   都是同一组题、答案码不变；每槽补到 2 道候选之后，这四行码必须按固定种子重推。 */
+const BANK_VERSION = 3
+const DRAW_SEED = 1
 const CASES = [
   { dept: 'dev', code: 'aba', name: '开发部' },
   { dept: 'sec', code: 'ddc', name: '网络安全部' },
@@ -33,7 +36,9 @@ for (const c of CASES) {
     if (r.status() >= 400) problems.push(`HTTP ${r.status()}: ${r.url()}`)
   })
 
-  await page.goto(`${BASE}?v=${BANK_VERSION}&a=${c.code}`, { waitUntil: 'domcontentloaded' })
+  await page.goto(`${BASE}?v=${BANK_VERSION}&s=${DRAW_SEED.toString(36)}&a=${c.code}`, {
+    waitUntil: 'domcontentloaded',
+  })
   await page.locator('h1').waitFor({ timeout: 15000 })
   await page.waitForTimeout(700)
 

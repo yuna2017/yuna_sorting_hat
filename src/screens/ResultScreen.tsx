@@ -5,7 +5,7 @@ import { ShareBar } from '../components/ShareBar'
 import { DepartmentStoryPanel } from '../components/DepartmentStoryPanel'
 import { DEPARTMENTS, DEPT_LIST } from '../data/departments'
 import { CAMPAIGN } from '../data/campaign'
-import { QUESTION_BANK } from '../data/questions'
+import type { QuestionBank } from '../data/questions'
 import { explainVerdict, verdictStrength } from '../lib/explain'
 import { deriveBehaviorIdentity } from '../lib/identity'
 import type { AnswerMap, Verdict } from '../lib/scoring'
@@ -13,6 +13,13 @@ import { buildShareText, buildShareUrl } from '../lib/shareCode'
 import resultBackground from '../assets/auxillary/result_background.webp'
 
 interface ResultScreenProps {
+  /**
+   * 这一场实际答的题。必须由 App 传入，不能自己去 import 题池 ——
+   * 满分、证据、身份判定都按「这 12 道题」算，拿池子里全部题目当分母会全线偏低。
+   */
+  bank: QuestionBank
+  /** 抽题种子。分享链接必须带上它，别人才能重建出同一组题。 */
+  drawSeed: number
   verdict: Verdict
   /** 当前答案。用于生成分享链接与「为什么是这个部门」的证据。 */
   answers: AnswerMap
@@ -50,19 +57,19 @@ const REASON_COPY = {
 /** 招新入口的排序与主次。join 是转化终点，永远排第一且用主按钮。 */
 const ACTION_ORDER = ['join', 'more', 'works'] as const
 
-function shareUrlOf(answers: AnswerMap): string {
+function shareUrlOf(bank: QuestionBank, drawSeed: number, answers: AnswerMap): string {
   if (typeof window === 'undefined') return ''
-  return buildShareUrl(QUESTION_BANK, answers, window.location.origin, window.location.pathname)
+  return buildShareUrl(bank, drawSeed, answers, window.location.origin, window.location.pathname)
 }
 
-export function ResultScreen({ verdict, answers, onRestart }: ResultScreenProps) {
+export function ResultScreen({ bank, drawSeed, verdict, answers, onRestart }: ResultScreenProps) {
   const dept = DEPARTMENTS[verdict.winner]
   const hesitated = verdict.tiedWith.length > 0
-  const explanation = explainVerdict(QUESTION_BANK, answers, verdict)
-  const strength = verdictStrength(QUESTION_BANK, explanation)
-  const identity = deriveBehaviorIdentity(QUESTION_BANK, answers, verdict, explanation)
+  const explanation = explainVerdict(bank, answers, verdict)
+  const strength = verdictStrength(bank, explanation)
+  const identity = deriveBehaviorIdentity(bank, answers, verdict, explanation)
 
-  const shareUrl = shareUrlOf(answers)
+  const shareUrl = shareUrlOf(bank, drawSeed, answers)
   const actions = [...dept.actions].sort(
     (a, b) => ACTION_ORDER.indexOf(a.kind) - ACTION_ORDER.indexOf(b.kind),
   )

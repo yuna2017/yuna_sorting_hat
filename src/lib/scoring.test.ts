@@ -3,7 +3,7 @@ import { DEPT_ORDER, PRIMARY_WEIGHT, SECONDARY_WEIGHT } from '../data/constants'
 import type { DeptId } from '../data/constants'
 import { DEPARTMENTS } from '../data/departments'
 import { RADAR_REFERENCE_MAX } from '../components/RadarChart'
-import { QUESTION_BANK } from '../data/questions'
+import { drawBank } from './drawQuestions'
 import type { OptionId, QuestionBank, QuizOption } from '../data/questions'
 import type { AnswerMap, TieBreakStage } from './scoring'
 import {
@@ -18,6 +18,9 @@ import {
 } from './scoring'
 
 const OPTION_IDS: readonly OptionId[] = ['a', 'b', 'c', 'd']
+
+/** 固定种子抽出一场题目，让断言可复现。 */
+const QUESTION_BANK = drawBank(1)
 
 /**
  * 基线从题库派生。题数改一次就要追改七处硬编码数字的日子已经过去了。
@@ -104,22 +107,59 @@ describe('满分与归一化', () => {
 })
 
 describe('手算样例', () => {
-  it('q1=a, q2=c 的得分逐项对得上', () => {
-    // q1a: dev+3 ops+1 ／ q2c: pr+3 dev+1
-    const answers: AnswerMap = { q1: 'a', q2: 'c' }
-    expect(tally(QUESTION_BANK, answers)).toEqual({ dev: 4, sec: 0, ops: 1, pr: 3 })
-    expect(primaryPickCounts(QUESTION_BANK, answers)).toEqual({
+  /**
+   * 用合成题库而不是真题库：题池化之后「第一题是哪道题」由种子决定，
+   * 把 q1a 的 p/s 写进断言等于把测试钉在某一次抽题结果上。
+   * 这里要验的是 tally 的加权逻辑，跟具体题面无关。
+   */
+  const bank: QuestionBank = {
+    version: 1,
+    questions: [
+      {
+        id: 'm1',
+        title: 'A',
+        scene: 'A',
+        options: [
+          opt('a', 'dev', 'ops'),
+          opt('b', 'sec', 'pr'),
+          opt('c', 'ops', 'dev'),
+          opt('d', 'pr', 'sec'),
+        ],
+      },
+      {
+        id: 'm2',
+        title: 'B',
+        scene: 'B',
+        options: [
+          opt('a', 'dev', 'sec'),
+          opt('b', 'sec', 'ops'),
+          opt('c', 'pr', 'dev'),
+          opt('d', 'ops', 'pr'),
+        ],
+      },
+    ],
+  }
+
+  it('m1=a, m2=c 的得分逐项对得上', () => {
+    // m1a: dev+3 ops+1 ／ m2c: pr+3 dev+1
+    const answers: AnswerMap = { m1: 'a', m2: 'c' }
+    expect(tally(bank, answers)).toEqual({ dev: 4, sec: 0, ops: 1, pr: 3 })
+    expect(primaryPickCounts(bank, answers)).toEqual({
       dev: 1,
       sec: 0,
       ops: 0,
       pr: 1,
     })
-    expect(isComplete(QUESTION_BANK, answers)).toBe(false)
+    expect(isComplete(bank, answers)).toBe(true)
+  })
+
+  it('漏答时 isComplete 为假', () => {
+    expect(isComplete(bank, { m1: 'a' })).toBe(false)
   })
 
   it('非法选项 id 视为未作答，不计分也不抛错', () => {
-    const answers = { q1: 'z' } as unknown as AnswerMap
-    expect(tally(QUESTION_BANK, answers)).toEqual(emptyScores())
+    const answers = { m1: 'z' } as unknown as AnswerMap
+    expect(tally(bank, answers)).toEqual(emptyScores())
   })
 })
 

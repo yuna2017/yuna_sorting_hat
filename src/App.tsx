@@ -4,16 +4,17 @@ import { OpeningScreen } from './screens/OpeningScreen'
 import { QuizScreen } from './screens/QuizScreen'
 import { RevealScreen } from './screens/RevealScreen'
 import { ResultScreen } from './screens/ResultScreen'
-import { QUESTION_BANK, reportUnfilledOptionDetail } from './data/questions'
+import { QUESTION_POOL, reportUnfilledOptionDetail } from './data/questions'
 import type { OptionId } from './data/questions'
 import { reportUnfilledCopy } from './data/departments'
 import { CAMPAIGN } from './data/campaign'
-import { assertBankInDev } from './lib/validateBank'
+import { assertPoolInDev } from './lib/validateBank'
 import { formatContentViolations, validateDepartmentContent } from './lib/validateContent'
 import { createSessionSeed } from './lib/seededShuffle'
+import { createDrawSeed, drawBank } from './lib/drawQuestions'
 import { isComplete, resolveWinner } from './lib/scoring'
 import type { AnswerMap } from './lib/scoring'
-import { readShareCodeFromUrl } from './lib/shareCode'
+import { readSharePayloadFromUrl } from './lib/shareCode'
 import hatHero from './assets/hat/hat_a_storybook.webp'
 import hatIdle from './assets/hat/hat_idle.webp'
 import hatThinking from './assets/hat/hat_thinking.webp'
@@ -41,9 +42,9 @@ const PRELOAD_ASSETS = [
 /** 'reveal' 是答完最后一题后的分院仪式，只延迟揭晓，不参与判定。 */
 type Phase = 'cover' | 'opening' | 'quiz' | 'reveal' | 'result'
 
-/* 开发期自检：题库不变量 + 还没填的事实文案，直接打在控制台。
+/* 开发期自检：题池不变量 + 还没填的事实文案，直接打在控制台。
    权威闸门是 vitest；这里是给「改了题但没跑测试」的人兜底。 */
-assertBankInDev(QUESTION_BANK, [...reportUnfilledCopy(), ...reportUnfilledOptionDetail()])
+assertPoolInDev(QUESTION_POOL, [...reportUnfilledCopy(), ...reportUnfilledOptionDetail()])
 
 if (import.meta.env.DEV) {
   const contentViolations = validateDepartmentContent()
@@ -57,25 +58,35 @@ if (import.meta.env.DEV && CAMPAIGN.status === 'open' && CAMPAIGN.publicJoinUrl 
 }
 
 export default function App() {
-  const questions = QUESTION_BANK.questions
-
-  /* 分享链接接缝：URL 带合法 ?v=1&a= 时直接落到结果页。
-     不引路由 —— 四屏是线性流程，而 GH Pages 是纯静态无 rewrite，
-     BrowserRouter 的深链/刷新会 404。 */
+  /* 分享链接接缝：URL 带合法 ?v=3&s=<种子>&a=<答案码> 时直接落到结果页。
+     不引路由 —— 五屏是线性流程，而 GH Pages 是纯静态无 rewrite，
+     BrowserRouter 的深链/刷新会 404。
+     种子必须先于题目读出来：题库是池子，不知道种子就不知道对方做的是哪 12 道题。 */
   const shared = useMemo(
     () =>
-      typeof window === 'undefined'
-        ? null
-        : readShareCodeFromUrl(QUESTION_BANK, window.location.search),
+      typeof window === 'undefined' ? null : readSharePayloadFromUrl(window.location.search),
     [],
   )
-  const sharedComplete = shared !== null && isComplete(QUESTION_BANK, shared)
+  const sharedComplete = shared !== null && isComplete(shared.bank, shared.answers)
 
   const [phase, setPhase] = useState<Phase>(sharedComplete ? 'result' : 'cover')
-  const [answers, setAnswers] = useState<AnswerMap>(() => (sharedComplete ? shared : {}))
+  const [answers, setAnswers] = useState<AnswerMap>(() =>
+    sharedComplete && shared !== null ? shared.answers : {},
+  )
   const [index, setIndex] = useState(0)
   /** 会话种子：整场答题只生成一次，决定选项显示顺序。不参与判定。 */
   const [sessionSeed, setSessionSeed] = useState(createSessionSeed)
+  /**
+   * 抽题种子：决定这一场从题池里抽出哪 12 道题。**参与判定**，因此必须进分享链接。
+   * 打开别人的结果时沿用对方的种子，否则解出来的答案会对错题。
+   */
+  const [drawSeed, setDrawSeed] = useState(() =>
+    sharedComplete && shared !== null ? shared.seed : createDrawSeed(),
+  )
+
+  /** 这一场实际用到的题目，包装成题库形状交给下游 —— 满分与特质上限都按这 12 道题算。 */
+  const bank = useMemo(() => drawBank(drawSeed), [drawSeed])
+  const questions = bank.questions
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -89,7 +100,7 @@ export default function App() {
     PRELOAD_ASSETS.forEach(preloadImage)
   }, [])
 
-  const verdict = useMemo(() => resolveWinner(QUESTION_BANK, answers), [answers])
+  const verdict = useMemo(() => resolveWinner(bank, answers), [bank, answers])
 
   // 换屏/换题时回到页顶，否则移动端会停在上一屏的滚动位置
   useEffect(() => {
@@ -125,6 +136,8 @@ export default function App() {
     setAnswers({})
     setIndex(0)
     setSessionSeed(createSessionSeed())
+    // 重抽题：重来一次要换一批题，否则「随机题库」对同一个人只随机了一次
+    setDrawSeed(createDrawSeed())
     setPhase('cover')
     // 清掉分享参数，否则刷新会又跳回别人的结果
     if (typeof window !== 'undefined' && window.location.search !== '') {
@@ -165,5 +178,13 @@ export default function App() {
     return <RevealScreen verdict={verdict} onDone={handleRevealDone} />
   }
 
-  return <ResultScreen verdict={verdict} answers={answers} onRestart={handleRestart} />
+  return (
+    <ResultScreen
+      bank={bank}
+      drawSeed={drawSeed}
+      verdict={verdict}
+      answers={answers}
+      onRestart={handleRestart}
+    />
+  )
 }

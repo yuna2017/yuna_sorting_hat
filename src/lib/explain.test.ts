@@ -1,10 +1,16 @@
 import { describe, expect, it } from 'vitest'
 import { DEPT_ORDER } from '../data/constants'
 import type { DeptId } from '../data/constants'
-import { QUESTION_BANK } from '../data/questions'
+import { drawBank } from './drawQuestions'
 import { explainVerdict, verdictStrength } from './explain'
 import { resolveWinner } from './scoring'
 import type { AnswerMap } from './scoring'
+
+/**
+ * 固定种子抽出一场题目。种子写死是为了让断言可复现 ——
+ * 「任意一次抽题都合法」由 validateBank.test.ts 穷举保证，这里只关心解释逻辑。
+ */
+const QUESTION_BANK = drawBank(1)
 
 /** 全选主推某部门的答案。 */
 function answersAllPrimary(dept: DeptId): AnswerMap {

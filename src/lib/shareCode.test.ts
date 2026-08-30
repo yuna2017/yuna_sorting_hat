@@ -2,22 +2,27 @@ import { describe, expect, it } from 'vitest'
 import { DEPT_ORDER } from '../data/constants'
 import type { DeptId } from '../data/constants'
 import { DEPARTMENTS } from '../data/departments'
-import { QUESTION_BANK } from '../data/questions'
+import { QUESTION_POOL } from '../data/questions'
+import { drawBank } from './drawQuestions'
 import { isComplete, resolveWinner } from './scoring'
 import type { AnswerMap } from './scoring'
 import {
   buildShareText,
   buildShareUrl,
-  readSharePayloadFromUrl,
   decodeAnswers,
   encodeAnswers,
-  readShareCodeFromUrl,
+  readSharePayloadFromUrl,
 } from './shareCode'
 
 /**
- * 码长与版本号都从题库派生。写死数字的代价已经付过一次 ——
- * v1→v2 改题时这个文件里的 '10 位' 和 'v=1' 全部要手改。
+ * v3 起分享链接由三段构成：?v=<题库版本>&s=<抽题种子>&a=<答案码>。
+ * 种子是新增的必需项 —— 题库变成池子之后，光有答案码无法知道对方做的是哪 12 道题。
  */
+const SEED = 1
+const QUESTION_BANK = drawBank(SEED)
+const SEED_CODE = SEED.toString(36)
+
+/** 码长与版本号都从题库派生，不写死数字。 */
 const CODE_LENGTH = QUESTION_BANK.questions.length
 const VERSION = QUESTION_BANK.version
 
@@ -30,6 +35,11 @@ function answersAllPrimary(dept: DeptId): AnswerMap {
     answers[q.id] = option.id
   }
   return answers
+}
+
+/** 按 v3 格式手搓一个查询串。 */
+function searchOf(answers: AnswerMap, seed = SEED, version = VERSION): string {
+  return `?v=${version}&s=${seed.toString(36)}&a=${encodeAnswers(QUESTION_BANK, answers)}`
 }
 
 describe('分享码编解码', () => {
@@ -76,38 +86,66 @@ describe('分享码编解码', () => {
     const code = encodeAnswers(QUESTION_BANK, answers)
     expect(decodeAnswers(QUESTION_BANK, `  ${code.toUpperCase()} `)).toEqual(answers)
   })
+})
 
-  it('从 URL 查询串读码', () => {
+describe('从 URL 读分享载荷', () => {
+  it('读出版本、种子与答案，并顺带把题目重建好', () => {
+    const answers = answersAllPrimary('ops')
+    const payload = readSharePayloadFromUrl(searchOf(answers))
+
+    expect(payload).not.toBeNull()
+    expect(payload!.version).toBe(VERSION)
+    expect(payload!.seed).toBe(SEED)
+    expect(payload!.answers).toEqual(answers)
+    // 重建出的题目必须与本地同种子抽出的完全一致，否则答案会对错题
+    expect(payload!.bank.questions.map((q) => q.id)).toEqual(
+      QUESTION_BANK.questions.map((q) => q.id),
+    )
+  })
+
+  it('缺参数、乱码、空串一律返回 null', () => {
     const answers = answersAllPrimary('ops')
     const code = encodeAnswers(QUESTION_BANK, answers)
-    expect(readSharePayloadFromUrl(QUESTION_BANK, `?v=${VERSION}&a=${code}`)).toEqual({
-      version: VERSION,
-      answers,
-    })
-    expect(readShareCodeFromUrl(QUESTION_BANK, `?v=${VERSION}&a=${code}`)).toEqual(answers)
-    expect(readShareCodeFromUrl(QUESTION_BANK, '')).toBeNull()
-    expect(readShareCodeFromUrl(QUESTION_BANK, '?a=nonsense')).toBeNull()
+
+    expect(readSharePayloadFromUrl('')).toBeNull()
+    expect(readSharePayloadFromUrl('?a=nonsense')).toBeNull()
+    // 有码无版本 = v1/v2 的旧链接格式
+    expect(readSharePayloadFromUrl(`?a=${code}`)).toBeNull()
+    // 有版本有码但缺种子 → 不知道该抽哪些题，宁可不显示也不能猜
+    expect(readSharePayloadFromUrl(`?v=${VERSION}&a=${code}`)).toBeNull()
+    expect(readSharePayloadFromUrl(`?v=${VERSION}&s=&a=${code}`)).toBeNull()
+    expect(readSharePayloadFromUrl(`?v=${VERSION}&s=ZZZZZZZZZZ&a=${code}`)).toBeNull()
   })
 
-  it('拒绝其他版本的分享码（含无 v 参数的 v1 旧链接）', () => {
-    // v1 题库已废除，拿 v2 题库解释 v1 的码会得到一个「看起来正常但其实错」的结果。
-    const code = encodeAnswers(QUESTION_BANK, answersAllPrimary('ops'))
-    expect(readShareCodeFromUrl(QUESTION_BANK, `?a=${code}`)).toBeNull()
-    expect(readShareCodeFromUrl(QUESTION_BANK, `?v=1&a=${code}`)).toBeNull()
-    expect(readShareCodeFromUrl(QUESTION_BANK, `?v=${VERSION + 1}&a=${code}`)).toBeNull()
+  it('拒绝其他版本的分享码', () => {
+    // v1/v2 题库已废除，拿 v3 题池解释旧码会得到一个「看起来正常但其实错」的结果。
+    const answers = answersAllPrimary('ops')
+    expect(readSharePayloadFromUrl(searchOf(answers, SEED, 1))).toBeNull()
+    expect(readSharePayloadFromUrl(searchOf(answers, SEED, 2))).toBeNull()
+    expect(readSharePayloadFromUrl(searchOf(answers, SEED, VERSION + 1))).toBeNull()
   })
 
-  it('生成的链接带 base 路径且可被解析回来', () => {
+  it('版本号跟着题池走', () => {
+    expect(VERSION).toBe(QUESTION_POOL.version)
+  })
+})
+
+describe('分享链接与文案', () => {
+  it('生成的链接带 base 路径与种子，且可被解析回来', () => {
     const answers = answersAllPrimary('pr')
     const url = buildShareUrl(
       QUESTION_BANK,
+      SEED,
       answers,
       'https://example.github.io',
       '/yuna_sorting_hat/',
     )
     const code = encodeAnswers(QUESTION_BANK, answers)
-    expect(url).toBe(`https://example.github.io/yuna_sorting_hat/?v=${VERSION}&a=${code}`)
-    expect(readShareCodeFromUrl(QUESTION_BANK, new URL(url).search)).toEqual(answers)
+
+    expect(url).toBe(
+      `https://example.github.io/yuna_sorting_hat/?v=${VERSION}&s=${SEED_CODE}&a=${code}`,
+    )
+    expect(readSharePayloadFromUrl(new URL(url).search)?.answers).toEqual(answers)
   })
 
   it('分享链接还原后判定完全一致（分享不改结果）', () => {
@@ -115,23 +153,37 @@ describe('分享码编解码', () => {
       const answers = answersAllPrimary(dept)
       const url = buildShareUrl(
         QUESTION_BANK,
+        SEED,
         answers,
         'https://example.github.io',
         '/yuna_sorting_hat/',
       )
-      const restored = readShareCodeFromUrl(QUESTION_BANK, new URL(url).search)
-      expect(restored).not.toBeNull()
-      expect(isComplete(QUESTION_BANK, restored!)).toBe(true)
-      expect(resolveWinner(QUESTION_BANK, restored!)).toEqual(
+      const payload = readSharePayloadFromUrl(new URL(url).search)
+
+      expect(payload).not.toBeNull()
+      expect(isComplete(payload!.bank, payload!.answers)).toBe(true)
+      // 用载荷自带的 bank 判定 —— 这才是分享方真正答过的那组题
+      expect(resolveWinner(payload!.bank, payload!.answers)).toEqual(
         resolveWinner(QUESTION_BANK, answers),
       )
     }
+  })
+
+  it('换一个种子会抽出不同的一场题，各自的链接互不串味', () => {
+    const answers = answersAllPrimary('dev')
+    const urlA = buildShareUrl(QUESTION_BANK, 1, answers, 'https://e.io', '/x/')
+    const urlB = buildShareUrl(QUESTION_BANK, 2, answers, 'https://e.io', '/x/')
+
+    expect(urlA).not.toBe(urlB)
+    expect(readSharePayloadFromUrl(new URL(urlA).search)?.seed).toBe(1)
+    expect(readSharePayloadFromUrl(new URL(urlB).search)?.seed).toBe(2)
   })
 
   it('分享文案把链接单独放一行，QQ/微信才能完整识别', () => {
     const answers = answersAllPrimary('pr')
     const url = buildShareUrl(
       QUESTION_BANK,
+      SEED,
       answers,
       'https://example.github.io',
       '/yuna_sorting_hat/',
@@ -142,8 +194,8 @@ describe('分享码编解码', () => {
     const lines = text.split('\n')
     // 链接必须自己占满一行：夹在中文标点之间会被自动识别吃掉尾字符
     expect(lines[lines.length - 1]).toBe(url)
-    expect(readShareCodeFromUrl(QUESTION_BANK, new URL(lines[lines.length - 1]!).search)).toEqual(
-      answers,
-    )
+    expect(
+      readSharePayloadFromUrl(new URL(lines[lines.length - 1]!).search)?.answers,
+    ).toEqual(answers)
   })
 })

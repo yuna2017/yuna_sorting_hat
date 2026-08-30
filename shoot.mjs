@@ -15,10 +15,12 @@ const OUT = process.env.OUT ?? 'screenshots'
    只测 390 会漏掉 320 的横向溢出 —— 这是移动端最常见的翻车点。 */
 const VIEWPORTS = [320, 360, 390, 412]
 
-/* 必须跟 src/data/questions.ts 对齐：题数 = 分享码长度，v = QUESTION_BANK.version。
-   当前 v2 样题阶段共 3 题（q1/q2/q12），补齐到 12 题时改这两个数。 */
+/* 必须跟 src/data/questions.ts 对齐：抽题数（槽位数）= 分享码长度，v = QUESTION_POOL.version。
+   当前 v3 槽位化阶段共 3 槽（q1/q2/q12），补齐到 12 槽时改这两个数。
+   DRAW_SEED 是抽题种子：v3 起分享链接必须带 &s=，否则无法重建对方做过的那组题。 */
 const QUESTION_COUNT = 3
-const BANK_VERSION = 2
+const BANK_VERSION = 3
+const DRAW_SEED = 1
 
 const browser = await chromium.launch({ channel: 'msedge' })
 const context = await browser.newContext({
@@ -116,7 +118,10 @@ await page.getByRole('button', { name: '复制结果链接' }).click()
 await page.waitForTimeout(300)
 const copied = await page.getByRole('button', { name: /已复制链接/ }).isVisible()
 const clipboard = await page.evaluate(() => navigator.clipboard.readText().catch(() => ''))
-const codeOk = new RegExp(`\\?v=${BANK_VERSION}&a=[abcd]{${QUESTION_COUNT}}$`).test(clipboard)
+// 种子是随机生成的，只校验格式（base36，1~7 位），不校验具体值
+const codeOk = new RegExp(
+  `\\?v=${BANK_VERSION}&s=[0-9a-z]{1,7}&a=[abcd]{${QUESTION_COUNT}}$`,
+).test(clipboard)
 console.log(`  ${copied ? '✓' : '✗'} 复制后按钮变为「已复制」`)
 console.log(`  ${codeOk ? '✓' : '✗'} 剪贴板里是可复现的结果链接：${clipboard || '(空)'}`)
 
@@ -152,11 +157,13 @@ const startedAt = Date.now()
 await answerAll(rp)
 await rp.locator('h1').waitFor({ timeout: 8000 })
 const elapsed = Date.now() - startedAt
-// 测的是「十题手动推进 + 被压缩的仪式」。完整仪式约 5.4s，reduce 分支只留 0.6s，
-// 所以全程必须明显短于 5400ms —— 否则说明仪式没被压缩，用户在干等。
-const reducedOk = elapsed < 5400
+// 测的是「逐题手动推进 + 被压缩的仪式」。完整仪式约 5.0s，reduce 分支只留 0.6s。
+// 阈值按题数派生：每题给 300ms 的点击与切换余量，再加 600ms 仪式 + 900ms 兜底。
+// 写死 5400 的话，补到 12 题后这条断言会因为题变多而误报。
+const reducedBudget = QUESTION_COUNT * 300 + 1500
+const reducedOk = elapsed < reducedBudget
 console.log(
-  `  ${reducedOk ? '✓' : '✗'} 从最后一题到结果页 ${elapsed}ms（reduce 下应远小于 5400ms）`,
+  `  ${reducedOk ? '✓' : '✗'} 从开始到结果页 ${elapsed}ms（reduce 下应小于 ${reducedBudget}ms）`,
 )
 await reducedCtx.close()
 
@@ -181,7 +188,9 @@ for (const c of CASES) {
     if (r.status() >= 400) problems.push(`HTTP ${r.status()}: ${r.url()}`)
   })
 
-  await p.goto(`${BASE}?v=${BANK_VERSION}&a=${c.code}`, { waitUntil: 'domcontentloaded' })
+  await p.goto(`${BASE}?v=${BANK_VERSION}&s=${DRAW_SEED.toString(36)}&a=${c.code}`, {
+    waitUntil: 'domcontentloaded',
+  })
   await p.locator('h1').waitFor({ timeout: 15000 })
   await p.waitForTimeout(700)
 

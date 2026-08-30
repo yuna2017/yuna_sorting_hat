@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { TRAIT_ORDER } from '../data/constants'
 import type { TraitId } from '../data/constants'
-import { QUESTION_BANK } from '../data/questions'
+import { drawBank } from './drawQuestions'
 import type { OptionTraits, QuestionBank } from '../data/questions'
 import type { AnswerMap } from './scoring'
 import {
@@ -12,6 +12,9 @@ import {
   tallyTraits,
   traitCeilings,
 } from './traits'
+
+/** 固定种子抽出一场题目，让断言可复现。 */
+const QUESTION_BANK = drawBank(1)
 
 /**
  * 造一份最小题库。特质链路的边界（上限为 0、并列、未作答）在真题库里很难摆出来，
@@ -179,7 +182,10 @@ describe('rankTraits', () => {
   })
 
   it('五个特质一个不漏', () => {
-    const profile = deriveProfile(QUESTION_BANK, { q1: 'a', q2: 'a', q12: 'a' })
+    // 题目 id 不写死 —— 抽题后具体是哪几道题由种子决定，写死 id 会在补候选题时失效
+    const answers: AnswerMap = {}
+    for (const q of QUESTION_BANK.questions) answers[q.id] = 'a'
+    const profile = deriveProfile(QUESTION_BANK, answers)
     const ranked: TraitId[] = rankTraits(profile)
     expect(ranked).toHaveLength(TRAIT_ORDER.length)
   })
