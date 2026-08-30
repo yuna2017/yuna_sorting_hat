@@ -223,6 +223,15 @@ body {
   animation: glow-pulse 3.4s ease-in-out infinite;
 }
 
+/* 冠军行的辉光（色点与量条共用）。和雷达多边形同读 --dept-glow，
+   两处读数才像同一个结果的两种画法。
+   用 box-shadow 而非 drop-shadow：都是实心块，不必栅格化整层。 */
+.winner-glow {
+  box-shadow:
+    0 0 6px rgb(var(--dept-glow) / 0.55),
+    0 0 14px rgb(var(--dept-glow) / 0.3);
+}
+
 /* 仪式中的帽子：极缓慢的呼吸式浮动，暗示「它在想」。
    幅度刻意很小 —— 过场只有五秒，大动作会显得吵。 */
 @keyframes hat-ponder {

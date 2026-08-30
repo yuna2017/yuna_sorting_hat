@@ -29,7 +29,7 @@ export function ScoreBars({ normalized, scores, maxScore, winner }: ScoreBarsPro
             {/* 色点：身份由它承担，所以文字可以保持文本色 */}
             <span
               aria-hidden="true"
-              className="size-2 shrink-0 rounded-full"
+              className={`size-2 shrink-0 rounded-full ${isWinner ? 'winner-glow' : ''}`}
               style={{
                 backgroundColor: isWinner ? 'var(--dept-accent)' : '#b9aa8b',
                 opacity: isWinner ? 1 : 0.55,
@@ -44,10 +44,14 @@ export function ScoreBars({ normalized, scores, maxScore, winner }: ScoreBarsPro
               {DEPARTMENTS[dept].name}
             </span>
 
-            {/* 量条：末端 4px 圆角，锚在基线上 */}
-            <span className="relative h-2 flex-1 overflow-hidden rounded-full bg-night-600/70">
+            {/* 量条：末端 4px 圆角，锚在基线上。
+                轨道刻意**不加 overflow-hidden** —— 填充块自身有 rounded-full 且宽度不超 100%，
+                本来无须裁剪；而裁剪会把冠军的辉光一起切掉。 */}
+            <span className="relative h-2 flex-1 rounded-full bg-night-600/70">
               <span
-                className="absolute inset-y-0 left-0 rounded-full transition-[width] duration-[900ms] ease-out"
+                className={`absolute inset-y-0 left-0 rounded-full transition-[width] duration-[900ms] ease-out ${
+                  isWinner ? 'winner-glow' : ''
+                }`}
                 style={{
                   width: `${Math.max(pct, 1.5)}%`,
                   backgroundColor: isWinner ? 'var(--dept-accent)' : '#b9aa8b',
