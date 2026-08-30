@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { QUESTION_BANK } from '../data/questions'
+import { DEPT_LIST } from '../data/departments'
+import { QUESTION_BANK, reportUnfilledOptionDetail } from '../data/questions'
 import type { QuestionBank } from '../data/questions'
 import { formatViolations, validateQuestionBank } from './validateBank'
 
@@ -29,6 +30,22 @@ describe('题库不变量', () => {
       for (const o of q.options) {
         expect(o.text.length, `${q.id}${o.id} 正文`).toBeGreaterThan(0)
         expect(o.whisper.length, `${q.id}${o.id} 低语`).toBeGreaterThan(0)
+      }
+    }
+  })
+
+  it('40 处选项点评已全部补齐', () => {
+    expect(reportUnfilledOptionDetail()).toEqual([])
+  })
+
+  it('选项点评不泄露部门名或关键词', () => {
+    // 红线：点评里出现部门名/关键词等于把答案映射印在卡片上。
+    const forbidden = DEPT_LIST.flatMap((d) => [d.name, d.latinName, ...d.keywords])
+    for (const q of QUESTION_BANK.questions) {
+      for (const o of q.options) {
+        const detail = o.detail ?? ''
+        const hit = forbidden.filter((word) => detail.includes(word))
+        expect(hit, `${q.id}${o.id} 点评泄露了 [${hit.join('、')}]`).toEqual([])
       }
     }
   })

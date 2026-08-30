@@ -46,7 +46,7 @@ name: TODO
 ### 题库版本与兼容
 
 - [x] 定义当前题库为 `v1`
-- [ ] 在 `src/data/campaign.ts` 或相应配置中记录：题库版本号、当前代码提交号、发布日期
+- [x] 在 `src/data/campaign.ts` 中记录 `bankVersion` 与 `releaseDate`（`campaign.test.ts` 强制 `bankVersion === QUESTION_BANK.version`）
 - [ ] 确保题目、选项 ID、权重、决胜规则在**整个招新期**都不改动
 - [ ] 如招新期后要改题库，必须分配新的版本号并保留 v1 的兼容解码逻辑
 
@@ -78,7 +78,7 @@ name: TODO
 - [x] 检查已填写入口是否为公开 http(s) URL
 - [x] 检查题目、选项、部门、行动 ID 的唯一性（`validateBank.ts` + `validateContent.ts`）
 - [x] 检查题目数（10）、满分（30）、决胜题（q10）与代码一致（`validateBank.test.ts`）
-- [ ] 检查文档声明的版本号与代码版本配置一致（题库版本目前只存在于文档约定，代码侧待补）
+- [x] 检查文档声明的版本号与代码版本配置一致（`campaign.test.ts` 对比 `CAMPAIGN.bankVersion` 与 `QUESTION_BANK.version`）
 - [x] 将内容检查接入 CI（测试 → 内容检查 → 构建）
 
 ---
@@ -87,17 +87,19 @@ name: TODO
 
 ### 帽子点评（选项说明卡文案）
 
-- [ ] 补齐 40 处选项 `detail` 文案（见 [题目.md](./题目.md)「帽子点评」一节，目前全空）
+- [x] 补齐 40 处选项 `detail` 文案（见 [题目.md](./题目.md)「帽子点评」一节）
   - 不评价高下、不暗示部门
   - 长度 2～3 行，语气延续帽子低语
   - 移动端 320px 下约 15 字/行
+- [x] 由 `validateBank.test.ts` 守住两条闸门：40 处全部填齐、点评不含部门名与关键词
+- [x] 清理 `OptionDetailCard.tsx` 的占位文案与开发提示条
 
 ### 行为身份
 
 - [x] 定义确定性的部门行为身份映射
 - [x] 身份由实际答案证据生成，不重新计算部门胜者
 - [x] 相同答案始终得到相同身份
-- [ ] 结果页同时展示部门、行为身份和第二高契合方向
+- [x] 结果页同时展示部门、行为身份和第二高契合方向（`ResultScreen.tsx` 身份卡 + runnerUp 一句）
 - [ ] 文案避免心理诊断和能力评判
 - [x] 为行为身份增加单元测试
 

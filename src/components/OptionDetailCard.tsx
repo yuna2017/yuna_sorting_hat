@@ -2,13 +2,6 @@ import { useEffect, useRef } from 'react'
 import { useTypewriter } from '../hooks/useTypewriter'
 import { prefersReducedMotion } from '../lib/motion'
 
-/**
- * 版式占位。真文案写进 questions.ts 的 detail 之后，
- * 这个常量连同下面那条开发提示一起删掉。
- */
-const DETAIL_PLACEHOLDER =
-  '（占位）帽子还在斟酌该怎么说这一条 —— 这里会写上它对这个选择的点评，两到三行。'
-
 interface OptionDetailCardProps {
   /** 供选项按钮的 aria-describedby 指向。 */
   id: string
@@ -61,11 +54,9 @@ export function OptionDetailCard({ id, whisper, detail, animate }: OptionDetailC
     return () => window.clearTimeout(timer)
   }, [animate])
 
-  /* 占位文案**只在开发期**出现：它的用途是让版式现在就能验收。
-     生产环境下 detail 还没写时，卡片就只有低语 —— 少一段，
-     总好过拿「（占位）」糊在招新页上。同 departments.ts 对 intro 的处理：
-     没填就不渲染该段，不留半截空白。 */
-  const showDetail = detail !== undefined || import.meta.env.DEV
+  /* detail 已全部写好（见 validateBank.test.ts 的「40 处选项点评已全部补齐」）。
+     万一将来加题忘了写，这里就只渲染低语 —— 少一段，
+     总好过拿占位文案糊在招新页上。同 departments.ts 对 intro 的处理。 */
 
   return (
     <div ref={ref} className="card-expand mt-1.5 scroll-mb-20">
@@ -87,17 +78,9 @@ export function OptionDetailCard({ id, whisper, detail, animate }: OptionDetailC
             <span className="sr-only">{whisper}</span>
           </p>
 
-          {showDetail && (
+          {detail !== undefined && (
             <p className="mt-3 border-t border-night-600/50 pt-3 text-[0.85rem] leading-relaxed text-parchment-dim break-words">
-              {detail ?? DETAIL_PLACEHOLDER}
-            </p>
-          )}
-
-          {/* 占位稿要自己承认是占位稿，但只在开发期说 ——
-              照 ResultScreen 的 contentDraft 提示同一套做法。 */}
-          {detail === undefined && import.meta.env.DEV && (
-            <p className="mt-3 rounded-lg border border-gold/30 bg-gold/5 px-3 py-2 text-[0.72rem] leading-relaxed text-gold-soft/85">
-              开发提示：本选项的点评还没写，上面是占位文案。真文案填进 questions.ts 的 detail。
+              {detail}
             </p>
           )}
         </div>
