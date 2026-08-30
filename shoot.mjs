@@ -98,7 +98,7 @@ await shot('5-result')
 
 // 结果页的新增分层是否都在
 const sections = await page.locator('h2').allInnerTexts()
-const wanted = ['帽子为什么这么判？', '四部门契合度', '关于', '感兴趣？', '分享你的结果']
+const wanted = ['帽子在你身上看见了什么？', '四部门契合度', '关于', '感兴趣？', '分享你的结果']
 const missingSections = wanted.filter((w) => !sections.some((s) => s.includes(w)))
 console.log(
   missingSections.length === 0
@@ -159,7 +159,7 @@ await reducedCtx.close()
 
 const CASES = [
   { dept: 'dev', code: 'acbddbabad', name: '开发部' },
-  { dept: 'sec', code: 'cadbbdcadb', name: '网安部' },
+  { dept: 'sec', code: 'cadbbdcadb', name: '网络安全部' },
   { dept: 'ops', code: 'bdacacbdcc', name: '运维部' },
   { dept: 'pr', code: 'dbcacadcba', name: '组宣部' },
 ]

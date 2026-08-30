@@ -29,7 +29,7 @@ export function OpeningScreen({ onContinue }: OpeningScreenProps) {
       className="starfield flex min-h-dvh flex-col items-center justify-center gap-6 px-6 py-9"
       onClick={done ? undefined : skip}
     >
-      <SortingHat className="w-20 shrink-0 sm:w-24" />
+      <SortingHat state="idle" className="w-20 shrink-0 sm:w-24" />
 
       <div className="flex min-h-[13rem] w-full max-w-md items-start justify-center sm:min-h-[14rem]">
         {/* 动画节点对读屏隐藏，另挂完整文本，避免逐字被念成乱码 */}

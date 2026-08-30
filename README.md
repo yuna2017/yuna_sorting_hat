@@ -8,10 +8,21 @@
 封面 → 开场 → 答题 → 分院仪式 → 结果 → 了解部门 → 招新入口 → 分享
 ```
 
-「结果」是中间节点而不是终点：用户看完要知道**为什么是这个部门**、
-**这个部门在做什么**、**接下来去哪报名**。
+**核心设计**：结果是中间节点而不是终点。用户看完要知道**为什么是这个部门**、**这个部门在做什么**、**接下来去哪报名**。
 
-策划文档在 [docs/](docs/)，入口见 [文档索引](docs/README.md) —— **`.md` 是唯一信息源**（`.docx` 只是同一份内容的导出件）。
+**权威文档**在 [docs/](docs/)。见 [文档索引](docs/README.md) —— **Markdown 是唯一信息源**（代码和导出件从这里同步）。
+
+## 项目状态
+
+✅ **核心功能已完成**：五阶段流程、零随机判定、分享码复现、题库校验、单元测试。
+
+⏳ **P0（上线前必须）**：
+- 四个部门正式资料输入代码（来自 [docs/部门收集材料.md](docs/部门收集材料.md)）
+- 外链检查与安全配置（target/rel）
+- 移动端真机验收（Android、iOS、微信）
+- 题库版本冻结与发布记录
+
+详见 [docs/TODO.md](docs/TODO.md)。
 
 ## 开发
 
@@ -19,12 +30,12 @@
 npm install
 npm run dev        # http://localhost:5173/yuna_sorting_hat/
 npm test           # 题库不变量 + 计分引擎 + 结果解释 + 分享码
+npm run simulate   # 题库分布模拟（四部门胜率、并列率等）
 npm run build      # tsc -b && vite build
 npm run preview    # 按 base 路径预览产物，部署前用这个复核
 ```
 
-注意 dev/preview 的地址都带 `/yuna_sorting_hat/` 前缀 —— 与 GitHub Pages 上的
-`base` 一致，见 [vite.config.ts](vite.config.ts)。
+**注意**：dev/preview 地址带 `/yuna_sorting_hat/` 前缀，与 GitHub Pages 上的 `base` 一致（见 [vite.config.ts](vite.config.ts)）。
 
 ## 目录结构
 
@@ -32,9 +43,9 @@ npm run preview    # 按 base 路径预览产物，部署前用这个复核
 | --- | --- |
 | 五阶段流程与状态机 | [src/App.tsx](src/App.tsx) |
 | 分院仪式（揭晓前的过场） | [src/screens/RevealScreen.tsx](src/screens/RevealScreen.tsx) |
-| 结果页九层信息 | [src/screens/ResultScreen.tsx](src/screens/ResultScreen.tsx) |
+| 结果页十层信息 | [src/screens/ResultScreen.tsx](src/screens/ResultScreen.tsx) |
 | 题库（题面／选项／低语／权重指针） | [src/data/questions.ts](src/data/questions.ts) |
-| 部门信息、招新入口、待填文案槽 | [src/data/departments.ts](src/data/departments.ts) |
+| 部门信息、招新入口、活动期配置 | [src/data/departments.ts](src/data/departments.ts)、[src/data/campaign.ts](src/data/campaign.ts) |
 | 计分、归一化、并列决胜 | [src/lib/scoring.ts](src/lib/scoring.ts) |
 | 「为什么是这个部门」的解释 | [src/lib/explain.ts](src/lib/explain.ts) |
 | 分享码与分享文案 | [src/lib/shareCode.ts](src/lib/shareCode.ts) |

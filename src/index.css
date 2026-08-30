@@ -263,3 +263,50 @@ body {
 .reveal-hat-enter {
   animation: reveal-hat-enter 0.55s ease-out both;
 }
+/* ───────────────────── 图片素材层 ───────────────────── */
+.result-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 0;
+  width: 100%;
+  height: auto;
+  max-width: none;
+  opacity: 0.22;
+  pointer-events: none;
+  user-select: none;
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, rgb(0 0 0 / 0.72) 48%, transparent 92%);
+  mask-image: linear-gradient(to bottom, #000 0%, rgb(0 0 0 / 0.72) 48%, transparent 92%);
+}
+
+.reveal-stage-shell {
+  position: relative;
+  isolation: isolate;
+}
+
+.reveal-magic-circle {
+  position: absolute;
+  z-index: -1;
+  width: min(22rem, 88vw);
+  height: auto;
+  opacity: 0.2;
+  pointer-events: none;
+  user-select: none;
+  filter: drop-shadow(0 0 18px rgb(212 175 55 / 0.16));
+  animation: seal-turn 28s linear infinite;
+}
+
+@keyframes seal-turn {
+  from {
+    transform: rotate(0deg) scale(0.94);
+  }
+  to {
+    transform: rotate(360deg) scale(0.94);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal-magic-circle {
+    animation: none;
+  }
+}

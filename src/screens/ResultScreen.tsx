@@ -3,13 +3,14 @@ import { RadarChart } from '../components/RadarChart'
 import { ScoreBars } from '../components/ScoreBars'
 import { ShareBar } from '../components/ShareBar'
 import { DepartmentStoryPanel } from '../components/DepartmentStoryPanel'
-import { DEPARTMENTS } from '../data/departments'
+import { DEPARTMENTS, DEPT_LIST } from '../data/departments'
 import { CAMPAIGN } from '../data/campaign'
 import { QUESTION_BANK } from '../data/questions'
 import { explainVerdict, verdictStrength } from '../lib/explain'
 import { deriveBehaviorIdentity } from '../lib/identity'
 import type { AnswerMap, Verdict } from '../lib/scoring'
 import { buildShareText, buildShareUrl } from '../lib/shareCode'
+import resultBackground from '../assets/auxillary/result_background.webp'
 
 interface ResultScreenProps {
   verdict: Verdict
@@ -84,8 +85,16 @@ export function ResultScreen({ verdict, answers, onRestart }: ResultScreenProps)
 
   return (
     // data-dept 一翻，雷达多边形／量条／辉光／边框整体换肤，零 JS 配色逻辑
-    <div data-dept={verdict.winner} className="starfield min-h-dvh px-5 py-10 sm:px-6">
-      <div className="mx-auto flex max-w-lg flex-col items-center">
+    <div data-dept={verdict.winner} className="result-screen starfield relative min-h-dvh overflow-hidden px-5 py-10 sm:px-6">
+      <img
+        aria-hidden="true"
+        src={resultBackground}
+        width={1080}
+        height={1920}
+        className="result-background"
+        alt=""
+      />
+      <div className="relative z-10 mx-auto flex max-w-lg flex-col items-center">
         {/* ── 第一层：结果 ── */}
         <p className="font-display text-[0.62rem] tracking-[0.36em] text-parchment-dim/70">
           THE HAT HAS DECIDED
@@ -327,12 +336,53 @@ export function ResultScreen({ verdict, answers, onRestart }: ResultScreenProps)
           </section>
         )}
 
-        {/* ── 第八层：传播 ── */}
+        {/* ── 第八层：探索其他部门。结果只是一个方向，给用户保留主动选择的入口。 ── */}
+        <section className="mt-6 w-full rounded-2xl border border-night-600/70 bg-night-800/40 p-5">
+          <h2 className="text-sm tracking-[0.16em] text-parchment-dim">对其他部门感兴趣？</h2>
+          <p className="mt-2 text-[0.8rem] leading-relaxed text-parchment-dim/75">
+            分部帽给出的只是一个方向，也可以看看其他部门，找到真正想去的地方。
+          </p>
+
+          <ul className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-3">
+            {DEPT_LIST.filter((otherDept) => otherDept.id !== dept.id).map((otherDept) => {
+              const detailAction = otherDept.actions.find((action) => action.kind === 'more')
+              const isOpen =
+                detailAction !== undefined &&
+                detailAction.href !== null &&
+                detailAction.status !== 'closed' &&
+                detailAction.status !== 'pending'
+              const pendingDetailLabel = detailAction?.status === 'closed' ? '本期暂未开放' : '入口待公布'
+
+              return (
+                <li key={otherDept.id}>
+                  {isOpen && detailAction !== undefined ? (
+                    <a
+                      href={detailAction.href ?? undefined}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex min-h-[3.5rem] items-center justify-between gap-2 rounded-lg border border-night-500/70 px-3.5 py-2.5 text-sm text-parchment/90 transition-colors hover:border-gold/60 hover:text-gold-soft"
+                    >
+                      <span className="break-words">{otherDept.name}</span>
+                      <span aria-hidden="true" className="shrink-0 text-gold-soft/70">→</span>
+                    </a>
+                  ) : (
+                    <div className="flex min-h-[3.5rem] items-center justify-between gap-2 rounded-lg border border-dashed border-night-500/60 px-3.5 py-2.5 text-sm text-parchment-dim/70">
+                      <span className="break-words">{otherDept.name}</span>
+                      <span className="shrink-0 text-[0.68rem]">{pendingDetailLabel}</span>
+                    </div>
+                  )}
+                </li>
+              )
+            })}
+          </ul>
+        </section>
+
+        {/* ── 第九层：传播 ── */}
         {shareUrl !== '' && (
           <ShareBar url={shareUrl} text={buildShareText(dept.name, identity.name, shareUrl)} />
         )}
 
-        {/* ── 第九层：重新体验 ── */}
+        {/* ── 第十层：重新体验 ── */}
         <button
           type="button"
           onClick={onRestart}

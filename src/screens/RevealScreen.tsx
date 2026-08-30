@@ -3,6 +3,7 @@ import { DeptCard } from '../components/DeptCard'
 import { SortingHat } from '../components/SortingHat'
 import { DEPARTMENTS } from '../data/departments'
 import { prefersReducedMotion } from '../lib/motion'
+import magicCircle from '../assets/auxillary/magic_circle.webp'
 import type { Verdict } from '../lib/scoring'
 
 interface RevealScreenProps {
@@ -72,12 +73,24 @@ export function RevealScreen({ verdict, onDone }: RevealScreenProps) {
         </p>
 
         {/* 固定高度让阶段替换时不发生页面跳动；初始阶段只留下黑暗和星空。 */}
-        <div className="mt-10 flex min-h-[25rem] w-full flex-col items-center justify-center">
+        <div className="reveal-stage-shell mt-10 flex min-h-[25rem] w-full flex-col items-center justify-center">
+          {(stage === 'thinking' || stage === 'decided') && (
+            <img
+              aria-hidden="true"
+              src={magicCircle}
+              width={2048}
+              height={2048}
+              className="reveal-magic-circle"
+              style={{ opacity: stage === 'decided' ? 0.3 : 0.2 }}
+              alt=""
+            />
+          )}
+
           {stage === 'silence' && <div aria-hidden="true" className="h-32 w-32" />}
 
           {stage === 'thinking' && (
             <div className="reveal-stage rise-in flex flex-col items-center">
-              <SortingHat className="reveal-hat w-32 sm:w-36" />
+              <SortingHat state="thinking" className="reveal-hat w-32 sm:w-36" />
               <p
                 aria-live="polite"
                 className="mt-8 font-display text-[0.85rem] tracking-[0.16em] text-gold-soft"
@@ -89,7 +102,7 @@ export function RevealScreen({ verdict, onDone }: RevealScreenProps) {
 
           {stage === 'decided' && (
             <div className="reveal-stage rise-in flex flex-col items-center">
-              <SortingHat className="reveal-hat w-32 sm:w-36" glow />
+              <SortingHat state="decided" className="reveal-hat w-32 sm:w-36" glow />
               <p
                 aria-live="polite"
                 className="mt-8 font-display text-[0.72rem] tracking-[0.34em] text-gold-soft"
