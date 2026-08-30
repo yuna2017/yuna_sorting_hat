@@ -170,10 +170,10 @@ await reducedCtx.close()
 // ---- 四个部门：用分享链接逐个验主题换肤、立绘加载与判定 ----
 
 const CASES = [
-  { dept: 'dev', code: 'abaccdabccaa', name: '开发部' },
-  { dept: 'sec', code: 'ddcdacbadbbc', name: '网络安全部' },
-  { dept: 'ops', code: 'badbbaccbadd', name: '运维部' },
-  { dept: 'pr', code: 'ccbadbddadcb', name: '组宣部' },
+  { dept: 'dev', code: 'adadddabacdd', name: '开发部' },
+  { dept: 'sec', code: 'bccaccbccbba', name: '网络安全部' },
+  { dept: 'ops', code: 'cadbaacdbaab', name: '运维部' },
+  { dept: 'pr', code: 'dbbcbbdaddcc', name: '组宣部' },
 ]
 
 console.log('\n四个部门：')

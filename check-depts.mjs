@@ -8,15 +8,15 @@ const BASE = process.env.TARGET ?? 'http://localhost:5173/yuna_sorting_hat/'
 /* 分享码必须跟 src/data/questions.ts 对齐：码长 = 抽题数（槽位数），v = QUESTION_POOL.version。
    题库一改这里就得重算 —— 每位是「该题主推目标部门的那个选项 id」。
    s = 抽题种子：v3 起题目从池子里抽，没有种子就不知道对方做的是哪几道题。
-   当前 v3 槽位化阶段共 3 槽（q1/q2/q12），每槽只有 1 道候选，所以任何种子抽出的
-   都是同一组题、答案码不变；每槽补到 2 道候选之后，这四行码必须按固定种子重推。 */
+   当前 v3 题池共 12 槽、每槽 2 道候选，抽题结果随种子变化，所以这四行码是按
+   DRAW_SEED = 1 重推出来的；改动题池或种子后必须重推（并同步 shoot.mjs 里那份）。 */
 const BANK_VERSION = 3
 const DRAW_SEED = 1
 const CASES = [
-  { dept: 'dev', code: 'abaccdabccaa', name: '开发部' },
-  { dept: 'sec', code: 'ddcdacbadbbc', name: '网络安全部' },
-  { dept: 'ops', code: 'badbbaccbadd', name: '运维部' },
-  { dept: 'pr', code: 'ccbadbddadcb', name: '组宣部' },
+  { dept: 'dev', code: 'adadddabacdd', name: '开发部' },
+  { dept: 'sec', code: 'bccaccbccbba', name: '网络安全部' },
+  { dept: 'ops', code: 'cadbaacdbaab', name: '运维部' },
+  { dept: 'pr', code: 'dbbcbbdaddcc', name: '组宣部' },
 ]
 
 const browser = await chromium.launch({ channel: 'msedge' })
