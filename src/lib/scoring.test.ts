@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { DEPT_ORDER, PRIMARY_WEIGHT } from '../data/constants'
 import type { DeptId } from '../data/constants'
+import { DEPARTMENTS } from '../data/departments'
+import { RADAR_REFERENCE_MAX } from '../components/RadarChart'
 import { QUESTION_BANK } from '../data/questions'
 import type { OptionId, QuestionBank } from '../data/questions'
 import type { AnswerMap, TieBreakStage } from './scoring'
@@ -27,6 +29,18 @@ function answersAllPrimary(bank: QuestionBank, dept: DeptId): AnswerMap {
   }
   return answers
 }
+
+describe('结果页文案与图表基线', () => {
+  it('招新按钮统一显示为“加入网协招新”', () => {
+    for (const dept of DEPT_ORDER) {
+      expect(DEPARTMENTS[dept].actions[0]?.label).toBe('加入网协招新')
+    }
+  })
+
+  it('雷达图基准线最高为 50% 以突出契合度差异', () => {
+    expect(RADAR_REFERENCE_MAX).toBe(0.5)
+  })
+})
 
 describe('满分与归一化', () => {
   it('单部门满分 = 题数 × 3 = 30', () => {

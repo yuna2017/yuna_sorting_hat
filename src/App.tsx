@@ -14,6 +14,29 @@ import { createSessionSeed } from './lib/seededShuffle'
 import { isComplete, resolveWinner } from './lib/scoring'
 import type { AnswerMap } from './lib/scoring'
 import { readShareCodeFromUrl } from './lib/shareCode'
+import hatHero from './assets/hat/hat_a_storybook.webp'
+import hatIdle from './assets/hat/hat_idle.webp'
+import hatThinking from './assets/hat/hat_thinking.webp'
+import hatDecided from './assets/hat/hat_decide.webp'
+import magicCircle from './assets/auxillary/magic_circle.webp'
+import resultBackground from './assets/auxillary/result_background.webp'
+import devImg from './assets/dept/dev.webp'
+import secImg from './assets/dept/sec.webp'
+import opsImg from './assets/dept/ops.webp'
+import prImg from './assets/dept/pr.webp'
+
+const PRELOAD_ASSETS = [
+  hatHero,
+  hatIdle,
+  hatThinking,
+  hatDecided,
+  magicCircle,
+  resultBackground,
+  devImg,
+  secImg,
+  opsImg,
+  prImg,
+]
 
 /** 'reveal' 是答完最后一题后的分院仪式，只延迟揭晓，不参与判定。 */
 type Phase = 'cover' | 'opening' | 'quiz' | 'reveal' | 'result'
@@ -53,6 +76,18 @@ export default function App() {
   const [index, setIndex] = useState(0)
   /** 会话种子：整场答题只生成一次，决定选项显示顺序。不参与判定。 */
   const [sessionSeed, setSessionSeed] = useState(createSessionSeed)
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+
+    const preloadImage = (src: string) => {
+      const img = new window.Image()
+      img.decoding = 'async'
+      img.src = src
+    }
+
+    PRELOAD_ASSETS.forEach(preloadImage)
+  }, [])
 
   const verdict = useMemo(() => resolveWinner(QUESTION_BANK, answers), [answers])
 

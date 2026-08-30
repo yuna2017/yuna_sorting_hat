@@ -83,7 +83,7 @@ function departmentActions(
   return [
     {
       kind: 'join',
-      label: `加入${deptName}招新`,
+      label: '加入网协招新',
       href: CAMPAIGN.publicJoinUrl,
       status: CAMPAIGN.status,
       note: `${CAMPAIGN.year} 届招新 QQ 群`,

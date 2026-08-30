@@ -15,7 +15,8 @@ const CX = 150
 const CY = 112
 const MAX_R = 72
 const LABEL_R = 90
-const RINGS = [0.25, 0.5, 0.75, 1]
+export const RADAR_REFERENCE_MAX = 0.5
+const RINGS = [0.125, 0.25, 0.375, 0.5]
 
 /** 轴角度：dev 上、sec 右、ops 下、pr 左。 */
 const ANGLES: Record<DeptId, number> = {
@@ -45,9 +46,10 @@ function ringPolygon(scale: number): string {
  *  · 多边形只用冠军部门的强调色（emphasis 形式：一个是主角，其余是背景）。
  */
 export function RadarChart({ normalized, winner, className = '' }: RadarChartProps) {
-  const shape = DEPT_ORDER.map((dept) =>
-    pointAt(dept, MAX_R * Math.max(normalized[dept], 0.02)).join(','),
-  ).join(' ')
+  const shape = DEPT_ORDER.map((dept) => {
+    const value = Math.min(Math.max(normalized[dept], 0.02), RADAR_REFERENCE_MAX)
+    return pointAt(dept, MAX_R * (value / RADAR_REFERENCE_MAX)).join(',')
+  }).join(' ')
 
   return (
     <svg
@@ -102,7 +104,8 @@ export function RadarChart({ normalized, winner, className = '' }: RadarChartPro
 
       {/* 顶点标记 */}
       {DEPT_ORDER.map((dept) => {
-        const [x, y] = pointAt(dept, MAX_R * Math.max(normalized[dept], 0.02))
+        const value = Math.min(Math.max(normalized[dept], 0.02), RADAR_REFERENCE_MAX)
+        const [x, y] = pointAt(dept, MAX_R * (value / RADAR_REFERENCE_MAX))
         const isWinner = dept === winner
         return (
           <circle
