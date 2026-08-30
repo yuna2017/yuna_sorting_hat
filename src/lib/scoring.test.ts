@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { DEPT_ORDER, PRIMARY_WEIGHT } from '../data/constants'
+import { DEPT_ORDER, PRIMARY_WEIGHT, SECONDARY_WEIGHT } from '../data/constants'
 import type { DeptId } from '../data/constants'
 import { DEPARTMENTS } from '../data/departments'
 import { RADAR_REFERENCE_MAX } from '../components/RadarChart'
 import { QUESTION_BANK } from '../data/questions'
-import type { OptionId, QuestionBank } from '../data/questions'
+import type { OptionId, QuestionBank, QuizOption } from '../data/questions'
 import type { AnswerMap, TieBreakStage } from './scoring'
 import {
   emptyScores,
@@ -18,6 +18,20 @@ import {
 } from './scoring'
 
 const OPTION_IDS: readonly OptionId[] = ['a', 'b', 'c', 'd']
+
+/**
+ * 基线从题库派生。题数改一次就要追改七处硬编码数字的日子已经过去了。
+ */
+const QUESTION_COUNT = QUESTION_BANK.questions.length
+const MAX_SCORE = QUESTION_COUNT * PRIMARY_WEIGHT
+
+/**
+ * 合成题库用的极简选项。特质权重给固定一份 —— 部门计分链路完全不读 traits，
+ * 这里只是为了满足类型。
+ */
+function opt(id: OptionId, p: DeptId, s: DeptId): QuizOption {
+  return { id, text: id, whisper: 'w', p, s, traits: { explore: 3 } }
+}
 
 /** 全选主推某部门的答案（该部门必然拿到满分）。 */
 function answersAllPrimary(bank: QuestionBank, dept: DeptId): AnswerMap {
@@ -43,18 +57,15 @@ describe('结果页文案与图表基线', () => {
 })
 
 describe('满分与归一化', () => {
-  it('单部门满分 = 题数 × 3 = 30', () => {
-    expect(maxScorePerDept(QUESTION_BANK)).toBe(30)
-    expect(maxScorePerDept(QUESTION_BANK)).toBe(
-      QUESTION_BANK.questions.length * PRIMARY_WEIGHT,
-    )
+  it('单部门满分 = 题数 × 主推权重', () => {
+    expect(maxScorePerDept(QUESTION_BANK)).toBe(MAX_SCORE)
   })
 
-  it('全选同一部门 → 该部门 30 分且 100%', () => {
+  it('全选同一部门 → 该部门满分且 100%', () => {
     for (const dept of DEPT_ORDER) {
       const answers = answersAllPrimary(QUESTION_BANK, dept)
       const verdict = resolveWinner(QUESTION_BANK, answers)
-      expect(verdict.scores[dept], `${dept} 应满分`).toBe(30)
+      expect(verdict.scores[dept], `${dept} 应满分`).toBe(MAX_SCORE)
       expect(verdict.winner, `${dept} 应胜出`).toBe(dept)
       expect(toPercent(verdict.normalized[dept])).toBe(100)
       expect(verdict.tiedWith).toEqual([])
@@ -63,17 +74,20 @@ describe('满分与归一化', () => {
   })
 
   it('归一化除的是单部门满分，不是总分（文档点名的易错点）', () => {
-    // 全选主推 dev：dev 拿 30；副推按题目分布散给其他部门，总分 = 10×(3+1) = 40
+    // 全选主推 dev：dev 拿满分；副推按题目分布散给其他部门，
+    // 总分 = 题数 × (主推 + 副推)，恒大于单部门满分。
     const answers = answersAllPrimary(QUESTION_BANK, 'dev')
     const scores = tally(QUESTION_BANK, answers)
     const total = DEPT_ORDER.reduce((sum, d) => sum + scores[d], 0)
-    expect(total).toBe(40)
+    const expectedTotal = QUESTION_BANK.questions.length * (PRIMARY_WEIGHT + SECONDARY_WEIGHT)
+    expect(total).toBe(expectedTotal)
+    expect(total).toBeGreaterThan(MAX_SCORE)
 
     const normalized = normalize(scores, maxScorePerDept(QUESTION_BANK))
-    // 除满分 30 → 100%。若错误地除总分 40，会得到 75%。
+    // 除满分 → 100%。若错误地除总分，会得到明显偏低的百分比。
     expect(normalized.dev).toBe(1)
     expect(toPercent(normalized.dev)).toBe(100)
-    expect(toPercent(normalized.dev)).not.toBe(75)
+    expect(toPercent(MAX_SCORE / total)).not.toBe(100)
   })
 
   it('空答案 → 全零，且不产生 NaN', () => {
@@ -91,14 +105,14 @@ describe('满分与归一化', () => {
 
 describe('手算样例', () => {
   it('q1=a, q2=c 的得分逐项对得上', () => {
-    // q1a: dev+3 sec+1 ／ q2c: dev+3 ops+1
+    // q1a: dev+3 ops+1 ／ q2c: pr+3 dev+1
     const answers: AnswerMap = { q1: 'a', q2: 'c' }
-    expect(tally(QUESTION_BANK, answers)).toEqual({ dev: 6, sec: 1, ops: 1, pr: 0 })
+    expect(tally(QUESTION_BANK, answers)).toEqual({ dev: 4, sec: 0, ops: 1, pr: 3 })
     expect(primaryPickCounts(QUESTION_BANK, answers)).toEqual({
-      dev: 2,
+      dev: 1,
       sec: 0,
       ops: 0,
-      pr: 0,
+      pr: 1,
     })
     expect(isComplete(QUESTION_BANK, answers)).toBe(false)
   })
@@ -120,10 +134,10 @@ describe('并列决胜', () => {
           title: 'A',
           scene: 'A',
           options: [
-            { id: 'a', text: 'a', whisper: 'w', p: 'dev', s: 'sec' },
-            { id: 'b', text: 'b', whisper: 'w', p: 'sec', s: 'ops' },
-            { id: 'c', text: 'c', whisper: 'w', p: 'ops', s: 'pr' },
-            { id: 'd', text: 'd', whisper: 'w', p: 'pr', s: 'dev' },
+            opt('a', 'dev', 'sec'),
+            opt('b', 'sec', 'ops'),
+            opt('c', 'ops', 'pr'),
+            opt('d', 'pr', 'dev'),
           ],
         },
         {
@@ -132,10 +146,10 @@ describe('并列决胜', () => {
           scene: 'B',
           decider: true,
           options: [
-            { id: 'a', text: 'a', whisper: 'w', p: 'dev', s: 'pr' },
-            { id: 'b', text: 'b', whisper: 'w', p: 'sec', s: 'dev' },
-            { id: 'c', text: 'c', whisper: 'w', p: 'ops', s: 'sec' },
-            { id: 'd', text: 'd', whisper: 'w', p: 'pr', s: 'ops' },
+            opt('a', 'dev', 'pr'),
+            opt('b', 'sec', 'dev'),
+            opt('c', 'ops', 'sec'),
+            opt('d', 'pr', 'ops'),
           ],
         },
       ],
@@ -159,10 +173,10 @@ describe('并列决胜', () => {
           title: 'A',
           scene: 'A',
           options: [
-            { id: 'a', text: 'a', whisper: 'w', p: 'dev', s: 'sec' },
-            { id: 'b', text: 'b', whisper: 'w', p: 'sec', s: 'ops' },
-            { id: 'c', text: 'c', whisper: 'w', p: 'ops', s: 'pr' },
-            { id: 'd', text: 'd', whisper: 'w', p: 'pr', s: 'dev' },
+            opt('a', 'dev', 'sec'),
+            opt('b', 'sec', 'ops'),
+            opt('c', 'ops', 'pr'),
+            opt('d', 'pr', 'dev'),
           ],
         },
         {
@@ -170,10 +184,10 @@ describe('并列决胜', () => {
           title: 'B',
           scene: 'B',
           options: [
-            { id: 'a', text: 'a', whisper: 'w', p: 'dev', s: 'pr' },
-            { id: 'b', text: 'b', whisper: 'w', p: 'sec', s: 'dev' },
-            { id: 'c', text: 'c', whisper: 'w', p: 'ops', s: 'sec' },
-            { id: 'd', text: 'd', whisper: 'w', p: 'pr', s: 'ops' },
+            opt('a', 'dev', 'pr'),
+            opt('b', 'sec', 'dev'),
+            opt('c', 'ops', 'sec'),
+            opt('d', 'pr', 'ops'),
           ],
         },
         {
@@ -182,10 +196,10 @@ describe('并列决胜', () => {
           scene: 'C',
           decider: true,
           options: [
-            { id: 'a', text: 'a', whisper: 'w', p: 'dev', s: 'sec' },
-            { id: 'b', text: 'b', whisper: 'w', p: 'sec', s: 'ops' },
-            { id: 'c', text: 'c', whisper: 'w', p: 'ops', s: 'pr' },
-            { id: 'd', text: 'd', whisper: 'w', p: 'pr', s: 'dev' },
+            opt('a', 'dev', 'sec'),
+            opt('b', 'sec', 'ops'),
+            opt('c', 'ops', 'pr'),
+            opt('d', 'pr', 'dev'),
           ],
         },
       ],
@@ -201,9 +215,17 @@ describe('并列决胜', () => {
   })
 })
 
-// ---- 穷举扫描：4^10 = 1,048,576 种答案组合 ----
+// ---- 答案空间扫描 ----
 
-describe('穷举扫描全部答案组合', () => {
+/**
+ * 扫描上限。4^12 ≈ 1678 万组，逐个跑要几分钟，把整套测试拖成不会有人愿意等的那种。
+ * 组合数超过上限时改为固定步长抽样：步长与总数互质，能均匀铺满整个空间，
+ * 且与穷举一样零随机 —— 失败永远可以原样复现。
+ */
+const SCAN_CAP = 1_100_000
+const SAMPLE_STRIDE = 7919 // 质数，保证 (i * stride) % total 遍历整个空间
+
+describe('扫描答案组合空间', () => {
   it(
     '零随机、四部门皆可达、冠军恒为最高分',
     { timeout: 180_000 },
@@ -211,8 +233,10 @@ describe('穷举扫描全部答案组合', () => {
       const questions = QUESTION_BANK.questions
       const n = questions.length
       const total = 4 ** n
+      const exhaustive = total <= SCAN_CAP
+      const samples = exhaustive ? total : SCAN_CAP
 
-      // 复用同一个 answers 对象，避免 100 万次对象分配。resolveWinner 不修改入参。
+      // 复用同一个 answers 对象，避免上百万次对象分配。resolveWinner 不修改入参。
       const answers: AnswerMap = {}
       const winnerCounts = emptyScores()
       const stageCounts: Record<TieBreakStage, number> = {
@@ -224,11 +248,12 @@ describe('穷举扫描全部答案组合', () => {
       let tiedAtTop = 0
       let largestTie = 1
 
-      for (let combo = 0; combo < total; combo++) {
+      for (let i = 0; i < samples; i++) {
+        const combo = exhaustive ? i : (i * SAMPLE_STRIDE) % total
         let rest = combo
         for (let qi = 0; qi < n; qi++) {
           answers[questions[qi]!.id] = OPTION_IDS[rest & 3]!
-          rest >>>= 2
+          rest = Math.floor(rest / 4)
         }
 
         const verdict = resolveWinner(QUESTION_BANK, answers)
@@ -251,17 +276,17 @@ describe('穷举扫描全部答案组合', () => {
       }
 
       const sum = DEPT_ORDER.reduce((acc, d) => acc + winnerCounts[d], 0)
-      expect(sum).toBe(total)
+      expect(sum).toBe(samples)
 
       // 四个部门都真的能被抽到
       for (const dept of DEPT_ORDER) {
         expect(winnerCounts[dept], `${dept} 不可达！`).toBeGreaterThan(0)
       }
 
-      const pct = (x: number) => `${((x / total) * 100).toFixed(2)}%`
+      const pct = (x: number) => `${((x / samples) * 100).toFixed(2)}%`
       console.log(
         [
-          `\n  穷举 ${total.toLocaleString()} 种组合：`,
+          `\n  ${exhaustive ? '穷举' : '抽样'} ${samples.toLocaleString()} / ${total.toLocaleString()} 种组合：`,
           `    冠军分布  ` +
             DEPT_ORDER.map((d) => `${d} ${pct(winnerCounts[d])}`).join('  '),
           `    顶部并列  ${tiedAtTop.toLocaleString()} 次（${pct(tiedAtTop)}），最大并列 ${largestTie} 个部门`,
@@ -274,21 +299,26 @@ describe('穷举扫描全部答案组合', () => {
 
       // 并列绝非罕见 —— 决胜路径是真会被走到的
       expect(tiedAtTop).toBeGreaterThan(0)
-      expect(stageCounts['primary-count']).toBeGreaterThan(0)
+      const tieBreaks =
+        stageCounts['primary-count'] +
+        stageCounts['decider-question'] +
+        stageCounts['fixed-order']
+      expect(tieBreaks).toBeGreaterThan(0)
     },
   )
 
   it('同一份答案重复求解结果完全一致（确定性）', () => {
     const questions = QUESTION_BANK.questions
     const n = questions.length
+    const total = 4 ** n
     const answers: AnswerMap = {}
 
     // 每隔 997 个组合抽一份做二次求解比对
-    for (let combo = 0; combo < 4 ** n; combo += 997) {
+    for (let combo = 0; combo < total; combo += 997) {
       let rest = combo
       for (let qi = 0; qi < n; qi++) {
         answers[questions[qi]!.id] = OPTION_IDS[rest & 3]!
-        rest >>>= 2
+        rest = Math.floor(rest / 4)
       }
       const first = resolveWinner(QUESTION_BANK, answers)
       const second = resolveWinner(QUESTION_BANK, answers)

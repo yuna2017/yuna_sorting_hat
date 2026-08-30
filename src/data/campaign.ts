@@ -27,6 +27,6 @@ export const CAMPAIGN: CampaignConfig = {
   status: 'open',
   publicJoinUrl: 'https://qm.qq.com/q/1DSuxKBV5a',
   siteUrl: 'https://www.yuna.team',
-  bankVersion: 1,
+  bankVersion: 2,
   releaseDate: '2026-08-30',
 }

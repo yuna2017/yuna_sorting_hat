@@ -51,7 +51,9 @@ export function decodeAnswers(bank: QuestionBank, code: string): AnswerMap | nul
 
 /**
  * 读取版本化分享载荷。无 `v` 的旧链接视为 v1；未知版本拒绝恢复，避免拿新题库误读旧答案。
- * 当前只有一版题库，未来引入 v2 时应在这里按版本选择对应题库快照。
+ *
+ * v1 已废除（题库从 10 题换成 12 题特质制，语义无法平移），因此 v1 链接会被拒绝。
+ * 调用方拿到 null 时应提示「这个结果来自旧版本的帽子」，而不是静默回封面。
  */
 export function readSharePayloadFromUrl(
   bank: QuestionBank,

@@ -4,11 +4,16 @@
 import { chromium } from 'playwright'
 
 const BASE = process.env.TARGET ?? 'http://localhost:5173/yuna_sorting_hat/'
+
+/* 分享码必须跟 src/data/questions.ts 对齐：码长 = 题数，v = QUESTION_BANK.version。
+   题库一改这里就得重算 —— 每位是「该题主推目标部门的那个选项 id」。
+   当前 v2 样题阶段共 3 题（q1/q2/q12）。 */
+const BANK_VERSION = 2
 const CASES = [
-  { dept: 'dev', code: 'acbddbabad', name: '开发部' },
-  { dept: 'sec', code: 'cadbbdcadb', name: '网络安全部' },
-  { dept: 'ops', code: 'bdacacbdcc', name: '运维部' },
-  { dept: 'pr', code: 'dbcacadcba', name: '组宣部' },
+  { dept: 'dev', code: 'aba', name: '开发部' },
+  { dept: 'sec', code: 'ddc', name: '网络安全部' },
+  { dept: 'ops', code: 'bad', name: '运维部' },
+  { dept: 'pr', code: 'ccb', name: '组宣部' },
 ]
 
 const browser = await chromium.launch({ channel: 'msedge' })
@@ -28,7 +33,7 @@ for (const c of CASES) {
     if (r.status() >= 400) problems.push(`HTTP ${r.status()}: ${r.url()}`)
   })
 
-  await page.goto(`${BASE}?v=1&a=${c.code}`, { waitUntil: 'domcontentloaded' })
+  await page.goto(`${BASE}?v=${BANK_VERSION}&a=${c.code}`, { waitUntil: 'domcontentloaded' })
   await page.locator('h1').waitFor({ timeout: 15000 })
   await page.waitForTimeout(700)
 

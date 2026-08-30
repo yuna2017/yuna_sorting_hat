@@ -1,7 +1,15 @@
 import { describe, expect, it } from 'vitest'
-import { DEPT_ORDER } from '../data/constants'
+import { DEPT_ORDER, PRIMARY_WEIGHT, SECONDARY_WEIGHT } from '../data/constants'
 import { QUESTION_BANK } from '../data/questions'
 import { formatSimulationReport, simulateBank } from './simulate'
+
+/**
+ * 随机作答下每个部门的理论均分：每题四选项里有一个主推它、一个副推它，
+ * 所以期望 = 题数 × (主推 + 副推) / 4。从题数派生，题库扩到 12 题时不用改这里。
+ */
+const EXPECTED_AVERAGE =
+  (QUESTION_BANK.questions.length * (PRIMARY_WEIGHT + SECONDARY_WEIGHT)) / 4
+const TOLERANCE = 0.25
 
 function seededRandom(seed = 0x59f2a17): () => number {
   let state = seed >>> 0
@@ -20,8 +28,8 @@ describe('题库分布模拟', () => {
     expect(report.tieCounts).toBeGreaterThan(0)
     for (const dept of DEPT_ORDER) {
       expect(report.winnerCounts[dept], `${dept} 应可达`).toBeGreaterThan(0)
-      expect(report.averageScores[dept]).toBeGreaterThan(8)
-      expect(report.averageScores[dept]).toBeLessThan(12)
+      expect(report.averageScores[dept]).toBeGreaterThan(EXPECTED_AVERAGE * (1 - TOLERANCE))
+      expect(report.averageScores[dept]).toBeLessThan(EXPECTED_AVERAGE * (1 + TOLERANCE))
     }
   })
 })

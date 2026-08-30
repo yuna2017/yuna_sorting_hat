@@ -15,6 +15,11 @@ const OUT = process.env.OUT ?? 'screenshots'
    只测 390 会漏掉 320 的横向溢出 —— 这是移动端最常见的翻车点。 */
 const VIEWPORTS = [320, 360, 390, 412]
 
+/* 必须跟 src/data/questions.ts 对齐：题数 = 分享码长度，v = QUESTION_BANK.version。
+   当前 v2 样题阶段共 3 题（q1/q2/q12），补齐到 12 题时改这两个数。 */
+const QUESTION_COUNT = 3
+const BANK_VERSION = 2
+
 const browser = await chromium.launch({ channel: 'msedge' })
 const context = await browser.newContext({
   viewport: { width: 390, height: 844 }, // iPhone 14 逻辑像素
@@ -38,9 +43,9 @@ async function shot(name) {
   console.log(`  ✓ ${name}.png`)
 }
 
-/** 走完十题。每题点第一个选项，说明卡展开后再点吸底的推进按钮。 */
+/** 走完全部题目。每题点第一个选项，说明卡展开后再点吸底的推进按钮。 */
 async function answerAll(p) {
-  for (let i = 0; i < 10; i++) {
+  for (let i = 0; i < QUESTION_COUNT; i++) {
     /* 每题都必须显式选 + 显式推进：已经没有自动前进了，
        而推进按钮改成了常驻（未作答时 disabled），
        所以不能再用「按钮是否可见」来判断这题答没答。 */
@@ -111,7 +116,7 @@ await page.getByRole('button', { name: '复制结果链接' }).click()
 await page.waitForTimeout(300)
 const copied = await page.getByRole('button', { name: /已复制链接/ }).isVisible()
 const clipboard = await page.evaluate(() => navigator.clipboard.readText().catch(() => ''))
-const codeOk = /\?v=1&a=[abcd]{10}$/.test(clipboard)
+const codeOk = new RegExp(`\\?v=${BANK_VERSION}&a=[abcd]{${QUESTION_COUNT}}$`).test(clipboard)
 console.log(`  ${copied ? '✓' : '✗'} 复制后按钮变为「已复制」`)
 console.log(`  ${codeOk ? '✓' : '✗'} 剪贴板里是可复现的结果链接：${clipboard || '(空)'}`)
 
@@ -158,10 +163,10 @@ await reducedCtx.close()
 // ---- 四个部门：用分享链接逐个验主题换肤、立绘加载与判定 ----
 
 const CASES = [
-  { dept: 'dev', code: 'acbddbabad', name: '开发部' },
-  { dept: 'sec', code: 'cadbbdcadb', name: '网络安全部' },
-  { dept: 'ops', code: 'bdacacbdcc', name: '运维部' },
-  { dept: 'pr', code: 'dbcacadcba', name: '组宣部' },
+  { dept: 'dev', code: 'aba', name: '开发部' },
+  { dept: 'sec', code: 'ddc', name: '网络安全部' },
+  { dept: 'ops', code: 'bad', name: '运维部' },
+  { dept: 'pr', code: 'ccb', name: '组宣部' },
 ]
 
 console.log('\n四个部门：')
@@ -176,7 +181,7 @@ for (const c of CASES) {
     if (r.status() >= 400) problems.push(`HTTP ${r.status()}: ${r.url()}`)
   })
 
-  await p.goto(`${BASE}?v=1&a=${c.code}`, { waitUntil: 'domcontentloaded' })
+  await p.goto(`${BASE}?v=${BANK_VERSION}&a=${c.code}`, { waitUntil: 'domcontentloaded' })
   await p.locator('h1').waitFor({ timeout: 15000 })
   await p.waitForTimeout(700)
 

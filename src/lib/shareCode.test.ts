@@ -14,6 +14,13 @@ import {
   readShareCodeFromUrl,
 } from './shareCode'
 
+/**
+ * 码长与版本号都从题库派生。写死数字的代价已经付过一次 ——
+ * v1→v2 改题时这个文件里的 '10 位' 和 'v=1' 全部要手改。
+ */
+const CODE_LENGTH = QUESTION_BANK.questions.length
+const VERSION = QUESTION_BANK.version
+
 /** 全选主推某部门的答案。 */
 function answersAllPrimary(dept: DeptId): AnswerMap {
   const answers: AnswerMap = {}
@@ -30,7 +37,7 @@ describe('分享码编解码', () => {
     for (const dept of DEPT_ORDER) {
       const answers = answersAllPrimary(dept)
       const code = encodeAnswers(QUESTION_BANK, answers)
-      expect(code, `${dept} 的码应为 10 位`).toHaveLength(10)
+      expect(code, `${dept} 的码应为 ${CODE_LENGTH} 位`).toHaveLength(CODE_LENGTH)
       expect(decodeAnswers(QUESTION_BANK, code)).toEqual(answers)
     }
   })
@@ -48,34 +55,46 @@ describe('分享码编解码', () => {
   })
 
   it('未作答的题编码成 -，解码后仍是未作答', () => {
-    const code = encodeAnswers(QUESTION_BANK, { q1: 'a' })
-    expect(code).toBe('a---------')
+    const firstId = QUESTION_BANK.questions[0]!.id
+    const code = encodeAnswers(QUESTION_BANK, { [firstId]: 'a' })
+    expect(code).toBe(`a${'-'.repeat(CODE_LENGTH - 1)}`)
     const decoded = decodeAnswers(QUESTION_BANK, code)
-    expect(decoded).toEqual({ q1: 'a' })
+    expect(decoded).toEqual({ [firstId]: 'a' })
     expect(isComplete(QUESTION_BANK, decoded!)).toBe(false)
   })
 
   it('长度不符或含非法字符时返回 null，而不是渲染半残结果', () => {
-    expect(decodeAnswers(QUESTION_BANK, 'abc')).toBeNull()
-    expect(decodeAnswers(QUESTION_BANK, 'abcdabcdabcd')).toBeNull()
-    expect(decodeAnswers(QUESTION_BANK, 'abcdabcdaz')).toBeNull()
+    expect(decodeAnswers(QUESTION_BANK, 'a'.repeat(CODE_LENGTH - 1))).toBeNull()
+    expect(decodeAnswers(QUESTION_BANK, 'a'.repeat(CODE_LENGTH + 1))).toBeNull()
+    // 长度对但末位不是合法选项
+    expect(decodeAnswers(QUESTION_BANK, `${'a'.repeat(CODE_LENGTH - 1)}z`)).toBeNull()
     expect(decodeAnswers(QUESTION_BANK, '')).toBeNull()
   })
 
   it('大小写与空白都能容错', () => {
-    expect(decodeAnswers(QUESTION_BANK, '  ACBDDBABAD ')).toEqual(
-      answersAllPrimary('dev'),
-    )
+    const answers = answersAllPrimary('dev')
+    const code = encodeAnswers(QUESTION_BANK, answers)
+    expect(decodeAnswers(QUESTION_BANK, `  ${code.toUpperCase()} `)).toEqual(answers)
   })
 
   it('从 URL 查询串读码', () => {
     const answers = answersAllPrimary('ops')
     const code = encodeAnswers(QUESTION_BANK, answers)
-    expect(readShareCodeFromUrl(QUESTION_BANK, `?a=${code}`)).toEqual(answers)
-    expect(readSharePayloadFromUrl(QUESTION_BANK, `?v=1&a=${code}`)).toEqual({ version: 1, answers })
+    expect(readSharePayloadFromUrl(QUESTION_BANK, `?v=${VERSION}&a=${code}`)).toEqual({
+      version: VERSION,
+      answers,
+    })
+    expect(readShareCodeFromUrl(QUESTION_BANK, `?v=${VERSION}&a=${code}`)).toEqual(answers)
     expect(readShareCodeFromUrl(QUESTION_BANK, '')).toBeNull()
     expect(readShareCodeFromUrl(QUESTION_BANK, '?a=nonsense')).toBeNull()
-    expect(readShareCodeFromUrl(QUESTION_BANK, `?v=2&a=${code}`)).toBeNull()
+  })
+
+  it('拒绝其他版本的分享码（含无 v 参数的 v1 旧链接）', () => {
+    // v1 题库已废除，拿 v2 题库解释 v1 的码会得到一个「看起来正常但其实错」的结果。
+    const code = encodeAnswers(QUESTION_BANK, answersAllPrimary('ops'))
+    expect(readShareCodeFromUrl(QUESTION_BANK, `?a=${code}`)).toBeNull()
+    expect(readShareCodeFromUrl(QUESTION_BANK, `?v=1&a=${code}`)).toBeNull()
+    expect(readShareCodeFromUrl(QUESTION_BANK, `?v=${VERSION + 1}&a=${code}`)).toBeNull()
   })
 
   it('生成的链接带 base 路径且可被解析回来', () => {
@@ -86,7 +105,8 @@ describe('分享码编解码', () => {
       'https://example.github.io',
       '/yuna_sorting_hat/',
     )
-    expect(url).toBe('https://example.github.io/yuna_sorting_hat/?v=1&a=dbcacadcba')
+    const code = encodeAnswers(QUESTION_BANK, answers)
+    expect(url).toBe(`https://example.github.io/yuna_sorting_hat/?v=${VERSION}&a=${code}`)
     expect(readShareCodeFromUrl(QUESTION_BANK, new URL(url).search)).toEqual(answers)
   })
 
@@ -109,7 +129,13 @@ describe('分享码编解码', () => {
   })
 
   it('分享文案把链接单独放一行，QQ/微信才能完整识别', () => {
-    const url = 'https://example.github.io/yuna_sorting_hat/?v=1&a=dbcacadcba'
+    const answers = answersAllPrimary('pr')
+    const url = buildShareUrl(
+      QUESTION_BANK,
+      answers,
+      'https://example.github.io',
+      '/yuna_sorting_hat/',
+    )
     const text = buildShareText(DEPARTMENTS.pr.name, '校园叙述者', url)
 
     expect(text).toContain('「组宣部」')
@@ -117,7 +143,7 @@ describe('分享码编解码', () => {
     // 链接必须自己占满一行：夹在中文标点之间会被自动识别吃掉尾字符
     expect(lines[lines.length - 1]).toBe(url)
     expect(readShareCodeFromUrl(QUESTION_BANK, new URL(lines[lines.length - 1]!).search)).toEqual(
-      answersAllPrimary('pr'),
+      answers,
     )
   })
 })
