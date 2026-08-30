@@ -164,6 +164,23 @@ body {
   animation: rise-in 0.45s ease-out both;
 }
 
+@keyframes screen-enter {
+  0% {
+    opacity: 0;
+    transform: translateY(18px) scale(0.985);
+    filter: blur(3px);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+    filter: blur(0);
+  }
+}
+
+.screen-enter {
+  animation: screen-enter 0.56s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
 /* 选项说明卡的展开：高度从 0 长到内容自身的高度。
    用 grid-template-rows 的 0fr→1fr 而不是 max-height ——
    max-height 要么猜一个够大的值（展开末段会「悬空」缓动一阵子），

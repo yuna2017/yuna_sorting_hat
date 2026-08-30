@@ -26,7 +26,7 @@ export function OpeningScreen({ onContinue }: OpeningScreenProps) {
 
   return (
     <div
-      className="starfield flex min-h-dvh flex-col items-center justify-center gap-6 px-6 py-9"
+      className="screen-enter starfield flex min-h-dvh flex-col items-center justify-center gap-6 px-6 py-9"
       onClick={done ? undefined : skip}
     >
       <SortingHat state="idle" className="w-20 shrink-0 sm:w-24" />

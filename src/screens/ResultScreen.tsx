@@ -85,7 +85,7 @@ export function ResultScreen({ verdict, answers, onRestart }: ResultScreenProps)
 
   return (
     // data-dept 一翻，雷达多边形／量条／辉光／边框整体换肤，零 JS 配色逻辑
-    <div data-dept={verdict.winner} className="result-screen starfield relative min-h-dvh overflow-hidden px-5 py-10 sm:px-6">
+    <div data-dept={verdict.winner} className="screen-enter result-screen starfield relative min-h-dvh overflow-hidden px-5 py-10 sm:px-6">
       <img
         aria-hidden="true"
         src={resultBackground}

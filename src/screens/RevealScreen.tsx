@@ -66,7 +66,7 @@ export function RevealScreen({ verdict, onDone }: RevealScreenProps) {
   }
 
   return (
-    <main className="starfield-deep reveal-screen flex min-h-dvh flex-col items-center justify-center px-6 py-10 text-center">
+    <main className="screen-enter starfield-deep reveal-screen flex min-h-dvh flex-col items-center justify-center px-6 py-10 text-center">
       <div className="flex w-full max-w-sm flex-col items-center">
         <p className="font-display text-[0.62rem] tracking-[0.36em] text-parchment-dim/55">
           YUNA SORTING HAT

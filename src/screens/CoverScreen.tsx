@@ -7,7 +7,7 @@ interface CoverScreenProps {
 
 export function CoverScreen({ onStart }: CoverScreenProps) {
   return (
-    <div className="starfield flex min-h-dvh flex-col items-center justify-between px-6 py-10">
+    <div className="screen-enter starfield flex min-h-dvh flex-col items-center justify-between px-6 py-10">
       <div className="flex flex-1 flex-col items-center justify-center gap-7 text-center">
         <SortingHat state="hero" className="w-36 sm:w-44" />
 

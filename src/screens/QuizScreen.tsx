@@ -51,7 +51,7 @@ export function QuizScreen({
   }
 
   return (
-    <div className="starfield flex min-h-dvh flex-col">
+    <div className="screen-enter starfield flex min-h-dvh flex-col">
       {/* 进度常驻：滚动时也知道自己走到哪 */}
       <header className="sticky top-0 z-10 border-b border-night-600/60 bg-night-900/85 px-5 py-3 backdrop-blur-sm sm:px-6">
         <div className="mx-auto flex max-w-lg items-center gap-4">
