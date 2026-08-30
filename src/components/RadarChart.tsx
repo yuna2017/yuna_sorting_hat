@@ -16,7 +16,7 @@ const CY = 112
 const MAX_R = 72
 const LABEL_R = 90
 export const RADAR_REFERENCE_MAX = 0.5
-const RINGS = [0.125, 0.25, 0.375, 0.5]
+const RINGS = [0.125, 0.25, 0.375, 0.5, 1]
 
 /** 轴角度：dev 上、sec 右、ops 下、pr 左。 */
 const ANGLES: Record<DeptId, number> = {
@@ -70,8 +70,8 @@ export function RadarChart({ normalized, winner, className = '' }: RadarChartPro
           points={ringPolygon(scale)}
           fill="none"
           stroke="#efe3c8"
-          strokeWidth="1"
-          opacity={scale === 1 ? 0.26 : 0.12}
+          strokeWidth={scale === 1 ? 1.4 : 1}
+          opacity={scale === 1 ? 0.38 : scale === RADAR_REFERENCE_MAX ? 0.26 : 0.12}
         />
       ))}
 
