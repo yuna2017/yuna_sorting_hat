@@ -9,8 +9,10 @@ import type { AnswerMap, Verdict } from '../lib/scoring'
 interface ShareBarProps {
   /** 可复现结果的完整链接（运行时 origin，本地调试也能用）。 */
   url: string
-  /** 系统分享用的文案（已含链接）。 */
+  /** 复制用的完整文案（含链接）。 */
   text: string
+  /** 系统分享用的正文，不含链接。 */
+  message: string
   bank: QuestionBank
   drawSeed: number
   verdict: Verdict
@@ -37,6 +39,7 @@ const MODES: { id: ShareMode; label: string }[] = [
 export function ShareBar({
   url,
   text,
+  message,
   bank,
   drawSeed,
   verdict,
@@ -108,7 +111,7 @@ export function ShareBar({
         className="mt-4"
       >
         {mode === 'web' ? (
-          <ShareWebPanel url={url} text={text} />
+          <ShareWebPanel url={url} text={text} message={message} />
         ) : (
           <SharePosterPanel
             bank={bank}

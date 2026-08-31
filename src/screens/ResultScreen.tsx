@@ -11,7 +11,7 @@ import type { QuestionBank } from '../data/questions'
 import { explainVerdict, verdictStrength } from '../lib/explain'
 import { deriveBehaviorIdentity } from '../lib/identity'
 import type { AnswerMap, Verdict } from '../lib/scoring'
-import { buildShareText, buildShareUrl } from '../lib/shareCode'
+import { buildShareMessage, buildShareText, buildShareUrl } from '../lib/shareCode'
 import { deriveProfile } from '../lib/traits'
 import resultBackground from '../assets/auxillary/result_background.webp'
 
@@ -432,6 +432,7 @@ export function ResultScreen({
           <ShareBar
             url={shareUrl}
             text={buildShareText(dept.name, identity.name, shareUrl)}
+            message={buildShareMessage(dept.name, identity.name)}
             bank={bank}
             drawSeed={drawSeed}
             verdict={verdict}
