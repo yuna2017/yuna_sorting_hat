@@ -1,12 +1,15 @@
 import { SortingHat } from '../components/SortingHat'
 import { CAMPAIGN } from '../data/campaign'
 import { drawSize } from '../lib/drawQuestions'
+import { POSTER_NICKNAME_MAX } from '../lib/poster'
 
 interface CoverScreenProps {
   onStart: () => void
+  nickname: string
+  onNicknameChange: (value: string) => void
 }
 
-export function CoverScreen({ onStart }: CoverScreenProps) {
+export function CoverScreen({ onStart, nickname, onNicknameChange }: CoverScreenProps) {
   return (
     <div className="screen-enter starfield flex min-h-dvh flex-col items-center justify-between px-6 py-10">
       <div className="flex flex-1 flex-col items-center justify-center gap-7 text-center">
@@ -37,6 +40,22 @@ export function CoverScreen({ onStart }: CoverScreenProps) {
           <br />
           回答完，帽子会告诉你该去哪。
         </p>
+
+        {/* 昵称只用于本地生成分享图，不进分享链接，也不上传 —— 文案必须说清楚，
+            否则这里就成了一个用途不明的个人信息采集点。 */}
+        <div className="flex w-full max-w-xs flex-col gap-1.5">
+          <label htmlFor="cover-nickname" className="text-[0.75rem] text-parchment-dim/80">
+            想在分享图上署名吗？（可留空）
+          </label>
+          <input
+            id="cover-nickname"
+            value={nickname}
+            maxLength={POSTER_NICKNAME_MAX}
+            onChange={(e) => onNicknameChange(e.target.value)}
+            placeholder="只显示在你自己生成的图片上"
+            className="w-full min-w-0 rounded-lg border border-night-500/70 bg-night-900/60 px-3 py-2 text-center text-[0.85rem] text-parchment/90 placeholder:text-parchment-dim/45"
+          />
+        </div>
 
         <button
           type="button"

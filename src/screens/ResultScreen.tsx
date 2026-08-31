@@ -2,14 +2,17 @@ import { DeptCard } from '../components/DeptCard'
 import { RadarChart } from '../components/RadarChart'
 import { ScoreBars } from '../components/ScoreBars'
 import { ShareBar } from '../components/ShareBar'
+import { TraitBars } from '../components/TraitBars'
 import { DepartmentStoryPanel } from '../components/DepartmentStoryPanel'
 import { DEPARTMENTS, DEPT_LIST } from '../data/departments'
+import { TRAITS } from '../data/traits'
 import { CAMPAIGN } from '../data/campaign'
 import type { QuestionBank } from '../data/questions'
 import { explainVerdict, verdictStrength } from '../lib/explain'
 import { deriveBehaviorIdentity } from '../lib/identity'
 import type { AnswerMap, Verdict } from '../lib/scoring'
 import { buildShareText, buildShareUrl } from '../lib/shareCode'
+import { deriveProfile } from '../lib/traits'
 import resultBackground from '../assets/auxillary/result_background.webp'
 
 interface ResultScreenProps {
@@ -23,6 +26,9 @@ interface ResultScreenProps {
   verdict: Verdict
   /** 当前答案。用于生成分享链接与「为什么是这个部门」的证据。 */
   answers: AnswerMap
+  /** 海报上的昵称。只本地渲染，不进分享码。 */
+  nickname: string
+  onNicknameChange: (value: string) => void
   onRestart: () => void
 }
 
@@ -62,12 +68,21 @@ function shareUrlOf(bank: QuestionBank, drawSeed: number, answers: AnswerMap): s
   return buildShareUrl(bank, drawSeed, answers, window.location.origin, window.location.pathname)
 }
 
-export function ResultScreen({ bank, drawSeed, verdict, answers, onRestart }: ResultScreenProps) {
+export function ResultScreen({
+  bank,
+  drawSeed,
+  verdict,
+  answers,
+  nickname,
+  onNicknameChange,
+  onRestart,
+}: ResultScreenProps) {
   const dept = DEPARTMENTS[verdict.winner]
   const hesitated = verdict.tiedWith.length > 0
   const explanation = explainVerdict(bank, answers, verdict)
   const strength = verdictStrength(bank, explanation)
   const identity = deriveBehaviorIdentity(bank, answers, verdict, explanation)
+  const profile = deriveProfile(bank, answers)
 
   const shareUrl = shareUrlOf(bank, drawSeed, answers)
   const actions = [...dept.actions].sort(
@@ -236,6 +251,34 @@ export function ResultScreen({ bank, drawSeed, verdict, answers, onRestart }: Re
           </p>
         </section>
 
+        {/* ── 第四层之二：五个倾向。与部门契合度同层但独立 ──
+            部门推荐来自 p/s，倾向来自 traits，两条链路解耦（docs/特质体系.md §3）。 */}
+        <section className="mt-6 w-full rounded-2xl border border-night-600/70 bg-night-800/55 p-5 sm:p-6">
+          <h2 className="text-center text-sm tracking-[0.16em] text-parchment-dim">你的五个倾向</h2>
+
+          <p className="mt-3 text-center text-[0.82rem] leading-relaxed text-parchment/90">
+            其中
+            <span className="mx-1 text-gold-soft">{TRAITS[profile.dominant].name}</span>
+            最突出
+            {profile.tiedWith.length > 0 && (
+              <>
+                ，不过
+                {profile.tiedWith.map((trait) => TRAITS[trait].name).join('、')}
+                和它分得很近
+              </>
+            )}
+            。
+          </p>
+
+          <div className="mt-4">
+            <TraitBars profile={profile} />
+          </div>
+
+          <p className="mt-4 text-center text-[0.7rem] leading-relaxed text-parchment-dim/60">
+            百分比 = 该倾向实得 ÷ 这套题里它的理论上限。这里只描述你更倾向怎么做，不评价能力高低。
+          </p>
+        </section>
+
         {/* ── 第五层：关于这个部门。未填写时整块不渲染，不留半截空白。 ── */}
         {dept.intro !== null && (
           <section className="mt-6 w-full rounded-2xl border border-night-600/70 bg-night-800/40 p-5">
@@ -386,7 +429,16 @@ export function ResultScreen({ bank, drawSeed, verdict, answers, onRestart }: Re
 
         {/* ── 第九层：传播 ── */}
         {shareUrl !== '' && (
-          <ShareBar url={shareUrl} text={buildShareText(dept.name, identity.name, shareUrl)} />
+          <ShareBar
+            url={shareUrl}
+            text={buildShareText(dept.name, identity.name, shareUrl)}
+            bank={bank}
+            drawSeed={drawSeed}
+            verdict={verdict}
+            answers={answers}
+            nickname={nickname}
+            onNicknameChange={onNicknameChange}
+          />
         )}
 
         {/* ── 第十层：重新体验 ── */}

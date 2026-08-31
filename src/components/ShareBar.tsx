@@ -1,121 +1,125 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
+import type { KeyboardEvent } from 'react'
+import { ShareWebPanel } from './ShareWebPanel'
+import { SharePosterPanel } from './SharePosterPanel'
+import { CAMPAIGN } from '../data/campaign'
+import type { QuestionBank } from '../data/questions'
+import type { AnswerMap, Verdict } from '../lib/scoring'
 
 interface ShareBarProps {
-  /** 可复现结果的完整链接。 */
+  /** 可复现结果的完整链接（运行时 origin，本地调试也能用）。 */
   url: string
   /** 系统分享用的文案（已含链接）。 */
   text: string
+  bank: QuestionBank
+  drawSeed: number
+  verdict: Verdict
+  answers: AnswerMap
+  nickname: string
+  onNicknameChange: (value: string) => void
 }
 
-type CopyState = 'idle' | 'copied' | 'manual'
+type ShareMode = 'web' | 'image'
 
-/** 「已复制」提示停留多久。 */
-const COPIED_HINT_MS = 2200
+const MODES: { id: ShareMode; label: string }[] = [
+  { id: 'web', label: '网页模式' },
+  { id: 'image', label: '图片模式' },
+]
 
 /**
- * 结果分享。
+ * 结果分享。两种模式并列，不是二选一的替代关系：
+ *   · 网页模式 —— 可复现链接，别人打开能反复查看这份结果；
+ *   · 图片模式 —— 合成竖版海报，适合存相册与转发。
  *
- * 两条路径，不是二选一：
- *   · 复制链接 —— 主路径，所有浏览器都要能用；
- *   · 系统分享 —— 仅在支持 navigator.share 时出现（多为移动端）。
- *
- * 复制失败必须有出口。Clipboard API 在非安全上下文（http 局域网预览）、
- * 部分内置浏览器里会直接抛错或静默失败，此时降级成一个只读输入框把链接摊开，
- * 让用户长按全选自己复制 —— 而不是只在控制台报错、界面毫无反应。
+ * 图片模式的二维码带 ?v=&s=&a=，升题库版本会让已发出的海报二维码失效，
+ * 所以 posterOrigin 未确定时生产环境不暴露这个入口（见 campaign.ts）。
  */
-export function ShareBar({ url, text }: ShareBarProps) {
-  const [state, setState] = useState<CopyState>('idle')
-  const manualRef = useRef<HTMLInputElement | null>(null)
-  const hintTimer = useRef<number | undefined>(undefined)
+export function ShareBar({
+  url,
+  text,
+  bank,
+  drawSeed,
+  verdict,
+  answers,
+  nickname,
+  onNicknameChange,
+}: ShareBarProps) {
+  const [mode, setMode] = useState<ShareMode>('web')
+  const tabRefs = useRef<Partial<Record<ShareMode, HTMLButtonElement | null>>>({})
 
-  // 链接变了（重测后再次进入结果）就把提示状态清掉
-  useEffect(() => {
-    setState('idle')
-  }, [url])
+  const posterEnabled = CAMPAIGN.posterOrigin !== null || import.meta.env.DEV
+  const modes = posterEnabled ? MODES : MODES.filter((m) => m.id === 'web')
 
-  useEffect(
-    () => () => {
-      if (hintTimer.current !== undefined) window.clearTimeout(hintTimer.current)
+  const handleKeyDown = useCallback(
+    (e: KeyboardEvent<HTMLButtonElement>) => {
+      if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return
+      e.preventDefault()
+      const current = modes.findIndex((m) => m.id === mode)
+      const delta = e.key === 'ArrowRight' ? 1 : -1
+      const next = modes[(current + delta + modes.length) % modes.length]
+      if (next === undefined) return
+      setMode(next.id)
+      tabRefs.current[next.id]?.focus()
     },
-    [],
+    [mode, modes],
   )
-
-  // 降级出现后立刻把链接选中，省掉一次「长按 → 全选」
-  useEffect(() => {
-    if (state === 'manual') manualRef.current?.select()
-  }, [state])
-
-  const handleCopy = useCallback(async () => {
-    if (hintTimer.current !== undefined) window.clearTimeout(hintTimer.current)
-    try {
-      // navigator.clipboard 在非安全上下文里可能整体不存在，不能只 try writeText
-      if (navigator.clipboard?.writeText === undefined) throw new Error('clipboard unavailable')
-      await navigator.clipboard.writeText(url)
-      setState('copied')
-      hintTimer.current = window.setTimeout(() => setState('idle'), COPIED_HINT_MS)
-    } catch {
-      setState('manual')
-    }
-  }, [url])
-
-  const handleSystemShare = useCallback(async () => {
-    try {
-      await navigator.share({ title: 'YUNA 分部帽', text, url })
-    } catch {
-      // 用户主动取消也会抛 AbortError —— 分享面板是系统 UI，取消不是错误，
-      // 这里不提示、不降级，保持安静。
-    }
-  }, [text, url])
-
-  const canSystemShare = typeof navigator !== 'undefined' && typeof navigator.share === 'function'
 
   return (
     <section className="mt-6 w-full rounded-2xl border border-night-600/70 bg-night-800/40 p-5">
       <h2 className="text-sm tracking-[0.16em] text-parchment-dim">分享你的结果</h2>
-      <p className="mt-2 text-[0.8rem] leading-relaxed text-parchment-dim/75">
-        链接里只带你每道题的选择，别人打开后会看到和你一样的结果。
-      </p>
 
-      <div className="mt-4 flex flex-col gap-2">
-        <button
-          type="button"
-          onClick={handleCopy}
-          className="flex min-h-[2.75rem] items-center justify-center rounded-lg border border-gold/45 px-4 text-sm tracking-[0.08em] text-gold-soft/95 transition-colors hover:border-gold hover:bg-gold/10 active:scale-[0.99]"
+      {modes.length > 1 && (
+        <div
+          role="tablist"
+          aria-label="分享方式"
+          className="mt-3 flex gap-1 rounded-lg border border-night-600/70 bg-night-900/50 p-1"
         >
-          {state === 'copied' ? '已复制链接 ✓' : '复制结果链接'}
-        </button>
-
-        {canSystemShare && (
-          <button
-            type="button"
-            onClick={handleSystemShare}
-            className="flex min-h-[2.75rem] items-center justify-center rounded-lg border border-night-500/70 px-4 text-sm text-parchment/90 transition-colors hover:border-gold/60 hover:text-gold-soft"
-          >
-            分享到…
-          </button>
-        )}
-      </div>
-
-      {state === 'manual' && (
-        <div className="mt-3">
-          <label
-            htmlFor="share-url-fallback"
-            className="text-[0.75rem] leading-relaxed text-parchment-dim/80"
-          >
-            这个浏览器不允许自动复制，请长按下面的链接手动复制：
-          </label>
-          <input
-            id="share-url-fallback"
-            ref={manualRef}
-            readOnly
-            value={url}
-            onFocus={(e) => e.currentTarget.select()}
-            /* w-full + min-w-0：窄屏下长 URL 会把 flex/grid 容器顶宽，
-               输入框必须允许被压缩，否则 320px 出现横向滚动条 */
-            className="mt-1.5 w-full min-w-0 rounded-lg border border-night-500/70 bg-night-900/70 px-3 py-2 text-[0.78rem] text-parchment/90"
-          />
+          {modes.map((m) => {
+            const active = m.id === mode
+            return (
+              <button
+                key={m.id}
+                ref={(el) => {
+                  tabRefs.current[m.id] = el
+                }}
+                type="button"
+                role="tab"
+                id={`share-tab-${m.id}`}
+                aria-selected={active}
+                aria-controls={`share-panel-${m.id}`}
+                tabIndex={active ? 0 : -1}
+                onClick={() => setMode(m.id)}
+                onKeyDown={handleKeyDown}
+                className={`flex-1 rounded-md px-3 py-2 text-[0.82rem] transition-colors ${
+                  active ? 'bg-gold/15 text-gold-soft' : 'text-parchment-dim hover:text-parchment/90'
+                }`}
+              >
+                {m.label}
+              </button>
+            )
+          })}
         </div>
       )}
+
+      <div
+        role="tabpanel"
+        id={`share-panel-${mode}`}
+        aria-labelledby={modes.length > 1 ? `share-tab-${mode}` : undefined}
+        className="mt-4"
+      >
+        {mode === 'web' ? (
+          <ShareWebPanel url={url} text={text} />
+        ) : (
+          <SharePosterPanel
+            bank={bank}
+            drawSeed={drawSeed}
+            verdict={verdict}
+            answers={answers}
+            nickname={nickname}
+            onNicknameChange={onNicknameChange}
+          />
+        )}
+      </div>
     </section>
   )
 }

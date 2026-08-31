@@ -45,3 +45,27 @@ export const OPTION_TRAIT_BUDGET = 3
 /** 单个 trait 权重的取值范围（含端点）。 */
 export const TRAIT_WEIGHT_MIN = 1
 export const TRAIT_WEIGHT_MAX = 3
+
+/**
+ * 海报绘制用的颜色表。
+ *
+ * 这是 src/index.css 里 `[data-dept]` 与 `@theme` 的**镜像** —— canvas 拿不到
+ * CSS 变量，只能在 TS 侧再写一份。改配色必须同时改两处，poster.test.ts 只能
+ * 校验格式，无法发现两边不一致。
+ */
+export const POSTER_COLORS = {
+  dept: {
+    dev: '#5b8cff',
+    sec: '#22d3ee',
+    ops: '#f5b92b',
+    pr: '#ff6fa5',
+  } satisfies Record<DeptId, string>,
+  gold: '#d4af37',
+  goldSoft: '#e8cf83',
+  parchment: '#efe3c8',
+  parchmentDim: '#b9aa8b',
+  night900: '#08061a',
+  night800: '#100d26',
+  night600: '#262048',
+} as const
+

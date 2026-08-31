@@ -105,7 +105,14 @@ await shot('5-result')
 
 // 结果页的新增分层是否都在
 const sections = await page.locator('h2').allInnerTexts()
-const wanted = ['帽子在你身上看见了什么？', '四部门契合度', '关于', '感兴趣？', '分享你的结果']
+const wanted = [
+  '帽子在你身上看见了什么？',
+  '四部门契合度',
+  '你的五个倾向',
+  '关于',
+  '感兴趣？',
+  '分享你的结果',
+]
 const missingSections = wanted.filter((w) => !sections.some((s) => s.includes(w)))
 console.log(
   missingSections.length === 0
@@ -124,6 +131,24 @@ const codeOk = new RegExp(
 ).test(clipboard)
 console.log(`  ${copied ? '✓' : '✗'} 复制后按钮变为「已复制」`)
 console.log(`  ${codeOk ? '✓' : '✗'} 剪贴板里是可复现的结果链接：${clipboard || '(空)'}`)
+
+console.log('图片分享：')
+await page.getByRole('tab', { name: '图片模式' }).click()
+let posterReady = false
+let posterDimensions = false
+try {
+  const poster = page.locator('img[data-poster-preview="ready"]')
+  await poster.waitFor({ timeout: 15000 })
+  posterReady = true
+  posterDimensions = await poster.evaluate(
+    (el) => el.naturalWidth === 1080 && el.naturalHeight === 1920,
+  )
+} catch {
+  // 保留失败状态，最终汇总会让脚本退出 1
+}
+console.log(`  ${posterReady ? '✓' : '✗'} 图片模式生成完成`)
+console.log(`  ${posterDimensions ? '✓' : '✗'} 海报尺寸为 1080×1920`)
+await page.screenshot({ path: `${OUT}/7-share-image.png`, fullPage: true })
 
 console.log('\n窄屏横向溢出：')
 let overflowFailures = 0
@@ -229,6 +254,8 @@ const pass =
   inReveal &&
   copied &&
   codeOk &&
+  posterReady &&
+  posterDimensions &&
   reducedOk
 console.log(pass ? '\n全部检查通过' : '\n有检查未通过，见上文 ✗')
 process.exit(pass ? 0 : 1)

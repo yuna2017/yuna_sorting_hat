@@ -42,6 +42,9 @@ const PRELOAD_ASSETS = [
 /** 'reveal' 是答完最后一题后的分院仪式，只延迟揭晓，不参与判定。 */
 type Phase = 'cover' | 'opening' | 'quiz' | 'reveal' | 'result'
 
+/** 昵称的 sessionStorage 键。只存这一项，且仅本会话有效。 */
+const NICKNAME_KEY = 'yuna-sorting-hat:nickname'
+
 /* 开发期自检：题池不变量 + 还没填的事实文案，直接打在控制台。
    权威闸门是 vitest；这里是给「改了题但没跑测试」的人兜底。 */
 assertPoolInDev(QUESTION_POOL, [...reportUnfilledCopy(), ...reportUnfilledOptionDetail()])
@@ -87,6 +90,21 @@ export default function App() {
   /** 这一场实际用到的题目，包装成题库形状交给下游 —— 满分与特质上限都按这 12 道题算。 */
   const bank = useMemo(() => drawBank(drawSeed), [drawSeed])
   const questions = bank.questions
+
+  /* 昵称只用于本地合成分享图，不进分享码也不上传。用 sessionStorage 而不是
+     localStorage：关掉标签页就应该忘掉，不在设备上留下跨会话的个人标识。
+     分享链接直达时天然为空（不走封面页）—— 别人的结果不该带你的名字。 */
+  const [nickname, setNickname] = useState(() => {
+    if (typeof window === 'undefined') return ''
+    return window.sessionStorage.getItem(NICKNAME_KEY) ?? ''
+  })
+
+  const handleNicknameChange = useCallback((value: string) => {
+    setNickname(value)
+    if (typeof window === 'undefined') return
+    if (value.trim() === '') window.sessionStorage.removeItem(NICKNAME_KEY)
+    else window.sessionStorage.setItem(NICKNAME_KEY, value)
+  }, [])
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -146,7 +164,13 @@ export default function App() {
   }, [])
 
   if (phase === 'cover') {
-    return <CoverScreen onStart={() => setPhase('opening')} />
+    return (
+      <CoverScreen
+        onStart={() => setPhase('opening')}
+        nickname={nickname}
+        onNicknameChange={handleNicknameChange}
+      />
+    )
   }
 
   if (phase === 'opening') {
@@ -184,6 +208,8 @@ export default function App() {
       drawSeed={drawSeed}
       verdict={verdict}
       answers={answers}
+      nickname={nickname}
+      onNicknameChange={handleNicknameChange}
       onRestart={handleRestart}
     />
   )
