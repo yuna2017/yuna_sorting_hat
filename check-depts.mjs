@@ -14,7 +14,7 @@ const BANK_VERSION = 3
 const DRAW_SEED = 1
 const CASES = [
   { dept: 'dev', code: 'adadddabacdd', name: '开发部' },
-  { dept: 'sec', code: 'bccaccbccbba', name: '网络安全部' },
+  { dept: 'sec', code: 'bccaccbccbba', name: '网安部' },
   { dept: 'ops', code: 'cadbaacdbaab', name: '运维部' },
   { dept: 'pr', code: 'dbbcbbdaddcc', name: '组宣部' },
 ]

@@ -123,7 +123,17 @@ npm run preview    # 按 base 路径预览产物，部署前用这个复核
 推到 `main` 即由 [.github/workflows/deploy.yml](.github/workflows/deploy.yml)
 自动构建并发布到 GitHub Pages（仓库 Settings → Pages → Source 选 **GitHub Actions**）。
 
-换仓库名或上自定义域名（根路径）时，设环境变量 `VITE_BASE` 覆盖即可。
+其他平台（Cloudflare Pages / Vercel / Netlify / 自有服务器等）部署**无需改代码**，
+只需在平台设置以下构建环境变量后重新构建：
+
+| 环境变量 | 含义 | 根路径部署（自定义域名 / *.pages.dev） | 子路径部署（GitHub Pages） |
+|---|---|---|---|
+| `VITE_BASE` | 资源路径（同 vite.config.ts 的 base） | `/` | `/yuna_sorting_hat/` |
+| `VITE_PUBLIC_PATH` | 海报二维码路径（需与 base 一致） | 不设（默认 `/`） | `/yuna_sorting_hat/` |
+| `VITE_PUBLIC_ORIGIN` | 海报二维码域名（不含路径）；不设则不启用海报二维码 | `https://你的域名` | 同左 |
+
+`VITE_PUBLIC_ORIGIN` 是海报功能的发布闸门：不设置时生产环境不出现「图片模式」
+入口，也不会把本地开发地址印进二维码。换仓库名或上自定义域名时同样只改环境变量。
 
 ## 字体
 

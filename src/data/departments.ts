@@ -124,7 +124,7 @@ export const DEPARTMENTS: Record<DeptId, Department> = {
   },
   sec: {
     id: 'sec',
-    name: '网络安全部',
+    name: '网安部',
     latinName: 'cyber security',
     house: '拉文克劳',
     houseLatin: 'Ravenclaw',
@@ -133,7 +133,7 @@ export const DEPARTMENTS: Record<DeptId, Department> = {
     slogan: '你要的从来不是答案，是它为什么成立。',
     tagline: '组织网络安全基础训练与 CTF 竞赛实践，覆盖多类安全方向，并通过赛题复盘沉淀可继续学习的技术路线。',
     intro:
-      'YUNA 网络安全部：协会最早创立的部门之一，围绕网络安全基础和 CTF 竞赛开展培训、研究与实战，' +
+      'YUNA 网安部：协会最早创立的部门之一，围绕网络安全基础和 CTF 竞赛开展培训、研究与实战，' +
       '接触漏洞分析、攻防思维和安全知识传播，在解题与复盘中逐步建立完整的计算机与网络安全知识体系。',
     doing: [
       '学习 Linux、Kali Linux、Python 脚本与常用安全工具',
@@ -143,7 +143,7 @@ export const DEPARTMENTS: Record<DeptId, Department> = {
     ],
     suitedFor: '喜欢解谜与钻研、对攻防原理充满好奇、愿意持续学习和复盘的人。',
     actions: departmentActions(
-      '网络安全部',
+      '网安部',
       'https://www.yuna.team/department-security',
       'https://www.yuna.team/articles?tag=%E7%BD%91%E5%AE%89%E9%83%A8',
       '查看训练资料与文章',
