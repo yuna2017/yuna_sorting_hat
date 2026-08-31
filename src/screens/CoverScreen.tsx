@@ -41,18 +41,18 @@ export function CoverScreen({ onStart, nickname, onNicknameChange }: CoverScreen
           回答完，帽子会告诉你该去哪。
         </p>
 
-        {/* 昵称只用于本地生成分享图，不进分享链接，也不上传 —— 文案必须说清楚，
-            否则这里就成了一个用途不明的个人信息采集点。 */}
+        {/* 名称仅用于本地生成结果与分享图，不进分享链接也不上传。
+            收集原因已在页面底部的声明小字中向用户说明。 */}
         <div className="flex w-full max-w-xs flex-col gap-1.5">
           <label htmlFor="cover-nickname" className="text-[0.75rem] text-parchment-dim/80">
-            想在分享图上署名吗？（可留空）
+            你的名字？
           </label>
           <input
             id="cover-nickname"
             value={nickname}
             maxLength={POSTER_NICKNAME_MAX}
             onChange={(e) => onNicknameChange(e.target.value)}
-            placeholder="只显示在你自己生成的图片上"
+            placeholder="代号也行"
             className="w-full min-w-0 rounded-lg border border-night-500/70 bg-night-900/60 px-3 py-2 text-center text-[0.85rem] text-parchment/90 placeholder:text-parchment-dim/45"
           />
         </div>
@@ -66,9 +66,16 @@ export function CoverScreen({ onStart, nickname, onNicknameChange }: CoverScreen
         </button>
       </div>
 
-      <p className="font-display text-[0.62rem] tracking-[0.3em] text-parchment-dim/55">
-        YUNA 社团 · {CAMPAIGN.label}
-      </p>
+      <div className="flex flex-col items-center gap-1.5">
+        <p className="font-display text-[0.62rem] tracking-[0.3em] text-parchment-dim/55">
+          YUNA 社团 · {CAMPAIGN.label}
+        </p>
+        <p className="text-[0.6rem] leading-relaxed tracking-[0.14em] text-parchment-dim/40">
+          名称仅用作生成结果与报告
+          <br />
+          剧情纯属虚构
+        </p>
+      </div>
     </div>
   )
 }
