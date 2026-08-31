@@ -52,6 +52,12 @@ export function CoverScreen({ onStart, nickname, onNicknameChange }: CoverScreen
             value={nickname}
             maxLength={POSTER_NICKNAME_MAX}
             onChange={(e) => onNicknameChange(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault()
+                onStart()
+              }
+            }}
             placeholder="代号也行"
             className="w-full min-w-0 rounded-lg border border-night-500/70 bg-night-900/60 px-3 py-2 text-center text-[0.85rem] text-parchment/90 placeholder:text-parchment-dim/45"
           />
