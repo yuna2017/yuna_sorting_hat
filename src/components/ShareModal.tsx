@@ -71,7 +71,7 @@ export function ShareModal({ open, onClose, title, children }: ShareModalProps) 
     <div
       // 面板贴近视口顶部而不是居中：弹窗里是海报预览等高内容，
       // 居中时下半屏被面板占满，顶部对齐能留出更多纵向阅读空间。
-      className="fixed inset-0 z-50 flex items-start justify-center overflow-x-hidden overflow-y-auto px-3 py-[max(1.5rem,env(safe-area-inset-top))] pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:px-4 sm:py-10"
+      className="fixed inset-0 z-50 box-border flex items-start justify-center overflow-x-hidden overflow-y-auto px-3 pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))] sm:px-4 sm:py-10"
       role="dialog"
       aria-modal="true"
       aria-labelledby="share-modal-title"
@@ -86,7 +86,7 @@ export function ShareModal({ open, onClose, title, children }: ShareModalProps) 
       />
       <div
         ref={panelRef}
-        className="share-modal-panel relative max-h-[calc(100dvh-3rem)] min-h-0 w-full min-w-0 max-w-lg overflow-x-hidden overflow-y-auto rounded-2xl border border-night-500/60 bg-night-800 p-5 shadow-2xl sm:max-h-[calc(100dvh-5rem)]"
+        className="share-modal-panel relative box-border max-h-[calc(100dvh-2rem)] min-h-0 w-full min-w-0 max-w-lg overflow-x-hidden overflow-y-auto rounded-2xl border border-night-500/60 bg-night-800 p-5 shadow-2xl sm:max-h-[calc(100dvh-5rem)]"
       >
         <div className="flex items-center justify-between gap-3">
           <h2 id="share-modal-title" className="text-sm tracking-[0.16em] text-parchment-dim">
