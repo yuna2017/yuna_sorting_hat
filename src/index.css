@@ -464,8 +464,63 @@ body {
     transform 180ms ease;
 }
 
+.theme-toggle-icon {
+  display: block;
+  font-family: Georgia, serif;
+  font-size: 1.35rem;
+  line-height: 1;
+  transform-origin: center;
+  animation: theme-icon-in 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.theme-toggle-icon-light {
+  color: var(--color-gold-soft);
+  text-shadow: 0 0 10px rgb(212 175 55 / 0.7);
+}
+
+.theme-toggle-icon-dark {
+  color: var(--color-parchment);
+  text-shadow: 0 0 9px rgb(239 227 200 / 0.42);
+}
+
+.theme-toggle-icon-system {
+  color: var(--color-parchment-dim);
+  font-size: 1.2rem;
+}
+
+@keyframes theme-icon-in {
+  from {
+    opacity: 0;
+    transform: rotate(-70deg) scale(0.35);
+  }
+  to {
+    opacity: 1;
+    transform: rotate(0deg) scale(1);
+  }
+}
+
 .theme-toggle:active {
   transform: scale(0.92);
+}
+
+.theme-toggle:hover .theme-toggle-icon {
+  animation: theme-icon-pulse 700ms ease-in-out infinite alternate;
+}
+
+@keyframes theme-icon-pulse {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.12) rotate(8deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .theme-toggle-icon,
+  .theme-toggle:hover .theme-toggle-icon {
+    animation: none;
+  }
 }
 
 [data-theme='dark'] {

@@ -77,7 +77,7 @@ function ThemeShell({ children }: { children: ReactNode }) {
 
   const nextMode: ThemeMode = mode === 'system' ? 'light' : mode === 'light' ? 'dark' : 'system'
   const label = mode === 'system' ? '跟随系统' : mode === 'light' ? '浅色模式' : '深色模式'
-  const icon = mode === 'system' ? '系' : mode === 'light' ? '浅' : '深'
+  const icon = mode === 'system' ? '◐' : mode === 'light' ? '☼' : '☾'
 
   return (
     <>
@@ -88,7 +88,9 @@ function ThemeShell({ children }: { children: ReactNode }) {
         title={`${label} · 点击切换`}
         onClick={() => setMode(nextMode)}
       >
-        <span aria-hidden="true">{icon}</span>
+        <span aria-hidden="true" className={`theme-toggle-icon theme-toggle-icon-${mode}`}>
+          {icon}
+        </span>
       </button>
       {children}
     </>
