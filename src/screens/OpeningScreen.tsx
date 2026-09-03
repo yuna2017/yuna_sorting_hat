@@ -26,10 +26,12 @@ export function OpeningScreen({ onContinue }: OpeningScreenProps) {
 
   return (
     <div
-      className="screen-enter starfield flex min-h-dvh flex-col items-center justify-center gap-6 px-6 py-9"
+      className="screen-enter opening-screen starfield flex min-h-dvh flex-col items-center justify-center gap-6 px-6 py-9"
       onClick={done ? undefined : skip}
     >
-      <SortingHat state="idle" className="w-20 shrink-0 sm:w-24" />
+      <div className="opening-art">
+        <SortingHat state="idle" className="w-20 shrink-0 sm:w-24" />
+      </div>
 
       <div className="flex min-h-[13rem] w-full max-w-md items-start justify-center sm:min-h-[14rem]">
         {/* 动画节点对读屏隐藏，另挂完整文本，避免逐字被念成乱码 */}

@@ -51,7 +51,7 @@ export function QuizScreen({
   }
 
   return (
-    <div className="screen-enter starfield flex min-h-dvh flex-col">
+    <div className="screen-enter quiz-screen starfield flex min-h-dvh flex-col">
       {/* 进度常驻：滚动时也知道自己走到哪 */}
       <header className="sticky top-0 z-10 border-b border-night-600/60 bg-night-900/85 px-5 py-3 backdrop-blur-sm sm:px-6">
         <div className="mx-auto flex max-w-lg items-center gap-4">
@@ -69,7 +69,7 @@ export function QuizScreen({
       </header>
 
       <main className="mx-auto flex w-full max-w-lg flex-1 flex-col px-5 py-6 sm:px-6 sm:py-8">
-        <div key={question.id} className="rise-in flex flex-1 flex-col">
+        <div key={question.id} className="quiz-content rise-in flex flex-1 flex-col">
           {/* 视觉层级刻意做成「标题 → 选项」为主，场景描述为辅：
               场景是氛围铺垫，不是要读者细品的正文。它此前带一条金色左边线，
               而深底上的金色 = 「重点框」信号，注意力会被吸在描述上、

@@ -11,9 +11,11 @@ interface CoverScreenProps {
 
 export function CoverScreen({ onStart, nickname, onNicknameChange }: CoverScreenProps) {
   return (
-    <div className="screen-enter starfield flex min-h-dvh flex-col items-center justify-between px-6 py-10">
-      <div className="flex flex-1 flex-col items-center justify-center gap-7 text-center">
-        <SortingHat state="hero" className="w-36 sm:w-44" />
+    <div className="screen-enter cover-screen starfield flex min-h-dvh flex-col items-center justify-between px-6 py-10">
+      <div className="cover-content flex flex-1 flex-col items-center justify-center gap-7 text-center">
+        <div className="cover-hero-art">
+          <SortingHat state="hero" className="w-36 sm:w-44" />
+        </div>
 
         <div className="flex flex-col items-center gap-2">
           {/* 层级：社团名是语境（小、弱），「分部帽」才是标题（大、亮）。
@@ -43,7 +45,7 @@ export function CoverScreen({ onStart, nickname, onNicknameChange }: CoverScreen
 
         {/* 名称仅用于本地生成结果与分享图，不进分享链接也不上传。
             收集原因已在页面底部的声明小字中向用户说明。 */}
-        <div className="flex w-full max-w-xs flex-col gap-1.5">
+        <div className="cover-form flex w-full max-w-xs flex-col gap-1.5">
           <label htmlFor="cover-nickname" className="text-[0.75rem] text-parchment-dim/80">
             你的名字？
           </label>

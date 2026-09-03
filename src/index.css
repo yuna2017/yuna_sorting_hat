@@ -170,6 +170,45 @@ body {
   );
 }
 
+/* ───────────────────── 分享弹窗 ───────────────────── */
+.share-modal-overlay {
+  animation: modal-overlay-in 0.22s ease-out both;
+}
+
+.share-modal-panel {
+  animation: modal-panel-in 0.28s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+/* 老 Safari（<17）不支持 dvh：面板已改为顶部对齐、由外层容器滚动，
+   这条兜底保留给未来可能回来的 dvh 用法 */
+@supports not (height: 1dvh) {
+  .share-modal-panel {
+    max-height: 90vh;
+  }
+}
+
+@keyframes modal-overlay-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* 面板：从顶部下方浮入（面板贴近顶部对齐，向下入场与位置呼应） */
+@keyframes modal-panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(-24px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+
 /* 打字机光标 */
 .caret::after {
   content: '';
@@ -459,6 +498,157 @@ body {
 .theme-toggle:hover {
   border-color: var(--color-gold);
   color: var(--color-gold-soft);
+}
+
+/* 宽屏不是把手机栏放大，而是给仪式内容留出叙事舞台。
+   断点只改变布局，字号和触控尺寸仍由各屏自己的移动端规则控制。 */
+@media (min-width: 900px) and (orientation: landscape) {
+  .cover-screen {
+    position: relative;
+    align-items: stretch;
+    padding-inline: clamp(3rem, 9vw, 10rem);
+  }
+
+  .cover-content {
+    display: grid;
+    grid-template-columns: minmax(18rem, 0.9fr) minmax(24rem, 1.1fr);
+    grid-template-rows: auto auto auto auto;
+    align-content: center;
+    justify-content: center;
+    column-gap: clamp(3rem, 9vw, 10rem);
+    width: min(72rem, 100%);
+    margin-inline: auto;
+    text-align: left;
+  }
+
+  .cover-hero-art {
+    grid-row: 1 / -1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .cover-hero-art img {
+    width: clamp(18rem, 34vw, 28rem);
+  }
+
+  .cover-content > :not(.cover-hero-art) {
+    justify-self: start;
+  }
+
+  .cover-content > div:not(.cover-hero-art) {
+    align-items: flex-start;
+  }
+
+  .cover-form {
+    margin-top: 0.5rem;
+  }
+
+  .cover-screen > div:last-child {
+    align-self: center;
+    margin-top: 2rem;
+  }
+
+  .opening-screen {
+    display: grid;
+    grid-template-columns: minmax(18rem, 0.8fr) minmax(26rem, 1.2fr);
+    grid-template-rows: 1fr auto;
+    column-gap: clamp(3rem, 10vw, 12rem);
+    align-content: center;
+    width: min(70rem, 100%);
+    margin-inline: auto;
+    text-align: left;
+  }
+
+  .opening-art {
+    grid-row: 1 / -1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .opening-art img {
+    width: clamp(12rem, 20vw, 18rem);
+  }
+
+  .opening-screen > div:not(.opening-art) {
+    justify-content: center;
+    text-align: left;
+  }
+
+  .opening-screen > button {
+    justify-self: start;
+  }
+
+  .reveal-screen {
+    padding-inline: clamp(3rem, 9vw, 10rem);
+  }
+
+  .reveal-screen > .w-full {
+    max-width: 72rem;
+  }
+
+  .reveal-stage-shell {
+    min-height: 30rem;
+    width: min(52rem, 65vw);
+  }
+
+  .reveal-stage-shell .reveal-magic-circle {
+    width: min(32rem, 52vw);
+  }
+
+  .reveal-stage-shell .reveal-stage > .reveal-hat {
+    width: clamp(11rem, 18vw, 17rem);
+  }
+
+  .reveal-stage-shell .reveal-stage > .w-44 {
+    width: clamp(13rem, 20vw, 19rem);
+  }
+
+  .quiz-screen main {
+    max-width: 78rem;
+    width: 100%;
+    padding-inline: clamp(2rem, 7vw, 8rem);
+  }
+
+  .quiz-content {
+    display: grid;
+    grid-template-columns: minmax(18rem, 0.85fr) minmax(28rem, 1.15fr);
+    align-content: center;
+    column-gap: clamp(3rem, 8vw, 9rem);
+  }
+
+  .quiz-content > h2,
+  .quiz-content > p {
+    grid-column: 1;
+  }
+
+  .quiz-content > ul {
+    grid-column: 2;
+    grid-row: 1 / span 3;
+    align-self: center;
+    margin-top: 0;
+  }
+
+  .quiz-screen header > div,
+  .quiz-screen footer > div {
+    max-width: 78rem;
+  }
+
+  .result-content {
+    max-width: 72rem;
+  }
+
+  .result-content > section,
+  .result-content > ul,
+  .result-content > .share-bar {
+    width: min(100%, 48rem);
+  }
+
+  .result-content > section:nth-of-type(2),
+  .result-content > section:nth-of-type(3) {
+    width: min(100%, 58rem);
+  }
 }
 /* ───────────────────── 图片素材层 ───────────────────── */
 .result-background {

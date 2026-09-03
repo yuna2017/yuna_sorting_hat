@@ -121,19 +121,37 @@ console.log(
 )
 
 console.log('分享：')
-await page.getByRole('button', { name: '复制结果链接' }).click()
-await page.waitForTimeout(300)
-const copied = await page.getByRole('button', { name: /已复制链接/ }).isVisible()
-const clipboard = await page.evaluate(() => navigator.clipboard.readText().catch(() => ''))
-// 种子是随机生成的，只校验格式（base36，1~7 位），不校验具体值
-const codeOk = new RegExp(
-  `\\?v=${BANK_VERSION}&s=[0-9a-z]{1,7}&a=[abcd]{${QUESTION_COUNT}}$`,
-).test(clipboard)
-console.log(`  ${copied ? '✓' : '✗'} 复制后按钮变为「已复制」`)
-console.log(`  ${codeOk ? '✓' : '✗'} 剪贴板里是可复现的结果链接：${clipboard || '(空)'}`)
+/* 自动打开：结果页尾部加了约半页空白，滚到页面最底部时
+   「打开分享窗口」按钮会到达画面约 1/3 处，弹窗应自动打开（每次加载仅一次）。 */
+await page
+  .getByRole('button', { name: '再测一次' })
+  .scrollIntoViewIfNeeded()
+await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight))
+await page.waitForTimeout(500)
+let autoOpened = (await page.getByRole('dialog').count()) === 1
+if (!autoOpened) {
+  // 兜底：某些环境下滚动事件迟到，再等一拍
+  await page.waitForTimeout(800)
+  autoOpened = (await page.getByRole('dialog').count()) === 1
+}
+console.log(`  ${autoOpened ? '✓' : '✗'} 滚动到底后分享弹窗自动打开`)
+const modalVisible = autoOpened || (await page.getByRole('dialog').isVisible())
+console.log(`  ${modalVisible ? '✓' : '✗'} 分享弹窗打开`)
 
-console.log('图片分享：')
-await page.getByRole('tab', { name: '图片模式' }).click()
+/* 自动打开只能一次：手动关闭后再滚动，不允许再弹 */
+await page.keyboard.press('Escape')
+await page.waitForTimeout(300)
+await page.evaluate(() => window.scrollTo(0, 0))
+await page.waitForTimeout(200)
+await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight))
+await page.waitForTimeout(500)
+const autoOnce = (await page.getByRole('dialog').count()) === 0
+console.log(`  ${autoOnce ? '✓' : '✗'} 自动打开只发生一次（关闭后再滚不再弹）`)
+
+/* 手动打开路径仍然可用 */
+await page.getByRole('button', { name: '打开分享窗口' }).click()
+await page.waitForTimeout(300)
+/* 默认应是图片模式：海报预览直接出现，无需切 tab */
 let posterReady = false
 let posterDimensions = false
 try {
@@ -146,11 +164,65 @@ try {
 } catch {
   // 保留失败状态，最终汇总会让脚本退出 1
 }
-console.log(`  ${posterReady ? '✓' : '✗'} 图片模式生成完成`)
+console.log(`  ${posterReady ? '✓' : '✗'} 默认图片模式，海报生成完成`)
 console.log(`  ${posterDimensions ? '✓' : '✗'} 海报尺寸为 1080×1920`)
 await page.screenshot({ path: `${OUT}/7-share-image.png`, fullPage: true })
 
-console.log('\n窄屏横向溢出：')
+/* 网页模式仍是可切换的备选，复制链路在这验 */
+await page.getByRole('tab', { name: '网页模式' }).click()
+await page.waitForTimeout(200)
+await page.getByRole('button', { name: '复制结果链接' }).click()
+await page.waitForTimeout(300)
+const copied = await page.getByRole('button', { name: /已复制链接/ }).isVisible()
+const clipboard = await page.evaluate(() => navigator.clipboard.readText().catch(() => ''))
+// 种子是随机生成的，只校验格式（base36，1~7 位），不校验具体值
+const codeOk = new RegExp(
+  `\\?v=${BANK_VERSION}&s=[0-9a-z]{1,7}&a=[abcd]{${QUESTION_COUNT}}$`,
+).test(clipboard)
+console.log(`  ${copied ? '✓' : '✗'} 复制后按钮变为「已复制」`)
+console.log(`  ${codeOk ? '✓' : '✗'} 剪贴板里是可复现的结果链接：${clipboard || '(空)'}`)
+
+/* 弹窗面板应贴近视口顶部，而不是居中或沉底 */
+const panelTop = await page
+  .getByRole('dialog')
+  .locator('.share-modal-panel')
+  .evaluate((el) => el.getBoundingClientRect().top)
+const panelNearTop = panelTop < 160
+console.log(
+  `${panelNearTop ? '✓' : '✗'} 弹窗面板贴近顶部（panelTop=${Math.round(panelTop)}px < 160）`,
+)
+
+/* 横屏高度通常只有 390px：面板不能把内容硬挤出视口，
+   应在自身范围内滚动，并且滚到底后仍能访问保存按钮。 */
+await page.getByRole('tab', { name: '图片模式' }).click()
+await page.locator('img[data-poster-preview="ready"]').waitFor({ timeout: 15000 })
+await page.setViewportSize({ width: 844, height: 390 })
+await page.waitForTimeout(350)
+const landscapePanel = page.locator('.share-modal-panel')
+const landscapeScroll = await landscapePanel.evaluate((el) => ({
+  clientHeight: el.clientHeight,
+  scrollHeight: el.scrollHeight,
+  overflowY: getComputedStyle(el).overflowY,
+}))
+const landscapeBounded = landscapeScroll.clientHeight < landscapeScroll.scrollHeight && landscapeScroll.overflowY === 'auto'
+await landscapePanel.evaluate((el) => {
+  el.scrollTop = el.scrollHeight
+})
+const landscapeBottomAction = await landscapePanel
+  .getByRole('link', { name: '保存图片' })
+  .evaluate((el) => {
+    const panel = el.closest('.share-modal-panel')?.getBoundingClientRect()
+    const rect = el.getBoundingClientRect()
+    return panel !== undefined && rect.top >= panel.top && rect.bottom <= panel.bottom
+  })
+const landscapeOk = landscapeBounded && landscapeBottomAction
+console.log(
+  `  ${landscapeOk ? '✓' : '✗'} 横屏面板可内部滚动到底（${landscapeScroll.clientHeight}/${landscapeScroll.scrollHeight}，保存按钮=${landscapeBottomAction ? '可见' : '不可见'}）`,
+)
+
+/* 窄屏溢出故意在弹窗打开时测：面板是新增的定宽容器，
+   又装着海报预览和长链接，是当前最容易顶宽的一屏。 */
+console.log('\n窄屏横向溢出（分享弹窗打开）：')
 let overflowFailures = 0
 for (const width of VIEWPORTS) {
   await page.setViewportSize({ width, height: 780 })
@@ -162,8 +234,23 @@ for (const width of VIEWPORTS) {
   const ok = o.scrollW <= o.clientW + 1
   if (!ok) overflowFailures++
   console.log(`  ${ok ? '✓' : '✗'} ${width}px  scrollWidth=${o.scrollW} clientWidth=${o.clientW}`)
-  if (width === 320) await shot('6-result-320')
 }
+
+// 弹窗可关闭：Esc 关闭，且分享区回到仅触发按钮
+await page.setViewportSize({ width: 320, height: 780 })
+await page.keyboard.press('Escape')
+await page.waitForTimeout(300)
+const modalClosed = (await page.getByRole('dialog').count()) === 0
+const shareTriggerBack = await page.getByRole('button', { name: '打开分享窗口' }).isVisible()
+// 关闭后必须解掉滚动锁，否则结果页再也滚不动
+const scrollUnlocked = await page.evaluate(
+  () => getComputedStyle(document.body).overflow !== 'hidden',
+)
+console.log(`  ${modalClosed ? '✓' : '✗'} Esc 可关闭分享弹窗`)
+console.log(`  ${shareTriggerBack ? '✓' : '✗'} 分享区回到触发按钮`)
+console.log(`  ${scrollUnlocked ? '✓' : '✗'} 关闭后背景滚动已解锁`)
+await page.waitForTimeout(200)
+await shot('6-result-320')
 await page.close()
 
 // ---- 减少动态偏好：仪式必须被压缩，不能让人干等 ----
@@ -252,6 +339,14 @@ const pass =
   overflowFailures === 0 &&
   missingSections.length === 0 &&
   inReveal &&
+  modalVisible &&
+  autoOpened &&
+  autoOnce &&
+  panelNearTop &&
+  landscapeOk &&
+  modalClosed &&
+  shareTriggerBack &&
+  scrollUnlocked &&
   copied &&
   codeOk &&
   posterReady &&

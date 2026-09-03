@@ -116,7 +116,7 @@ export function ResultScreen({
         className="result-background"
         alt=""
       />
-      <div className="relative z-10 mx-auto flex max-w-lg flex-col items-center">
+      <div className="result-content relative z-10 mx-auto flex max-w-lg flex-col items-center">
         {/* ── 第一层：结果 ── */}
         <p className="font-display text-[0.62rem] tracking-[0.36em] text-parchment-dim/70">
           THE HAT HAS DECIDED
@@ -441,7 +441,6 @@ export function ResultScreen({
             onNicknameChange={onNicknameChange}
           />
         )}
-
         {/* ── 第十层：重新体验 ── */}
         <button
           type="button"
@@ -460,6 +459,11 @@ export function ResultScreen({
         <p className="font-display mt-6 text-[0.6rem] tracking-[0.3em] text-parchment-dim/45">
           YUNA 社团 · {CAMPAIGN.label}
         </p>
+
+        {/* 尾部留白（约半页）：自动弹分享要在「分享按钮到达画面 1/3 处」时触发，
+            若页面在分享区就到底，部分视口高度下按钮天然停在水位线之上，
+            自动打开永远不会发生。这段空白保证滚动有得滚，触发条件才成立。 */}
+        <div aria-hidden="true" className="h-[50dvh] w-full" />
       </div>
     </div>
   )
