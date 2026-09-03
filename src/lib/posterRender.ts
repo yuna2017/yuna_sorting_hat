@@ -1,5 +1,5 @@
-import QrCreator from 'qr-creator'
-import { POSTER_COLORS } from '../data/constants'
+import { POSTER_COLORS as POSTER_DARK_COLORS, POSTER_LIGHT_COLORS } from '../data/constants'
+import type { DeptId } from '../data/constants'
 import { mulberry32 } from './seededShuffle'
 import type { PosterData } from './poster'
 import type { PosterImages } from './posterImages'
@@ -27,8 +27,19 @@ const FONT_DISPLAY = "'Cinzel', 'Palatino Linotype', Georgia, 'Songti SC', 'SimS
 const STARFIELD_SEED = 0x5eed
 const STAR_COUNT = 220
 
-const QR_SIZE = 196
-const QR_QUIET = 16
+export type PosterTheme = 'light' | 'dark'
+type PosterColors = {
+  dept: Record<DeptId, string>
+  gold: string
+  goldSoft: string
+  parchment: string
+  parchmentDim: string
+  night900: string
+  night800: string
+  night600: string
+}
+
+let activePosterColors: PosterColors = POSTER_DARK_COLORS
 
 function font(size: number, weight = 400, family = FONT_BODY): string {
   return `${weight} ${size}px ${family}`
@@ -71,11 +82,36 @@ function roundRect(
 
 function drawBackdrop(ctx: CanvasRenderingContext2D): void {
   const gradient = ctx.createLinearGradient(0, 0, 0, POSTER_HEIGHT)
-  gradient.addColorStop(0, POSTER_COLORS.night900)
-  gradient.addColorStop(0.45, POSTER_COLORS.night800)
-  gradient.addColorStop(1, POSTER_COLORS.night900)
+  gradient.addColorStop(0, activePosterColors.night900)
+  gradient.addColorStop(0.45, activePosterColors.night800)
+  gradient.addColorStop(1, activePosterColors.night900)
   ctx.fillStyle = gradient
   ctx.fillRect(0, 0, POSTER_WIDTH, POSTER_HEIGHT)
+
+  if (activePosterColors === POSTER_LIGHT_COLORS) {
+    ctx.globalAlpha = 0.42
+    ctx.strokeStyle = '#c9b980'
+    ctx.lineWidth = 1
+    for (let x = 0; x <= POSTER_WIDTH; x += 64) {
+      ctx.beginPath()
+      ctx.moveTo(x, 0)
+      ctx.lineTo(x, POSTER_HEIGHT)
+      ctx.stroke()
+    }
+    for (let y = 0; y <= POSTER_HEIGHT; y += 64) {
+      ctx.beginPath()
+      ctx.moveTo(0, y)
+      ctx.lineTo(POSTER_WIDTH, y)
+      ctx.stroke()
+    }
+    const glow = ctx.createRadialGradient(POSTER_WIDTH * 0.78, 160, 0, POSTER_WIDTH * 0.78, 160, 560)
+    glow.addColorStop(0, 'rgb(212 175 55 / 0.18)')
+    glow.addColorStop(1, 'rgb(212 175 55 / 0)')
+    ctx.globalAlpha = 1
+    ctx.fillStyle = glow
+    ctx.fillRect(0, 0, POSTER_WIDTH, 720)
+    return
+  }
 
   const rand = mulberry32(STARFIELD_SEED)
   for (let i = 0; i < STAR_COUNT; i++) {
@@ -83,7 +119,7 @@ function drawBackdrop(ctx: CanvasRenderingContext2D): void {
     const y = rand() * POSTER_HEIGHT
     const r = 0.6 + rand() * 1.6
     ctx.globalAlpha = 0.08 + rand() * 0.3
-    ctx.fillStyle = POSTER_COLORS.parchment
+    ctx.fillStyle = activePosterColors.parchment
     ctx.beginPath()
     ctx.arc(x, y, r, 0, Math.PI * 2)
     ctx.fill()
@@ -99,25 +135,25 @@ function drawMasthead(ctx: CanvasRenderingContext2D): number {
   ctx.textBaseline = 'alphabetic'
 
   ctx.font = font(30)
-  ctx.fillStyle = POSTER_COLORS.parchmentDim
-  fillTrackedCenter(ctx, '燕山大学网络与信息协会', centerX, 128, 5)
+  ctx.fillStyle = activePosterColors.parchmentDim
+  fillTrackedCenter(ctx, '燕山大学网络与信息协会', centerX, 96, 5)
 
-  ctx.font = font(84, 600, FONT_DISPLAY)
-  ctx.fillStyle = POSTER_COLORS.parchment
-  ctx.fillText('分部帽', centerX, 226)
+  ctx.font = font(76, 600, FONT_DISPLAY)
+  ctx.fillStyle = activePosterColors.parchment
+  ctx.fillText('分部帽', centerX, 198)
 
   const ruleGradient = ctx.createLinearGradient(centerX - 130, 0, centerX + 130, 0)
   ruleGradient.addColorStop(0, 'rgba(212,175,55,0)')
-  ruleGradient.addColorStop(0.5, POSTER_COLORS.gold)
+  ruleGradient.addColorStop(0.5, activePosterColors.gold)
   ruleGradient.addColorStop(1, 'rgba(212,175,55,0)')
   ctx.fillStyle = ruleGradient
-  ctx.fillRect(centerX - 130, 258, 260, 2)
+  ctx.fillRect(centerX - 130, 232, 260, 2)
 
   ctx.font = font(24, 400, FONT_DISPLAY)
-  ctx.fillStyle = POSTER_COLORS.goldSoft
-  fillTrackedCenter(ctx, 'YUNA SORTING HAT', centerX, 300, 10)
+  ctx.fillStyle = activePosterColors.goldSoft
+  fillTrackedCenter(ctx, 'YUNA SORTING HAT', centerX, 278, 10)
 
-  return 340
+  return 344
 }
 
 /** 立绘与背后的魔法阵。返回下一个可用的 y。 */
@@ -174,7 +210,7 @@ function drawVerdict(
 
   if (data.nickname !== null) {
     ctx.font = font(36)
-    ctx.fillStyle = POSTER_COLORS.parchmentDim
+    ctx.fillStyle = activePosterColors.parchmentDim
     // 昵称是用户输入，12 个全角字符也可能超出安全宽度
     const shown = truncateToWidth(data.nickname, POSTER_CONTENT_WIDTH - 80, (s) =>
       ctx.measureText(s).width,
@@ -184,12 +220,12 @@ function drawVerdict(
   }
 
   ctx.font = font(76, 600)
-  ctx.fillStyle = POSTER_COLORS.parchment
+  ctx.fillStyle = activePosterColors.parchment
   ctx.fillText(data.identityName, centerX, y + 56)
   y += 128
 
   ctx.font = font(38)
-  ctx.fillStyle = POSTER_COLORS.parchmentDim
+  ctx.fillStyle = activePosterColors.parchmentDim
   const prefix = '帽子的选择：'
   const prefixWidth = ctx.measureText(prefix).width
   ctx.font = font(44, 600)
@@ -198,7 +234,7 @@ function drawVerdict(
 
   ctx.textAlign = 'left'
   ctx.font = font(38)
-  ctx.fillStyle = POSTER_COLORS.parchmentDim
+  ctx.fillStyle = activePosterColors.parchmentDim
   ctx.fillText(prefix, startX, y)
   ctx.font = font(44, 600)
   ctx.fillStyle = accent
@@ -206,7 +242,7 @@ function drawVerdict(
 
   ctx.textAlign = 'center'
   ctx.font = font(22, 400, FONT_DISPLAY)
-  ctx.fillStyle = POSTER_COLORS.parchmentDim
+  ctx.fillStyle = activePosterColors.parchmentDim
   fillTrackedCenter(ctx, data.latinName.toUpperCase(), centerX, y + 44, 8)
 
   return y + 84
@@ -234,7 +270,7 @@ function drawTraitBars(
 
   ctx.textAlign = 'center'
   ctx.font = font(26)
-  ctx.fillStyle = POSTER_COLORS.parchmentDim
+  ctx.fillStyle = activePosterColors.parchmentDim
   fillTrackedCenter(ctx, '你的五个倾向', centerX, top + 26, 5)
 
   const rects = traitBarRects(data.traitBars, box)
@@ -243,18 +279,18 @@ function drawTraitBars(
 
   for (const rect of rects) {
     const isDominant = highlighted.has(rect.name)
-    const color = isDominant ? accent : POSTER_COLORS.parchmentDim
+    const color = isDominant ? accent : activePosterColors.parchmentDim
 
     ctx.textAlign = 'left'
     ctx.textBaseline = 'middle'
     ctx.font = font(30, isDominant ? 600 : 400)
-    ctx.fillStyle = isDominant ? POSTER_COLORS.parchment : POSTER_COLORS.parchmentDim
+    ctx.fillStyle = isDominant ? activePosterColors.parchment : activePosterColors.parchmentDim
     ctx.globalAlpha = isDominant ? 1 : 0.8
     ctx.fillText(rect.name, rect.labelX, rect.centerY)
 
     const trackHeight = 14
     ctx.globalAlpha = 1
-    ctx.fillStyle = POSTER_COLORS.night600
+    ctx.fillStyle = activePosterColors.night600
     roundRect(ctx, rect.trackX, rect.centerY - trackHeight / 2, rect.trackWidth, trackHeight, 7)
     ctx.fill()
 
@@ -266,7 +302,7 @@ function drawTraitBars(
 
     ctx.textAlign = 'right'
     ctx.font = font(28, isDominant ? 600 : 400)
-    ctx.fillStyle = isDominant ? POSTER_COLORS.parchment : POSTER_COLORS.parchmentDim
+    ctx.fillStyle = isDominant ? activePosterColors.parchment : activePosterColors.parchmentDim
     ctx.fillText(`${Math.round(rect.ratio * 100)}%`, rect.valueX, rect.centerY)
   }
 
@@ -296,7 +332,7 @@ function drawFlavor(
     ctx.lineWidth = 2
     roundRect(ctx, chip.x, chip.y, chip.width, chip.height, chipHeight / 2)
     ctx.stroke()
-    ctx.fillStyle = POSTER_COLORS.parchment
+    ctx.fillStyle = activePosterColors.parchment
     ctx.fillText(chip.text, chip.x + chip.width / 2, chip.y + chip.height / 2 + 1)
   }
   ctx.textBaseline = 'alphabetic'
@@ -305,7 +341,7 @@ function drawFlavor(
   const flavor = data.tagline ?? data.slogan
   ctx.font = font(30)
   const lines = wrapText(flavor, POSTER_CONTENT_WIDTH - 60, measure).slice(0, 2)
-  ctx.fillStyle = POSTER_COLORS.parchmentDim
+  ctx.fillStyle = activePosterColors.parchmentDim
   for (const line of lines) {
     ctx.fillText(line, centerX, y)
     y += 46
@@ -314,69 +350,70 @@ function drawFlavor(
   return y
 }
 
-/** 二维码渲到独立 canvas，再作为图片贴进海报 —— qr-creator 会重设目标 canvas 尺寸。 */
-function renderQrCanvas(text: string): HTMLCanvasElement {
-  const canvas = document.createElement('canvas')
-  QrCreator.render(
-    {
-      text,
-      size: QR_SIZE,
-      radius: 0,
-      ecLevel: 'M',
-      fill: POSTER_COLORS.night900,
-      background: null,
-    },
-    canvas,
-  )
-  return canvas
-}
-
-/** 底部：二维码或纯文字引导，加页脚。 */
-function drawFooter(ctx: CanvasRenderingContext2D, data: PosterData): void {
+/** 底部：招新群二维码与结果二维码，加页脚。 */
+function drawFooter(ctx: CanvasRenderingContext2D, images: PosterImages): void {
   const centerX = POSTER_WIDTH / 2
   const footerY = POSTER_HEIGHT - 74
 
   ctx.textAlign = 'center'
   ctx.font = font(24, 400, FONT_DISPLAY)
-  ctx.fillStyle = POSTER_COLORS.parchmentDim
+  ctx.fillStyle = activePosterColors.parchmentDim
   ctx.globalAlpha = 0.7
-  fillTrackedCenter(ctx, `YUNA · ${data.campaignLabel}`, centerX, footerY, 6)
+  fillTrackedCenter(ctx, 'YUNA · 2026 招新季', centerX, footerY, 6)
   ctx.globalAlpha = 1
 
   const blockTop = POSTER_HEIGHT - 300
 
-  if (data.shareUrl === null) {
-    ctx.font = font(30)
-    ctx.fillStyle = POSTER_COLORS.parchmentDim
-    ctx.fillText('去 YUNA 分部帽，测出你自己的部门', centerX, blockTop + 110)
-    return
-  }
+  drawQrCard(ctx, images, blockTop)
+}
 
-  const plateSize = QR_SIZE + QR_QUIET * 2
-  const plateX = POSTER_PAD_X
-  const plateY = blockTop + 30
+/** 底部横向群信息卡片：左侧 logo，中间文字，右侧二维码。 */
+function drawQrCard(ctx: CanvasRenderingContext2D, images: PosterImages, top: number): void {
+  const cardX = 0
+  const cardY = top
 
-  ctx.fillStyle = '#ffffff'
-  roundRect(ctx, plateX, plateY, plateSize, plateSize, 16)
+  // 卡片像从海报底部叠上来：顶部接缝圆润过渡，左右和底部严丝合缝。
+  const topRadius = 32
+  ctx.beginPath()
+  ctx.moveTo(cardX, cardY + topRadius)
+  ctx.quadraticCurveTo(cardX, cardY, cardX + topRadius, cardY)
+  ctx.lineTo(POSTER_WIDTH - topRadius, cardY)
+  ctx.quadraticCurveTo(POSTER_WIDTH, cardY, POSTER_WIDTH, cardY + topRadius)
+  ctx.lineTo(POSTER_WIDTH, POSTER_HEIGHT - 32)
+  ctx.quadraticCurveTo(POSTER_WIDTH, POSTER_HEIGHT, POSTER_WIDTH - 32, POSTER_HEIGHT)
+  ctx.lineTo(32, POSTER_HEIGHT)
+  ctx.quadraticCurveTo(0, POSTER_HEIGHT, 0, POSTER_HEIGHT - 32)
+  ctx.closePath()
+  ctx.fillStyle = activePosterColors === POSTER_LIGHT_COLORS ? '#1d2928' : '#f7f1df'
+  ctx.globalAlpha = 1
   ctx.fill()
-  ctx.drawImage(renderQrCanvas(data.shareUrl), plateX + QR_QUIET, plateY + QR_QUIET, QR_SIZE, QR_SIZE)
 
-  const textX = plateX + plateSize + 40
+  const cardColor = activePosterColors === POSTER_LIGHT_COLORS
+  const textColor = cardColor ? '#f4ead5' : '#17120a'
+  const dimColor = cardColor ? '#b8c3bd' : '#6e6658'
+  const logoSize = 142
+  const logoX = 62
+  const logoY = cardY + 79
+  if (images.logo !== null) ctx.drawImage(images.logo, logoX, logoY, logoSize, logoSize)
+
+  const textX = 252
   ctx.textAlign = 'left'
-  ctx.font = font(32, 600)
-  ctx.fillStyle = POSTER_COLORS.parchment
-  ctx.fillText('扫码看这份结果', textX, plateY + 76)
+  ctx.font = font(28, 700)
+  ctx.fillStyle = textColor
+  ctx.fillText('燕山大学大学生网络信息协会交流群', textX, cardY + 118)
+  ctx.font = font(25)
+  ctx.fillStyle = dimColor
+  ctx.fillText('招新群号：978801324', textX, cardY + 158)
+  ctx.fillText('学习 · 实践 · 分享', textX, cardY + 198)
 
-  ctx.font = font(26)
-  ctx.fillStyle = POSTER_COLORS.parchmentDim
-  const measure: MeasureText = (s) => ctx.measureText(s).width
-  const available = POSTER_WIDTH - POSTER_PAD_X - textX
-  const lines = wrapText('打开后点「再测一次」，可以自己重新抽题作答。', available, measure).slice(0, 3)
-  let y = plateY + 126
-  for (const line of lines) {
-    ctx.fillText(line, textX, y)
-    y += 40
+  const qrSize = 174
+  const qrX = POSTER_WIDTH - POSTER_PAD_X - qrSize - 40
+  const qrY = cardY + 63
+  if (images.groupQr !== null) {
+    ctx.drawImage(images.groupQr, qrX, qrY, qrSize, qrSize)
   }
+
+  ctx.textAlign = 'center'
 }
 
 /**
@@ -389,6 +426,7 @@ export function renderPoster(
   canvas: HTMLCanvasElement,
   data: PosterData,
   images: PosterImages,
+  theme: PosterTheme = 'dark',
 ): void {
   canvas.width = POSTER_WIDTH
   canvas.height = POSTER_HEIGHT
@@ -396,13 +434,14 @@ export function renderPoster(
   const ctx = canvas.getContext('2d')
   if (ctx === null) throw new Error('无法获取 canvas 2d 上下文')
 
-  const accent = POSTER_COLORS.dept[data.deptId]
+  activePosterColors = theme === 'light' ? POSTER_LIGHT_COLORS : POSTER_DARK_COLORS
+  const accent = activePosterColors.dept[data.deptId]
 
   drawBackdrop(ctx)
   const afterMast = drawMasthead(ctx)
-  const afterArt = drawArtwork(ctx, images, accent, afterMast)
-  const afterVerdict = drawVerdict(ctx, data, accent, afterArt + 24)
-  const afterTraits = drawTraitBars(ctx, data, accent, afterVerdict)
-  drawFlavor(ctx, data, accent, afterTraits)
-  drawFooter(ctx, data)
+  const afterArt = drawArtwork(ctx, images, accent, afterMast + 18)
+  const afterVerdict = drawVerdict(ctx, data, accent, afterArt + 30)
+  const afterTraits = drawTraitBars(ctx, data, accent, afterVerdict + 18)
+  drawFlavor(ctx, data, accent, afterTraits - 18)
+  drawFooter(ctx, images)
 }

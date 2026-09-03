@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { type ReactNode, useCallback, useEffect, useMemo, useState } from 'react'
 import { CoverScreen } from './screens/CoverScreen'
 import { OpeningScreen } from './screens/OpeningScreen'
 import { QuizScreen } from './screens/QuizScreen'
@@ -42,9 +42,59 @@ const PRELOAD_ASSETS = [
 
 /** 'reveal' 是答完最后一题后的分院仪式，只延迟揭晓，不参与判定。 */
 type Phase = 'cover' | 'opening' | 'quiz' | 'reveal' | 'result'
+type ThemeMode = 'system' | 'light' | 'dark'
 
 /** 昵称的 sessionStorage 键。只存这一项，且仅本会话有效。 */
 const NICKNAME_KEY = 'yuna-sorting-hat:nickname'
+const THEME_KEY = 'yuna-sorting-hat:theme'
+
+function readThemeMode(): ThemeMode {
+  if (typeof window === 'undefined') return 'system'
+  const saved = window.localStorage.getItem(THEME_KEY)
+  return saved === 'light' || saved === 'dark' || saved === 'system' ? saved : 'system'
+}
+
+function ThemeShell({ children }: { children: ReactNode }) {
+  const [mode, setMode] = useState<ThemeMode>(readThemeMode)
+
+  useEffect(() => {
+    const root = document.documentElement
+    if (mode === 'system') root.removeAttribute('data-theme')
+    else root.dataset.theme = mode
+    root.style.colorScheme = mode === 'system' ? '' : mode
+    window.localStorage.setItem(THEME_KEY, mode)
+
+    const systemTheme = window.matchMedia('(prefers-color-scheme: light)')
+    const updateThemeColor = () => {
+      const isLight = mode === 'light' || (mode === 'system' && systemTheme.matches)
+      document
+        .querySelector('meta[name="theme-color"]')
+        ?.setAttribute('content', isLight ? '#f7f8fb' : '#08061a')
+    }
+    updateThemeColor()
+    if (mode === 'system') systemTheme.addEventListener('change', updateThemeColor)
+    return () => systemTheme.removeEventListener('change', updateThemeColor)
+  }, [mode])
+
+  const nextMode: ThemeMode = mode === 'system' ? 'light' : mode === 'light' ? 'dark' : 'system'
+  const label = mode === 'system' ? '跟随系统' : mode === 'light' ? '浅色模式' : '深色模式'
+  const icon = mode === 'system' ? '系' : mode === 'light' ? '浅' : '深'
+
+  return (
+    <>
+      <button
+        type="button"
+        className="theme-toggle"
+        aria-label={`${label}，点击切换为${nextMode === 'system' ? '跟随系统' : nextMode === 'light' ? '浅色模式' : '深色模式'}`}
+        title={`${label} · 点击切换`}
+        onClick={() => setMode(nextMode)}
+      >
+        <span aria-hidden="true">{icon}</span>
+      </button>
+      {children}
+    </>
+  )
+}
 
 /* 开发期自检：题池不变量 + 还没填的事实文案，直接打在控制台。
    权威闸门是 vitest；这里是给「改了题但没跑测试」的人兜底。 */
@@ -167,52 +217,66 @@ export default function App() {
 
   if (phase === 'cover') {
     return (
-      <CoverScreen
-        onStart={() => setPhase('opening')}
-        nickname={nickname}
-        onNicknameChange={handleNicknameChange}
-      />
+      <ThemeShell>
+        <CoverScreen
+          onStart={() => setPhase('opening')}
+          nickname={nickname}
+          onNicknameChange={handleNicknameChange}
+        />
+      </ThemeShell>
     )
   }
 
   if (phase === 'opening') {
-    return <OpeningScreen onContinue={() => setPhase('quiz')} />
+    return (
+      <ThemeShell>
+        <OpeningScreen onContinue={() => setPhase('quiz')} />
+      </ThemeShell>
+    )
   }
 
   if (phase === 'quiz') {
     const question = questions[index]
     if (question === undefined) return null
     return (
-      <QuizScreen
-        question={question}
-        questionIndex={index}
-        total={questions.length}
-        sessionSeed={sessionSeed}
-        selected={answers[question.id]}
-        onSelect={handleSelect}
-        onNext={handleNext}
-        onBack={handleBack}
-        canGoBack={index > 0}
-        isLast={index === questions.length - 1}
-      />
+      <ThemeShell>
+        <QuizScreen
+          question={question}
+          questionIndex={index}
+          total={questions.length}
+          sessionSeed={sessionSeed}
+          selected={answers[question.id]}
+          onSelect={handleSelect}
+          onNext={handleNext}
+          onBack={handleBack}
+          canGoBack={index > 0}
+          isLast={index === questions.length - 1}
+        />
+      </ThemeShell>
     )
   }
 
   if (phase === 'reveal') {
     // 分享链接直达结果时不会走到这里 —— 那条路径的初始 phase 就是 'result'，
     // 别人的结果不需要再演一次仪式。
-    return <RevealScreen verdict={verdict} dominantTrait={profile.dominant} onDone={handleRevealDone} />
+    return (
+      <ThemeShell>
+        <RevealScreen verdict={verdict} dominantTrait={profile.dominant} onDone={handleRevealDone} />
+      </ThemeShell>
+    )
   }
 
   return (
-    <ResultScreen
-      bank={bank}
-      drawSeed={drawSeed}
-      verdict={verdict}
-      answers={answers}
-      nickname={nickname}
-      onNicknameChange={handleNicknameChange}
-      onRestart={handleRestart}
-    />
+    <ThemeShell>
+      <ResultScreen
+        bank={bank}
+        drawSeed={drawSeed}
+        verdict={verdict}
+        answers={answers}
+        nickname={nickname}
+        onNicknameChange={handleNicknameChange}
+        onRestart={handleRestart}
+      />
+    </ThemeShell>
   )
 }

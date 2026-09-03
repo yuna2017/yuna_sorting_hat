@@ -117,7 +117,23 @@ export function buildShareUrl(
   return `${origin}${pathname}?${params.toString()}`
 }
 
-/** 分享文案中的链接单独占一行，兼容 QQ/微信自动识别。 */
+/**
+ * 分享文案正文，**不含链接**。
+ *
+ * 给 navigator.share 用。Web Share API 的 text 与 url 是两个字段，接收方
+ * （QQ、微信、系统短信…）普遍会把两者拼成一条消息，所以 text 里再塞一遍链接
+ * 就会出现两个完全相同的 URL —— 链接只能交给 url 字段。
+ */
+export function buildShareMessage(deptName: string, identityName: string): string {
+  return `我在 YUNA 分部帽里被分到了「${deptName}」，帽子说我是「${identityName}」。\n你会被分到哪个部门？`
+}
+
+/**
+ * 复制到剪贴板用的完整文案：链接自己占满最后一行。
+ *
+ * 纯文本场景没有独立的 url 字段，链接必须内联；夹在中文标点之间会被自动识别
+ * 吃掉尾字符，所以单独一行。
+ */
 export function buildShareText(deptName: string, identityName: string, url: string): string {
-  return `我在 YUNA 分部帽里被分到了「${deptName}」，帽子说我是「${identityName}」。\n你会被分到哪个部门？\n${url}`
+  return `${buildShareMessage(deptName, identityName)}\n${url}`
 }

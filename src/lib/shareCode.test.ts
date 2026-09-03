@@ -7,6 +7,7 @@ import { drawBank } from './drawQuestions'
 import { isComplete, resolveWinner } from './scoring'
 import type { AnswerMap } from './scoring'
 import {
+  buildShareMessage,
   buildShareText,
   buildShareUrl,
   decodeAnswers,
@@ -197,5 +198,13 @@ describe('分享链接与文案', () => {
     expect(
       readSharePayloadFromUrl(new URL(lines[lines.length - 1]!).search)?.answers,
     ).toEqual(answers)
+  })
+
+  it('系统分享正文不含链接，避免与 navigator.share 的 url 字段重复出现两条链接', () => {
+    const message = buildShareMessage(DEPARTMENTS.sec.name, '问题追踪者')
+
+    expect(message).toContain('「问题追踪者」')
+    expect(message).not.toMatch(/https?:\/\//)
+    expect(message).not.toContain('?v=')
   })
 })
