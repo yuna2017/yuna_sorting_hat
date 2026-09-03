@@ -69,3 +69,14 @@ export const POSTER_COLORS = {
   night600: '#262048',
 } as const
 
+export const POSTER_LIGHT_COLORS = {
+  dept: POSTER_COLORS.dept,
+  gold: '#9a7410',
+  goldSoft: '#765800',
+  parchment: '#27303b',
+  parchmentDim: '#68717a',
+  night900: '#f4f2ec',
+  night800: '#fffdf7',
+  night600: '#d7d0c3',
+} as const
+

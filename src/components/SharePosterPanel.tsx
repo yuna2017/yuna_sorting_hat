@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { POSTER_NICKNAME_MAX, buildPosterData } from '../lib/poster'
 import { loadPosterImages } from '../lib/posterImages'
-import { renderPoster } from '../lib/posterRender'
+import { renderPoster, type PosterTheme } from '../lib/posterRender'
 import { POSTER_HEIGHT, POSTER_WIDTH } from '../lib/posterLayout'
 import type { QuestionBank } from '../data/questions'
 import type { AnswerMap, Verdict } from '../lib/scoring'
@@ -19,6 +19,12 @@ interface SharePosterPanelProps {
 
 type RenderState = 'rendering' | 'ready' | 'failed'
 
+function readPosterTheme(): PosterTheme {
+  if (document.documentElement.dataset.theme === 'light') return 'light'
+  if (document.documentElement.dataset.theme === 'dark') return 'dark'
+  return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'
+}
+
 export function SharePosterPanel({
   bank,
   drawSeed,
@@ -31,6 +37,20 @@ export function SharePosterPanel({
   const [imageUrl, setImageUrl] = useState<string | null>(null)
   const blobRef = useRef<Blob | null>(null)
   const [draftNickname, setDraftNickname] = useState(nickname)
+  const [posterTheme, setPosterTheme] = useState<PosterTheme>(readPosterTheme)
+
+  useEffect(() => {
+    const root = document.documentElement
+    const systemTheme = window.matchMedia('(prefers-color-scheme: light)')
+    const update = () => setPosterTheme(readPosterTheme())
+    const observer = new MutationObserver(update)
+    observer.observe(root, { attributes: true, attributeFilter: ['data-theme'] })
+    systemTheme.addEventListener('change', update)
+    return () => {
+      observer.disconnect()
+      systemTheme.removeEventListener('change', update)
+    }
+  }, [])
 
   /* 昵称边打字边重绘会让 1080×1920 的 canvas 抖，这里等输入停下来再画。
      同时把值提交给上层，供「再测一次」后沿用。 */
@@ -47,11 +67,11 @@ export function SharePosterPanel({
       setState('rendering')
       try {
         const data = buildPosterData(bank, drawSeed, verdict, answers, draftNickname)
-        const images = await loadPosterImages(data.deptId)
+        const images = await loadPosterImages(data.deptId, posterTheme)
         if (cancelled) return
 
         const canvas = document.createElement('canvas')
-        renderPoster(canvas, data, images)
+        renderPoster(canvas, data, images, posterTheme)
 
         const blob = await new Promise<Blob | null>((resolve) => {
           canvas.toBlob((b) => resolve(b), 'image/png')
@@ -75,7 +95,7 @@ export function SharePosterPanel({
       // 不回收会随每次重绘泄漏一整张 1080×1920 PNG
       if (objectUrl !== null) URL.revokeObjectURL(objectUrl)
     }
-  }, [bank, drawSeed, verdict, answers, draftNickname])
+  }, [bank, drawSeed, verdict, answers, draftNickname, posterTheme])
 
   const fileName = `yuna-分部帽-${verdict.winner}.png`
 
