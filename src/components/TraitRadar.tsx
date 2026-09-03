@@ -67,7 +67,7 @@ export function TraitRadar({ profile, className = '' }: TraitRadarProps) {
           key={scale}
           points={ringPolygon(scale)}
           fill="none"
-          stroke="#efe3c8"
+          stroke="var(--color-parchment)"
           strokeWidth="1"
           opacity={scale === REFERENCE ? 0.26 : 0.12}
         />
@@ -83,7 +83,7 @@ export function TraitRadar({ profile, className = '' }: TraitRadarProps) {
             y1={CY}
             x2={x}
             y2={y}
-            stroke="#efe3c8"
+            stroke="var(--color-parchment)"
             strokeWidth="1"
             opacity="0.14"
           />
@@ -113,7 +113,7 @@ export function TraitRadar({ profile, className = '' }: TraitRadarProps) {
             cy={y}
             r={isDominant ? 4.5 : 3}
             fill="var(--dept-accent)"
-            stroke="#100d26"
+            stroke="var(--color-night-800)"
             strokeWidth="2"
           />
         )
@@ -134,7 +134,7 @@ export function TraitRadar({ profile, className = '' }: TraitRadarProps) {
             textAnchor={anchor}
             className="font-body"
             fontSize="12.5"
-            fill="#efe3c8"
+            fill="var(--color-parchment)"
             opacity={trait === profile.dominant ? 0.95 : 0.6}
           >
             {TRAITS[trait].name}
