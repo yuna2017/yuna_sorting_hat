@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
 import type { ReactNode } from 'react'
+import QrCreator from 'qr-creator'
 
 interface ShareModalProps {
   open: boolean
@@ -22,6 +23,23 @@ export function ShareModal({ open, onClose, title, children }: ShareModalProps) 
   const panelRef = useRef<HTMLDivElement | null>(null)
   const closeRef = useRef<HTMLButtonElement | null>(null)
   const lastFocusedRef = useRef<Element | null>(null)
+  const projectQrRef = useRef<HTMLCanvasElement | null>(null)
+
+  useEffect(() => {
+    if (!open || projectQrRef.current === null) return
+    const projectUrl = `${window.location.origin}${window.location.pathname}`
+    QrCreator.render(
+      {
+        text: projectUrl,
+        ecLevel: 'H',
+        fill: '#241e14',
+        background: '#efe3c8',
+        radius: 0.12,
+        size: 96,
+      },
+      projectQrRef.current,
+    )
+  }, [open])
 
   useEffect(() => {
     if (!open) return
@@ -88,19 +106,30 @@ export function ShareModal({ open, onClose, title, children }: ShareModalProps) 
         ref={panelRef}
         className="share-modal-panel relative box-border max-h-[calc(100dvh-2rem)] min-h-0 w-full min-w-0 max-w-lg overflow-x-hidden overflow-y-auto rounded-2xl border border-night-500/60 bg-night-800 p-5 shadow-2xl sm:max-h-[calc(100dvh-5rem)]"
       >
-        <div className="flex items-center justify-between gap-3">
-          <h2 id="share-modal-title" className="text-sm tracking-[0.16em] text-parchment-dim">
-            {title}
-          </h2>
-          <button
-            ref={closeRef}
-            type="button"
-            onClick={onClose}
-            aria-label="关闭分享窗口"
-            className="grid size-9 shrink-0 place-items-center rounded-full border border-night-500/70 text-parchment-dim transition-colors hover:border-gold/60 hover:text-gold-soft"
+        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
+          <div className="flex min-w-0 items-center justify-between gap-2">
+            <h2 id="share-modal-title" className="min-w-0 text-sm tracking-[0.16em] text-parchment-dim">
+              {title}
+            </h2>
+            <button
+              ref={closeRef}
+              type="button"
+              onClick={onClose}
+              aria-label="关闭分享窗口"
+              className="grid size-9 shrink-0 place-items-center rounded-full border border-night-500/70 text-parchment-dim transition-colors hover:border-gold/60 hover:text-gold-soft"
+            >
+              <span aria-hidden="true">✕</span>
+            </button>
+          </div>
+          <div
+            className="share-project-card flex w-[7.25rem] shrink-0 items-center gap-1.5 rounded-lg border border-gold/35 bg-parchment/95 p-2 text-ink shadow-lg"
+            aria-label="扫码回到项目"
           >
-            <span aria-hidden="true">✕</span>
-          </button>
+            <canvas ref={projectQrRef} width="80" height="80" aria-label="扫码回到项目" />
+            <span className="w-4 shrink-0 [writing-mode:vertical-rl] text-center text-[0.68rem] leading-tight tracking-[0.08em]">
+              你是哪种类型？
+            </span>
+          </div>
         </div>
         <div className="mt-4">{children}</div>
       </div>
