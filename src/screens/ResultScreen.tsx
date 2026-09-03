@@ -3,7 +3,6 @@ import { RadarChart } from '../components/RadarChart'
 import { ScoreBars } from '../components/ScoreBars'
 import { ShareBar } from '../components/ShareBar'
 import { TraitBars } from '../components/TraitBars'
-import { DepartmentStoryPanel } from '../components/DepartmentStoryPanel'
 import { DEPARTMENTS, DEPT_LIST } from '../data/departments'
 import { TRAITS } from '../data/traits'
 import { CAMPAIGN } from '../data/campaign'
@@ -323,9 +322,6 @@ export function ResultScreen({
             )}
           </section>
         )}
-
-        {/* 可选体验：只读自己的选择，不参与计分和分享。 */}
-        <DepartmentStoryPanel department={dept.id} />
 
         {/* ── 第七层：行动。招新转化的终点，不能让用户看完不知道去哪。 ── */}
         {actions.length > 0 && (

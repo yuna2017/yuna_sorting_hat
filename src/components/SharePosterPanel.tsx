@@ -5,7 +5,6 @@ import { renderPoster, type PosterTheme } from '../lib/posterRender'
 import { POSTER_HEIGHT, POSTER_WIDTH } from '../lib/posterLayout'
 import type { QuestionBank } from '../data/questions'
 import type { AnswerMap, Verdict } from '../lib/scoring'
-import { CAMPAIGN } from '../data/campaign'
 
 interface SharePosterPanelProps {
   bank: QuestionBank
@@ -198,11 +197,6 @@ export function SharePosterPanel({
         </>
       )}
 
-      {CAMPAIGN.posterOrigin === null && (
-        <p className="mt-3 rounded-lg border border-night-500/60 bg-night-900/40 px-3 py-2 text-[0.72rem] leading-relaxed text-parchment-dim/75">
-          开发预览：公开地址尚未确定（campaign.posterOrigin 为 null），海报暂不含二维码。
-        </p>
-      )}
     </>
   )
 }
