@@ -162,11 +162,12 @@ function drawMasthead(ctx: CanvasRenderingContext2D, data: PosterData): number {
 }
 
 function drawProjectQrCard(ctx: CanvasRenderingContext2D, projectUrl: string): void {
-  const cardWidth = 224
+  const cardWidth = 178
   const cardX = POSTER_WIDTH - POSTER_PAD_X - cardWidth
-  const cardY = 42
-  const cardHeight = 228
+  const cardY = 72
+  const cardHeight = 178
   const cardCenterX = cardX + cardWidth / 2
+  const qrSize = 136
   const qrCanvas = document.createElement('canvas')
   QrCreator.render(
     {
@@ -176,20 +177,20 @@ function drawProjectQrCard(ctx: CanvasRenderingContext2D, projectUrl: string): v
       fill: activePosterColors === POSTER_LIGHT_COLORS ? '#195b61' : '#d6b64a',
       background: activePosterColors === POSTER_LIGHT_COLORS ? '#f4ead5' : '#172528',
       radius: 0.08,
-      size: 142,
+      size: qrSize,
     },
     qrCanvas,
   )
 
-  // 卡片采用与二维码相反的明暗底色，二维码、文字和卡片共享同一条中轴线。
+  // 卡片只包住二维码，说明文字留在卡片外，避免视觉上挤成一块。
   ctx.fillStyle = activePosterColors === POSTER_LIGHT_COLORS ? '#1d2928' : '#f7f1df'
-  roundRect(ctx, cardX, cardY, cardWidth, cardHeight, 22)
+  roundRect(ctx, cardX, cardY, cardWidth, cardHeight, 18)
   ctx.fill()
-  ctx.drawImage(qrCanvas, cardCenterX - 71, cardY + 14, 142, 142)
+  ctx.drawImage(qrCanvas, cardCenterX - qrSize / 2, cardY + (cardHeight - qrSize) / 2, qrSize, qrSize)
   ctx.textAlign = 'center'
-  ctx.font = font(23, 700)
+  ctx.font = font(22, 700)
   ctx.fillStyle = activePosterColors === POSTER_LIGHT_COLORS ? '#f4ead5' : '#17120a'
-  ctx.fillText('你是哪种类型？', cardCenterX, cardY + 192)
+  ctx.fillText('你是哪种类型？', cardCenterX, cardY + cardHeight + 42)
   ctx.textAlign = 'center'
 }
 
