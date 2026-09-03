@@ -1,4 +1,5 @@
 import { POSTER_COLORS as POSTER_DARK_COLORS, POSTER_LIGHT_COLORS } from '../data/constants'
+import QrCreator from 'qr-creator'
 import type { DeptId } from '../data/constants'
 import { mulberry32 } from './seededShuffle'
 import type { PosterData } from './poster'
@@ -128,32 +129,71 @@ function drawBackdrop(ctx: CanvasRenderingContext2D): void {
 }
 
 /** 顶部标识区。返回下一个可用的 y。 */
-function drawMasthead(ctx: CanvasRenderingContext2D): number {
+function drawMasthead(ctx: CanvasRenderingContext2D, data: PosterData): number {
   const centerX = POSTER_WIDTH / 2
+  const titleCenterX = data.projectUrl === null ? centerX : 330
 
-  ctx.textAlign = 'center'
+  ctx.textAlign = data.projectUrl === null ? 'center' : 'left'
   ctx.textBaseline = 'alphabetic'
 
   ctx.font = font(30)
   ctx.fillStyle = activePosterColors.parchmentDim
-  fillTrackedCenter(ctx, '燕山大学网络与信息协会', centerX, 96, 5)
+  if (data.projectUrl === null) {
+    fillTrackedCenter(ctx, '燕山大学网络与信息协会', centerX, 96, 5)
+  } else {
+    ctx.fillText('燕山大学网络与信息协会', POSTER_PAD_X, 96)
+  }
 
   ctx.font = font(76, 600, FONT_DISPLAY)
   ctx.fillStyle = activePosterColors.parchment
-  ctx.fillText('分部帽', centerX, 198)
+  ctx.fillText('分部帽', titleCenterX, 198)
 
-  const ruleGradient = ctx.createLinearGradient(centerX - 130, 0, centerX + 130, 0)
+  const ruleGradient = ctx.createLinearGradient(titleCenterX - 130, 0, titleCenterX + 130, 0)
   ruleGradient.addColorStop(0, 'rgba(212,175,55,0)')
   ruleGradient.addColorStop(0.5, activePosterColors.gold)
   ruleGradient.addColorStop(1, 'rgba(212,175,55,0)')
   ctx.fillStyle = ruleGradient
-  ctx.fillRect(centerX - 130, 232, 260, 2)
+  ctx.fillRect(titleCenterX - 130, 232, 260, 2)
 
   ctx.font = font(24, 400, FONT_DISPLAY)
   ctx.fillStyle = activePosterColors.goldSoft
-  fillTrackedCenter(ctx, 'YUNA SORTING HAT', centerX, 278, 10)
+  fillTrackedCenter(ctx, 'YUNA SORTING HAT', titleCenterX, 278, 10)
+
+  if (data.projectUrl !== null) drawProjectQrCard(ctx, data.projectUrl)
 
   return 344
+}
+
+function drawProjectQrCard(ctx: CanvasRenderingContext2D, projectUrl: string): void {
+  const cardX = POSTER_WIDTH - POSTER_PAD_X - 250
+  const cardY = 42
+  const cardWidth = 250
+  const cardHeight = 262
+  const qrCanvas = document.createElement('canvas')
+  QrCreator.render(
+    {
+      text: projectUrl,
+      ecLevel: 'H',
+      fill: activePosterColors === POSTER_LIGHT_COLORS ? '#241e14' : '#17120a',
+      background: activePosterColors === POSTER_LIGHT_COLORS ? '#f4ead5' : '#f7f1df',
+      radius: 0.08,
+      size: 176,
+    },
+    qrCanvas,
+  )
+
+  ctx.fillStyle = activePosterColors === POSTER_LIGHT_COLORS ? '#1d2928' : '#f7f1df'
+  roundRect(ctx, cardX, cardY, cardWidth, cardHeight, 24)
+  ctx.fill()
+  ctx.drawImage(qrCanvas, cardX + 18, cardY + 18, 176, 176)
+  ctx.textAlign = 'center'
+  ctx.font = font(25, 700)
+  ctx.fillStyle = activePosterColors === POSTER_LIGHT_COLORS ? '#f4ead5' : '#17120a'
+  ctx.fillText('你是哪种类型？', cardX + 88, cardY + 229)
+  ctx.font = font(18)
+  ctx.fillStyle = activePosterColors === POSTER_LIGHT_COLORS ? '#b8c3bd' : '#6e6658'
+  ctx.fillText('扫码回到项目', cardX + 88, cardY + 252)
+  ctx.textAlign = 'center'
 }
 
 /** 立绘与背后的魔法阵。返回下一个可用的 y。 */
@@ -438,7 +478,7 @@ export function renderPoster(
   const accent = activePosterColors.dept[data.deptId]
 
   drawBackdrop(ctx)
-  const afterMast = drawMasthead(ctx)
+  const afterMast = drawMasthead(ctx, data)
   const afterArt = drawArtwork(ctx, images, accent, afterMast + 18)
   const afterVerdict = drawVerdict(ctx, data, accent, afterArt + 30)
   const afterTraits = drawTraitBars(ctx, data, accent, afterVerdict + 18)
