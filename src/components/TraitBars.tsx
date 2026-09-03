@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react'
 import { TRAIT_LIST } from '../data/traits'
 import { toPercent } from '../lib/scoring'
 import type { TraitProfile } from '../lib/traits'
@@ -44,14 +45,15 @@ export function TraitBars({ profile }: TraitBarsProps) {
 
               <span className="relative h-2 flex-1 rounded-full bg-night-600/70">
                 <span
-                  className={`absolute inset-y-0 left-0 rounded-full transition-[width] duration-[900ms] ease-out ${
+                  className={`score-bar-fill absolute inset-y-0 left-0 rounded-full transition-[width] duration-[900ms] ease-out ${
                     isDominant ? 'winner-glow' : ''
                   }`}
                   style={{
                     width: `${Math.max(pct, 1.5)}%`,
+                    '--bar-width': `${Math.max(pct, 1.5)}%`,
                     backgroundColor: isDominant ? 'var(--dept-accent)' : '#b9aa8b',
                     opacity: isDominant ? 1 : 0.4,
-                  }}
+                  } as CSSProperties}
                 />
               </span>
 

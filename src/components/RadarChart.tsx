@@ -95,6 +95,7 @@ export function RadarChart({ normalized, winner, className = '' }: RadarChartPro
       {/* 数据多边形 */}
       <polygon
         points={shape}
+        className="radar-shape"
         fill="var(--dept-accent)"
         fillOpacity="0.22"
         stroke="var(--dept-accent)"

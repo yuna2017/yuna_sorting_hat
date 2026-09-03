@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react'
 import type { DeptId, NormalizedScores, Scores } from '../data/constants'
 import { DEPT_ORDER } from '../data/constants'
 import { DEPARTMENTS } from '../data/departments'
@@ -49,14 +50,15 @@ export function ScoreBars({ normalized, scores, maxScore, winner }: ScoreBarsPro
                 本来无须裁剪；而裁剪会把冠军的辉光一起切掉。 */}
             <span className="relative h-2 flex-1 rounded-full bg-night-600/70">
               <span
-                className={`absolute inset-y-0 left-0 rounded-full transition-[width] duration-[900ms] ease-out ${
+                className={`score-bar-fill absolute inset-y-0 left-0 rounded-full transition-[width] duration-[900ms] ease-out ${
                   isWinner ? 'winner-glow' : ''
                 }`}
                 style={{
                   width: `${Math.max(pct, 1.5)}%`,
+                  '--bar-width': `${Math.max(pct, 1.5)}%`,
                   backgroundColor: isWinner ? 'var(--dept-accent)' : '#b9aa8b',
                   opacity: isWinner ? 1 : 0.4,
-                }}
+                } as CSSProperties}
               />
             </span>
 

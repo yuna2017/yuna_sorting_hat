@@ -1,9 +1,10 @@
+import { useEffect, useRef, useState } from 'react'
 import { DeptCard } from '../components/DeptCard'
 import { RadarChart } from '../components/RadarChart'
 import { ScoreBars } from '../components/ScoreBars'
 import { ShareBar } from '../components/ShareBar'
 import { TraitBars } from '../components/TraitBars'
-import { DEPARTMENTS, DEPT_LIST } from '../data/departments'
+import { DEPARTMENTS } from '../data/departments'
 import { TRAITS } from '../data/traits'
 import { CAMPAIGN } from '../data/campaign'
 import type { QuestionBank } from '../data/questions'
@@ -59,9 +60,6 @@ const REASON_COPY = {
   },
 } as const
 
-/** 招新入口的排序与主次。join 是转化终点，永远排第一且用主按钮。 */
-const ACTION_ORDER = ['join', 'more', 'works'] as const
-
 function shareUrlOf(bank: QuestionBank, drawSeed: number, answers: AnswerMap): string {
   if (typeof window === 'undefined') return ''
   return buildShareUrl(bank, drawSeed, answers, window.location.origin, window.location.pathname)
@@ -76,6 +74,10 @@ export function ResultScreen({
   onNicknameChange,
   onRestart,
 }: ResultScreenProps) {
+  const pagesRef = useRef<HTMLDivElement>(null)
+  const wheelLockRef = useRef(false)
+  const touchStartRef = useRef<number | null>(null)
+  const [activePage, setActivePage] = useState(0)
   const dept = DEPARTMENTS[verdict.winner]
   const hesitated = verdict.tiedWith.length > 0
   const explanation = explainVerdict(bank, answers, verdict)
@@ -84,25 +86,82 @@ export function ResultScreen({
   const profile = deriveProfile(bank, answers)
 
   const shareUrl = shareUrlOf(bank, drawSeed, answers)
-  const actions = [...dept.actions].sort(
-    (a, b) => ACTION_ORDER.indexOf(a.kind) - ACTION_ORDER.indexOf(b.kind),
-  )
-  const actionIsOpen = (action: (typeof actions)[number]) => {
-    if (action.status === 'closed') return false
-    if (action.href !== null) return action.status === undefined || action.status === 'open'
-    if (action.kind === 'join') return CAMPAIGN.status === 'open' && CAMPAIGN.publicJoinUrl !== null
-    if (action.kind === 'more') return CAMPAIGN.siteUrl !== null && CAMPAIGN.status !== 'closed'
-    return false
+  const actions = [...dept.actions].sort((a, b) => {
+    const order = ['join', 'more', 'works'] as const
+    return order.indexOf(a.kind) - order.indexOf(b.kind)
+  })
+  const pageCount = shareUrl === '' ? 6 : 7
+
+  useEffect(() => {
+    const pages = pagesRef.current
+    if (pages === null) return
+
+    const onScroll = () => {
+      const page = Math.round(pages.scrollTop / pages.clientHeight)
+      setActivePage(Math.max(0, Math.min(page, pageCount - 1)))
+    }
+    const onWheel = (event: WheelEvent) => {
+      if (Math.abs(event.deltaY) < 8 || wheelLockRef.current) return
+      event.preventDefault()
+      wheelLockRef.current = true
+      const direction = event.deltaY > 0 ? 1 : -1
+      const nextPage = Math.max(0, Math.min(activePage + direction, pageCount - 1))
+      pages.children[nextPage]?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      window.setTimeout(() => {
+        wheelLockRef.current = false
+      }, 650)
+    }
+    const onKeyDown = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement
+      if (target.closest('button, a, input, textarea, select')) return
+      const pageKeys: Record<string, number> = {
+        ArrowDown: 1,
+        PageDown: 1,
+        ArrowUp: -1,
+        PageUp: -1,
+        Home: -activePage,
+        End: pageCount - 1 - activePage,
+      }
+      if (pageKeys[event.key] === undefined) return
+      event.preventDefault()
+      const offset = pageKeys[event.key]
+      if (offset === undefined) return
+      const nextPage = Math.max(0, Math.min(activePage + offset, pageCount - 1))
+      pages.children[nextPage]?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+    const onTouchStart = (event: TouchEvent) => {
+      touchStartRef.current = event.touches[0]?.clientY ?? null
+    }
+    const onTouchEnd = (event: TouchEvent) => {
+      const startY = touchStartRef.current
+      const endY = event.changedTouches[0]?.clientY
+      touchStartRef.current = null
+      if (startY === null || endY === undefined || Math.abs(endY - startY) < 48) return
+      const direction = endY < startY ? 1 : -1
+      const nextPage = Math.max(0, Math.min(activePage + direction, pageCount - 1))
+      pages.children[nextPage]?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+
+    pages.addEventListener('scroll', onScroll, { passive: true })
+    pages.addEventListener('wheel', onWheel, { passive: false })
+    pages.addEventListener('keydown', onKeyDown)
+    pages.addEventListener('touchstart', onTouchStart, { passive: true })
+    pages.addEventListener('touchend', onTouchEnd, { passive: true })
+    return () => {
+      pages.removeEventListener('scroll', onScroll)
+      pages.removeEventListener('wheel', onWheel)
+      pages.removeEventListener('keydown', onKeyDown)
+      pages.removeEventListener('touchstart', onTouchStart)
+      pages.removeEventListener('touchend', onTouchEnd)
+    }
+  }, [activePage])
+
+  const goToPage = (page: number) => {
+    const pages = pagesRef.current
+    if (pages === null) return
+    const nextPage = Math.max(0, Math.min(page, pageCount - 1))
+    pages.children[nextPage]?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
-  const liveActions = actions.filter(actionIsOpen)
-  const pendingActions = actions.filter((a) => !liveActions.includes(a))
-  const actionHref = (action: (typeof actions)[number]) => {
-    if (action.href !== null) return action.href
-    if (action.kind === 'join') return CAMPAIGN.publicJoinUrl
-    if (action.kind === 'more') return CAMPAIGN.siteUrl
-    return null
-  }
-  const pendingLabel = CAMPAIGN.status === 'closed' ? '本期暂未开放' : '入口待公布'
 
   return (
     // data-dept 一翻，雷达多边形／量条／辉光／边框整体换肤，零 JS 配色逻辑
@@ -115,8 +174,19 @@ export function ResultScreen({
         className="result-background"
         alt=""
       />
-      <div className="result-content relative z-10 mx-auto flex max-w-lg flex-col items-center">
+      <div className="result-pages relative z-10 mx-auto max-w-lg">
+        <div className="result-page-progress" aria-live="polite">
+          <span>{activePage + 1}</span> / {pageCount}
+        </div>
+        <div
+          ref={pagesRef}
+          tabIndex={0}
+          aria-label="结果页纸叠"
+          data-active-page={activePage}
+          className="result-content flex flex-col items-center outline-none"
+        >
         {/* ── 第一层：结果 ── */}
+        <section className="paper-page result-page--result flex flex-col items-center justify-center px-2 py-12" aria-labelledby="result-title">
         <p className="font-display text-[0.62rem] tracking-[0.36em] text-parchment-dim/70">
           THE HAT HAS DECIDED
         </p>
@@ -125,7 +195,7 @@ export function ResultScreen({
           <DeptCard dept={dept} />
         </div>
 
-        <h1
+        <h1 id="result-title"
           className="mt-5 font-display text-3xl font-semibold sm:text-4xl"
           style={{ color: 'var(--dept-accent)' }}
         >
@@ -146,12 +216,25 @@ export function ResultScreen({
             {dept.tagline}
           </p>
         )}
+        <ul className="mt-5 flex flex-wrap justify-center gap-2">
+          {dept.keywords.map((kw) => (
+            <li key={kw} className="rounded-full border px-3 py-1 text-xs text-parchment/90" style={{ borderColor: 'rgb(var(--dept-glow) / 0.4)' }}>
+              {kw}
+            </li>
+          ))}
+        </ul>
+        <p className="mt-4 text-xs text-parchment-dim/70">
+          若在霍格沃兹，这里是 <span className="mx-1 text-gold-soft">{dept.house}</span>
+          <span className="font-display tracking-wider">({dept.houseLatin})</span>
+        </p>
+        </section>
 
         {/* ── 第二层：解释 ──
             此前结果页从部门名直接跳到雷达图，用户拿不到「为什么是我」。
             证据全部来自刚才自己的选择，不引入新判定。 */}
-        <section className="mt-8 w-full rounded-2xl border border-night-600/70 bg-night-800/40 p-5">
-          <h2 className="text-sm tracking-[0.16em] text-parchment-dim">帽子在你身上看见了什么？</h2>
+        <section className="paper-page result-page--reason flex min-h-dvh flex-col justify-center px-2 py-12" aria-labelledby="explanation-title">
+        <div className="page-panel w-full">
+          <h2 id="explanation-title" className="text-sm tracking-[0.16em] text-parchment-dim">帽子在你身上看见了什么？</h2>
 
           <p className="mt-2.5 text-sm leading-relaxed text-parchment/90">
             {REASON_COPY[dept.id][strength]}
@@ -204,31 +287,13 @@ export function ResultScreen({
               </p>
             )
           )}
+        </div>
         </section>
 
-        {/* ── 第三层：关键词 ── */}
-        <ul className="mt-6 flex flex-wrap justify-center gap-2">
-          {dept.keywords.map((kw) => (
-            <li
-              key={kw}
-              className="rounded-full border px-3 py-1 text-xs text-parchment/90"
-              style={{ borderColor: 'rgb(var(--dept-glow) / 0.4)' }}
-            >
-              {kw}
-            </li>
-          ))}
-        </ul>
-
-        {/* 学院氛围点缀 */}
-        <p className="mt-4 text-xs text-parchment-dim/70">
-          若在霍格沃兹，这里是
-          <span className="mx-1 text-gold-soft">{dept.house}</span>
-          <span className="font-display tracking-wider">({dept.houseLatin})</span>
-        </p>
-
-        {/* ── 第四层：数据。雷达图从「结果页主角」降为参考区 ── */}
-        <section className="mt-8 w-full rounded-2xl border border-night-600/70 bg-night-800/55 p-5 sm:p-6">
-          <h2 className="text-center text-sm tracking-[0.16em] text-parchment-dim">
+        {/* ── 第三层：部门契合度 ── */}
+        <section className="paper-page result-page--data flex min-h-dvh flex-col justify-center px-2 py-12" aria-labelledby="scores-title">
+        <div className="page-panel w-full">
+          <h2 id="scores-title" className="text-center text-sm tracking-[0.16em] text-parchment-dim">
             四部门契合度
           </h2>
 
@@ -248,12 +313,13 @@ export function ResultScreen({
           <p className="mt-4 text-center text-[0.7rem] leading-relaxed text-parchment-dim/60">
             百分比 = 该部门得分 ÷ 单部门满分 {verdict.maxScore}
           </p>
+        </div>
         </section>
 
-        {/* ── 第四层之二：五个倾向。与部门契合度同层但独立 ──
-            部门推荐来自 p/s，倾向来自 traits，两条链路解耦（docs/特质体系.md §3）。 */}
-        <section className="mt-6 w-full rounded-2xl border border-night-600/70 bg-night-800/55 p-5 sm:p-6">
-          <h2 className="text-center text-sm tracking-[0.16em] text-parchment-dim">你的五个倾向</h2>
+        {/* ── 第四层：行为倾向 ── */}
+        <section className="paper-page result-page--traits flex min-h-dvh flex-col justify-center px-2 py-12" aria-labelledby="traits-title">
+        <div className="page-panel w-full">
+          <h2 id="traits-title" className="text-center text-sm tracking-[0.16em] text-parchment-dim">你的五个倾向</h2>
 
           <p className="mt-3 text-center text-[0.82rem] leading-relaxed text-parchment/90">
             其中
@@ -276,12 +342,14 @@ export function ResultScreen({
           <p className="mt-4 text-center text-[0.7rem] leading-relaxed text-parchment-dim/60">
             百分比 = 该倾向实得 ÷ 这套题里它的理论上限。这里只描述你更倾向怎么做，不评价能力高低。
           </p>
+        </div>
         </section>
 
-        {/* ── 第五层：关于这个部门。未填写时整块不渲染，不留半截空白。 ── */}
-        {dept.intro !== null && (
-          <section className="mt-6 w-full rounded-2xl border border-night-600/70 bg-night-800/40 p-5">
-            <h2 className="text-sm tracking-[0.16em] text-parchment-dim">关于{dept.name}</h2>
+        {/* ── 第五层：关于部门与协会 ── */}
+        <section className="paper-page result-page--about flex min-h-dvh flex-col justify-center px-2 py-12" aria-labelledby="about-title">
+          <div className="page-flow-content flex flex-col justify-center px-2 py-8">
+          <div className="page-panel w-full">
+            <h2 id="about-title" className="text-sm tracking-[0.16em] text-parchment-dim">关于{dept.name}</h2>
             <p className="mt-2.5 text-sm leading-relaxed text-parchment/90">{dept.intro}</p>
 
             {dept.doing.length > 0 && (
@@ -320,111 +388,35 @@ export function ResultScreen({
                 false。
               </p>
             )}
-          </section>
-        )}
-
-        {/* ── 第七层：行动。招新转化的终点，不能让用户看完不知道去哪。 ── */}
-        {actions.length > 0 && (
-          <section
-            className="mt-6 w-full rounded-2xl border p-5"
-            style={{ borderColor: 'rgb(var(--dept-glow) / 0.32)' }}
-          >
-            <h2 className="text-sm tracking-[0.16em] text-parchment-dim">
-              对{dept.name}感兴趣？
-            </h2>
-
-            {liveActions.length > 0 && (
-              <ul className="mt-3 flex flex-col gap-2">
-                {liveActions.map((action) => (
-                  <li key={action.label}>
-                    <a
-                      href={actionHref(action) ?? undefined}
-                      target="_blank"
-                      /* noopener 必须显式写：新窗口拿到 window.opener 就能篡改本页，
-                         而这些 URL 由社团后续填入、不全在我们控制下。 */
-                      rel="noopener noreferrer"
-                      className={`flex min-h-[2.75rem] items-center justify-center gap-2 rounded-lg px-4 text-sm transition-colors ${
-                        action.kind === 'join'
-                          ? 'border border-gold/55 bg-gold/10 tracking-[0.08em] text-gold-soft hover:border-gold hover:bg-gold/18'
-                          : 'border border-night-500/70 text-parchment/90 hover:border-gold/60 hover:text-gold-soft'
-                      }`}
-                    >
-                      <span className="break-words">{action.label}</span>
-                      {action.note !== undefined && (
-                        <span className="text-[0.72rem] text-parchment-dim/70">{action.note}</span>
-                      )}
-                    </a>
-                  </li>
-                  ))}
-              </ul>
-            )}
-
-            {pendingActions.length > 0 && (
-              <>
-                {/* 没有 URL 的入口渲染成静态条目而不是 <a>：
-                    一个点进去 404 的招新按钮比没有按钮更糟。 */}
-                <ul className="mt-3 flex flex-col gap-2">
-                  {pendingActions.map((action) => (
-                    <li
-                      key={action.label}
-                      className="flex min-h-[2.75rem] flex-wrap items-center justify-center rounded-lg border border-dashed border-night-500/60 px-4 text-center text-[0.82rem] leading-snug text-parchment-dim/70"
-                    >
-                      <span className="break-words">{action.label}</span>
-                      <span className="ml-1.5 text-[0.72rem]">（{action.status === 'closed' ? '本期暂未开放' : pendingLabel}）</span>
-                    </li>
-                  ))}
-                </ul>
-                <p className="mt-2.5 text-[0.72rem] leading-relaxed text-parchment-dim/60">
-                  招新渠道确定后会更新在这里。
-                </p>
-              </>
-            )}
-          </section>
-        )}
-
-        {/* ── 第八层：探索其他部门。结果只是一个方向，给用户保留主动选择的入口。 ── */}
-        <section className="mt-6 w-full rounded-2xl border border-night-600/70 bg-night-800/40 p-5">
-          <h2 className="text-sm tracking-[0.16em] text-parchment-dim">对其他部门感兴趣？</h2>
-          <p className="mt-2 text-[0.8rem] leading-relaxed text-parchment-dim/75">
-            分部帽给出的只是一个方向，也可以看看其他部门，找到真正想去的地方。
-          </p>
-
-          <ul className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-3">
-            {DEPT_LIST.filter((otherDept) => otherDept.id !== dept.id).map((otherDept) => {
-              const detailAction = otherDept.actions.find((action) => action.kind === 'more')
-              const isOpen =
-                detailAction !== undefined &&
-                detailAction.href !== null &&
-                detailAction.status !== 'closed' &&
-                detailAction.status !== 'pending'
-              const pendingDetailLabel = detailAction?.status === 'closed' ? '本期暂未开放' : '入口待公布'
-
-              return (
-                <li key={otherDept.id}>
-                  {isOpen && detailAction !== undefined ? (
-                    <a
-                      href={detailAction.href ?? undefined}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex min-h-[3.5rem] items-center justify-between gap-2 rounded-lg border border-night-500/70 px-3.5 py-2.5 text-sm text-parchment/90 transition-colors hover:border-gold/60 hover:text-gold-soft"
-                    >
-                      <span className="break-words">{otherDept.name}</span>
-                      <span aria-hidden="true" className="shrink-0 text-gold-soft/70">→</span>
+          </div>
+          <div className="mt-5 page-association text-center">
+            <p className="text-xs tracking-[0.16em] text-gold-soft/80">YUNA 网络与信息协会</p>
+            <p className="mt-2 text-sm leading-relaxed text-parchment-dim">在技术、创意与协作之间，找到一起做事的人。</p>
+          </div>
+          {actions.length > 0 && (
+            <ul className="mt-5 flex w-full flex-col gap-2">
+              {actions.map((action) => (
+                <li key={action.label}>
+                  {action.href !== null && action.status !== 'closed' ? (
+                    <a href={action.href} target="_blank" rel="noopener noreferrer" className="flex min-h-[2.65rem] items-center justify-center rounded-lg border border-gold/40 px-4 text-sm text-gold-soft transition-colors hover:bg-gold/10">
+                      {action.label}
                     </a>
                   ) : (
-                    <div className="flex min-h-[3.5rem] items-center justify-between gap-2 rounded-lg border border-dashed border-night-500/60 px-3.5 py-2.5 text-sm text-parchment-dim/70">
-                      <span className="break-words">{otherDept.name}</span>
-                      <span className="shrink-0 text-[0.68rem]">{pendingDetailLabel}</span>
-                    </div>
+                    <span className="flex min-h-[2.65rem] items-center justify-center rounded-lg border border-dashed border-night-500/60 px-4 text-sm text-parchment-dim/70">
+                      {action.label}（入口待公布）
+                    </span>
                   )}
                 </li>
-              )
-            })}
-          </ul>
+              ))}
+            </ul>
+          )}
+        </div>
         </section>
 
-        {/* ── 第九层：传播 ── */}
+        {/* ── 第六页：传播 ── */}
         {shareUrl !== '' && (
+          <section className="paper-page result-page--share flex min-h-dvh flex-col items-center justify-center px-2 py-12" aria-labelledby="share-title">
+          <h2 id="share-title" className="mb-5 text-sm tracking-[0.16em] text-parchment-dim">分享这次分院结果</h2>
           <ShareBar
             url={shareUrl}
             text={buildShareText(dept.name, identity.name, shareUrl)}
@@ -436,8 +428,11 @@ export function ResultScreen({
             nickname={nickname}
             onNicknameChange={onNicknameChange}
           />
+          </section>
         )}
-        {/* ── 第十层：重新体验 ── */}
+        {/* ── 第七页：鸣谢与重新体验 ── */}
+        <section className="paper-page result-page--final flex min-h-dvh flex-col items-center justify-center px-2 py-12" aria-labelledby="restart-title">
+        <h2 id="restart-title" className="sr-only">重新体验</h2>
         <button
           type="button"
           onClick={onRestart}
@@ -455,11 +450,43 @@ export function ResultScreen({
         <p className="font-display mt-6 text-[0.6rem] tracking-[0.3em] text-parchment-dim/45">
           YUNA 社团 · {CAMPAIGN.label}
         </p>
+        <div className="page-flow-content flex flex-col items-center justify-center px-2 py-8 text-center">
+          <p className="font-display text-[0.62rem] tracking-[0.36em] text-parchment-dim/70">WITH GRATITUDE</p>
+          <h2 id="thanks-title" className="mt-5 font-display text-3xl text-gold-soft">鸣谢</h2>
+          <div className="rule-gold mt-5 w-24" />
+          <p className="mt-6 max-w-xs text-sm leading-relaxed text-parchment-dim">
+            感谢每一个认真回答问题、愿意了解 YUNA 的你。
+          </p>
+          <p className="mt-3 text-xs tracking-[0.12em] text-parchment-dim/60">成员名单与制作信息待补充</p>
+          <p className="font-display mt-8 text-[0.6rem] tracking-[0.3em] text-parchment-dim/45">YUNA · {CAMPAIGN.label}</p>
+          <a
+            href="https://game.yuna.team/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-8 text-xs text-gold-soft/80 underline decoration-gold/35 underline-offset-4 transition-colors hover:text-gold-soft"
+          >
+            燕山大学人生模拟器 · 你的燕大四年，会走向哪里？
+          </a>
+        </div>
+        </section>
 
-        {/* 尾部留白（约半页）：自动弹分享要在「分享按钮到达画面 1/3 处」时触发，
-            若页面在分享区就到底，部分视口高度下按钮天然停在水位线之上，
-            自动打开永远不会发生。这段空白保证滚动有得滚，触发条件才成立。 */}
-        <div aria-hidden="true" className="h-[50dvh] w-full" />
+        </div>
+        <div className="result-page-controls" aria-label="纸叠页面导航">
+          <button type="button" onClick={() => goToPage(activePage - 1)} disabled={activePage === 0} aria-label="上一页">↑</button>
+          <button type="button" onClick={() => goToPage(activePage + 1)} disabled={activePage === pageCount - 1} aria-label="下一页">↓</button>
+        </div>
+        <nav className="result-page-dots" aria-label="结果页快速导航">
+          {Array.from({ length: pageCount }, (_, page) => (
+            <button
+              key={page}
+              type="button"
+              className={page === activePage ? 'is-active' : ''}
+              onClick={() => goToPage(page)}
+              aria-label={`第 ${page + 1} 页`}
+              aria-current={page === activePage ? 'step' : undefined}
+            />
+          ))}
+        </nav>
       </div>
     </div>
   )

@@ -261,6 +261,423 @@ body {
   animation: screen-enter 0.56s cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 
+/* 结果页是一叠按消息展开的纸，而不是一张很长的报告。 */
+.result-pages {
+  position: relative;
+  height: min(100%, calc(100dvh - 5rem));
+  min-height: 0;
+  width: min(100%, 42rem);
+  overflow: hidden;
+  overscroll-behavior: contain;
+}
+
+.result-content {
+  box-sizing: border-box;
+  height: 100%;
+  min-height: 0;
+  border: 1px solid rgb(var(--color-gold) / 0.22);
+  border-radius: 1.25rem;
+  background: linear-gradient(145deg, rgb(var(--color-night-800) / 0.88), rgb(var(--color-night-900) / 0.72));
+  box-shadow: 0 1.5rem 4rem rgb(0 0 0 / 0.28), inset 0 0 0 1px rgb(255 255 255 / 0.025);
+  overflow-y: auto;
+  scroll-behavior: smooth;
+  scroll-snap-type: y mandatory;
+  scrollbar-width: none;
+  overscroll-behavior-y: contain;
+}
+
+.result-screen {
+  box-sizing: border-box;
+  height: 100dvh;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.result-content::-webkit-scrollbar {
+  display: none;
+}
+
+.paper-page {
+  position: relative;
+  flex: 0 0 calc(100% - 1.5rem);
+  box-sizing: border-box;
+  height: calc(100% - 1.5rem);
+  margin: 0.75rem 0;
+  min-height: 0;
+  max-height: 100%;
+  padding-inline: 1rem;
+  border: 1px solid rgb(var(--color-gold) / 0.14);
+  border-radius: 1rem;
+  background: rgb(var(--color-night-800) / 0.3);
+  overflow-y: auto;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+  isolation: isolate;
+  scrollbar-width: none;
+  transition: opacity 0.45s ease, transform 0.65s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.paper-page::-webkit-scrollbar {
+  display: none;
+}
+
+.paper-page > * {
+  position: relative;
+  z-index: 1;
+  animation: paper-content-enter 0.65s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.result-page--data .page-panel {
+  width: min(100%, 42rem);
+  margin-inline: auto;
+}
+
+.result-page--data .page-panel > div:first-of-type {
+  width: min(100%, 22rem);
+  margin-inline: auto;
+}
+
+.result-page--traits .page-panel {
+  width: min(100%, 42rem);
+  margin-inline: auto;
+}
+
+.page-panel {
+  padding: 1.25rem;
+}
+
+.paper-page:not(:first-child) {
+  opacity: 0.86;
+}
+
+.result-content[data-active-page='0'] .paper-page:nth-child(1),
+.result-content[data-active-page='1'] .paper-page:nth-child(2),
+.result-content[data-active-page='2'] .paper-page:nth-child(3),
+.result-content[data-active-page='3'] .paper-page:nth-child(4),
+.result-content[data-active-page='4'] .paper-page:nth-child(5),
+.result-content[data-active-page='5'] .paper-page:nth-child(6),
+.result-content[data-active-page='6'] .paper-page:nth-child(7) {
+  opacity: 1;
+  transform: scale(1.008);
+}
+
+@keyframes paper-content-enter {
+  from {
+    opacity: 0;
+    transform: translateY(1.1rem);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.paper-page::before,
+.paper-page::after {
+  display: none;
+}
+
+.paper-page::before {
+  transform: rotate(-1.1deg) translate(-0.35rem, 0.35rem);
+}
+
+.paper-page::after {
+  transform: rotate(0.8deg) translate(0.35rem, 0.15rem);
+}
+
+.result-page--share {
+  overflow: hidden;
+}
+
+.result-page--share .share-bar > h2 {
+  display: none;
+}
+
+.result-page--share .share-bar {
+  max-width: 32rem;
+}
+
+.result-page--share .share-bar > p:first-of-type {
+  display: none;
+}
+
+.result-page--share .share-bar > div {
+  margin-top: 0.75rem;
+}
+
+.result-page--share .share-bar [role='tabpanel'] {
+  margin-top: 0.75rem;
+}
+
+.result-page--share .share-bar input {
+  padding-block: 0.4rem;
+}
+
+.result-page--share [data-poster-preview] {
+  max-height: min(48dvh, 25rem);
+  width: auto;
+  object-fit: contain;
+}
+
+.result-page--share .share-bar .relative:has([data-poster-preview]) {
+  width: auto;
+  max-width: min(100%, 14rem);
+  height: min(34dvh, 18rem);
+  max-height: none;
+  aspect-ratio: auto;
+}
+
+.result-page--share .share-bar .relative:has([data-poster-preview]) img {
+  display: block;
+  height: auto;
+  max-height: 100%;
+}
+
+.result-page-progress {
+  position: absolute;
+  z-index: 20;
+  top: 0.35rem;
+  right: 0.75rem;
+  color: rgb(var(--color-parchment) / 0.55);
+  font-family: var(--font-display);
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  pointer-events: none;
+}
+
+.result-page-progress span {
+  color: var(--dept-accent);
+}
+
+.result-page-controls {
+  position: absolute;
+  z-index: 20;
+  right: 0.6rem;
+  bottom: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.result-page-controls button {
+  display: grid;
+  width: 2rem;
+  height: 2rem;
+  place-items: center;
+  border: 1px solid rgb(var(--color-gold) / 0.38);
+  border-radius: 999px;
+  background: rgb(var(--color-night-800) / 0.82);
+  color: var(--color-gold-soft);
+  cursor: pointer;
+  transition: opacity 0.2s ease, background-color 0.2s ease;
+}
+
+.result-page-controls button:hover:not(:disabled) {
+  background: rgb(var(--color-gold) / 0.14);
+}
+
+.result-page-controls button:disabled {
+  cursor: default;
+  opacity: 0.25;
+}
+
+.result-page-dots {
+  position: absolute;
+  top: 50%;
+  left: -1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  transform: translateY(-50%);
+}
+
+.result-page-dots button {
+  width: 0.35rem;
+  height: 0.35rem;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: rgb(var(--color-parchment) / 0.32);
+  cursor: pointer;
+  transition: background-color 0.25s ease, transform 0.25s ease;
+}
+
+.result-page-dots button.is-active {
+  background: var(--dept-accent);
+  transform: scale(1.8);
+}
+
+/* 横屏时把同一张纸里的重点内容拉成左右两列；竖屏保持上下阅读节奏。 */
+@media (min-aspect-ratio: 4 / 3) and (min-width: 760px) {
+  .result-pages {
+    width: min(100%, 76rem);
+  }
+
+  .paper-page > .w-full {
+    max-width: 68rem;
+  }
+
+  .result-page--data .page-panel {
+    display: grid;
+    grid-template-columns: minmax(15rem, 22rem) minmax(20rem, 1fr);
+    align-items: center;
+    column-gap: clamp(2rem, 5vw, 5rem);
+    max-width: 62rem;
+  }
+
+  .result-page--data .page-panel > h2,
+  .result-page--data .page-panel > p {
+    grid-column: 1 / -1;
+  }
+
+  .result-page--data .page-panel > div:first-of-type {
+    width: min(100%, 22rem);
+    grid-column: 1;
+    grid-row: 2 / span 2;
+  }
+
+  .result-page--data .page-panel > div:nth-of-type(2) {
+    grid-column: 2;
+    grid-row: 2;
+  }
+
+  .result-page--data .page-panel > p {
+    grid-row: 4;
+  }
+
+  .result-page--traits .page-panel {
+    max-width: 48rem;
+  }
+
+  .result-page--reason > .w-full,
+  .result-page--about .page-flow-content,
+  .result-page--share .share-bar {
+    display: grid;
+    grid-template-columns: minmax(12rem, 0.75fr) minmax(20rem, 1.25fr);
+    align-items: center;
+    gap: 2.5rem;
+  }
+
+  .result-page--about .page-flow-content > .page-panel > h2,
+  .result-page--share .share-bar > h2 {
+    grid-column: 1;
+  }
+
+  .result-page--about .page-flow-content > .page-panel > div,
+  .result-page--share .share-bar > div {
+    grid-column: 2;
+  }
+
+  .result-page--about .page-flow-content > .page-panel > p,
+  .result-page--share .share-bar > p {
+    grid-column: 1 / -1;
+  }
+
+  .result-page--reason > .w-full > h2,
+  .result-page--reason > .w-full > p,
+  .result-page--reason > .w-full > div,
+  .result-page--reason > .w-full > ul {
+    grid-column: 1 / -1;
+  }
+
+  .result-page--reason > .w-full > div {
+    max-width: 30rem;
+  }
+}
+
+.radar-shape {
+  transform: scale(0.04);
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: radar-expand 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) 0.15s both;
+}
+
+@keyframes radar-expand {
+  from {
+    opacity: 0.05;
+    transform: scale(0.04);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.score-bar-fill {
+  width: var(--bar-width);
+  animation: score-bar-grow 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) 0.28s both;
+}
+
+@keyframes score-bar-grow {
+  from {
+    width: 0;
+  }
+  to {
+    width: var(--bar-width);
+  }
+}
+
+@media (max-width: 640px) {
+  .result-pages {
+    width: 100%;
+    height: min(100%, calc(100dvh - 4rem));
+  }
+
+  .paper-page {
+    padding-bottom: 4rem;
+  }
+
+  .result-page-controls {
+    right: 0.25rem;
+    bottom: 0.7rem;
+  }
+
+  .result-page-dots {
+    top: auto;
+    right: 3.15rem;
+    bottom: 1.1rem;
+    left: auto;
+    flex-direction: row;
+    transform: none;
+  }
+
+  .result-page-dots button {
+    width: 0.3rem;
+    height: 0.3rem;
+  }
+}
+
+@media (orientation: landscape) {
+  .result-screen {
+    padding-block: 1.25rem;
+  }
+
+  .result-pages {
+    width: min(100%, 78rem);
+    max-width: none;
+    height: calc(100dvh - 2.5rem);
+  }
+
+  .result-content {
+    border-radius: 1.5rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .paper-page {
+    transition: none;
+  }
+
+  .result-content {
+    scroll-behavior: auto;
+  }
+
+  .radar-shape,
+  .score-bar-fill {
+    animation: none;
+  }
+}
+
 /* 选项说明卡的展开：高度从 0 长到内容自身的高度。
    用 grid-template-rows 的 0fr→1fr 而不是 max-height ——
    max-height 要么猜一个够大的值（展开末段会「悬空」缓动一阵子），
