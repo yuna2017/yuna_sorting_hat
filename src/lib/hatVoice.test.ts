@@ -5,22 +5,21 @@ import { HAT_REMEMBER_LINES, hatMoodLine, hatRememberLine } from './hatVoice'
 const FORBIDDEN = ['擅长', '聪明', '能力强', '适合', '优秀', '智商', '诊断', '心理', '你擅长', '你适合', '你聪明']
 
 describe('帽子人格状态机', () => {
-  it('低语随进度变化，且同一进度的答案永远一致（零随机）', () => {
-    // 第一题留白
+  it('进度旁白：每题一句、11 句各不相同、逐题推进且零随机', () => {
+    // 第一题（第 0 屏）留白
     expect(hatMoodLine(0)).toBeNull()
-    // 四个档位各有话、互不相同
+    // 第 1..11 题都有话，且各不相同（不再重复档位）
     const seen = new Set<string>()
-    for (const i of [1, 4, 7, 10]) {
+    for (let i = 1; i <= 11; i++) {
       const line = hatMoodLine(i)
       expect(line).toBeTruthy()
       seen.add(line as string)
     }
-    expect(seen.size).toBe(4)
-    // 确定性：同档位重复调用结果相同
-    expect(hatMoodLine(2)).toBe(hatMoodLine(3))
-    expect(hatMoodLine(5)).toBe(hatMoodLine(6))
-    expect(hatMoodLine(8)).toBe(hatMoodLine(9))
-    expect(hatMoodLine(11)).toBe(hatMoodLine(12))
+    expect(seen.size).toBe(11)
+    // 超出题库的题号（理论不发生）收在最后一句，仍确定
+    expect(hatMoodLine(12)).toBe(hatMoodLine(11))
+    // 确定性：同题号重复调用结果相同
+    for (let i = 1; i <= 11; i++) expect(hatMoodLine(i)).toBe(hatMoodLine(i))
   })
 
   it('「记得你」：五个主导特质都有专属句子，且零随机', () => {

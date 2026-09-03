@@ -258,7 +258,7 @@ export function ResultScreen({
           <h2 className="text-center text-sm tracking-[0.16em] text-parchment-dim">你的五个倾向</h2>
 
           {/* 五特质画像雷达：与上方四部门雷达并列展示，互不替代 */}
-          <div className="mx-auto mt-3 max-w-[15rem]">
+          <div className="mx-auto mt-3 max-w-[16.5rem]">
             <TraitRadar profile={profile} />
           </div>
 
