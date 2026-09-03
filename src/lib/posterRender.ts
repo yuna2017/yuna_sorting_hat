@@ -420,9 +420,9 @@ function drawQrCard(ctx: CanvasRenderingContext2D, images: PosterImages, top: nu
   ctx.lineTo(POSTER_WIDTH - topRadius, cardY)
   ctx.quadraticCurveTo(POSTER_WIDTH, cardY, POSTER_WIDTH, cardY + topRadius)
   ctx.lineTo(POSTER_WIDTH, POSTER_HEIGHT - 32)
-  ctx.quadraticCurveTo(POSTER_WIDTH, POSTER_HEIGHT, POSTER_WIDTH - 32, POSTER_HEIGHT)
-  ctx.lineTo(32, POSTER_HEIGHT)
-  ctx.quadraticCurveTo(0, POSTER_HEIGHT, 0, POSTER_HEIGHT - 32)
+  ctx.lineTo(POSTER_WIDTH, POSTER_HEIGHT)
+  ctx.lineTo(0, POSTER_HEIGHT)
+  ctx.lineTo(0, POSTER_HEIGHT - 32)
   ctx.closePath()
   ctx.fillStyle = activePosterColors === POSTER_LIGHT_COLORS ? '#1d2928' : '#f7f1df'
   ctx.globalAlpha = 1
