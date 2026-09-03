@@ -131,33 +131,30 @@ function drawBackdrop(ctx: CanvasRenderingContext2D): void {
 /** 顶部标识区。返回下一个可用的 y。 */
 function drawMasthead(ctx: CanvasRenderingContext2D, data: PosterData): number {
   const centerX = POSTER_WIDTH / 2
-  const titleCenterX = data.projectUrl === null ? centerX : 330
 
-  ctx.textAlign = data.projectUrl === null ? 'center' : 'left'
+  ctx.textAlign = 'left'
   ctx.textBaseline = 'alphabetic'
 
   ctx.font = font(30)
   ctx.fillStyle = activePosterColors.parchmentDim
-  if (data.projectUrl === null) {
-    fillTrackedCenter(ctx, '燕山大学网络与信息协会', centerX, 96, 5)
-  } else {
-    ctx.fillText('燕山大学网络与信息协会', POSTER_PAD_X, 96)
-  }
+  ctx.fillText('燕山大学网络与信息协会', POSTER_PAD_X, 96)
 
+  // 主标题不因右侧二维码改变中心点，始终对齐整张海报的中轴线。
   ctx.font = font(76, 600, FONT_DISPLAY)
   ctx.fillStyle = activePosterColors.parchment
-  ctx.fillText('分部帽', titleCenterX, 198)
+  ctx.textAlign = 'center'
+  ctx.fillText('分部帽', centerX, 198)
 
-  const ruleGradient = ctx.createLinearGradient(titleCenterX - 130, 0, titleCenterX + 130, 0)
+  const ruleGradient = ctx.createLinearGradient(centerX - 130, 0, centerX + 130, 0)
   ruleGradient.addColorStop(0, 'rgba(212,175,55,0)')
   ruleGradient.addColorStop(0.5, activePosterColors.gold)
   ruleGradient.addColorStop(1, 'rgba(212,175,55,0)')
   ctx.fillStyle = ruleGradient
-  ctx.fillRect(titleCenterX - 130, 232, 260, 2)
+  ctx.fillRect(centerX - 130, 232, 260, 2)
 
   ctx.font = font(24, 400, FONT_DISPLAY)
   ctx.fillStyle = activePosterColors.goldSoft
-  fillTrackedCenter(ctx, 'YUNA SORTING HAT', titleCenterX, 278, 10)
+  fillTrackedCenter(ctx, 'YUNA SORTING HAT', centerX, 278, 10)
 
   if (data.projectUrl !== null) drawProjectQrCard(ctx, data.projectUrl)
 
@@ -165,34 +162,34 @@ function drawMasthead(ctx: CanvasRenderingContext2D, data: PosterData): number {
 }
 
 function drawProjectQrCard(ctx: CanvasRenderingContext2D, projectUrl: string): void {
-  const cardX = POSTER_WIDTH - POSTER_PAD_X - 250
+  const cardWidth = 224
+  const cardX = POSTER_WIDTH - POSTER_PAD_X - cardWidth
   const cardY = 42
-  const cardWidth = 250
-  const cardHeight = 262
+  const cardHeight = 228
+  const cardCenterX = cardX + cardWidth / 2
   const qrCanvas = document.createElement('canvas')
   QrCreator.render(
     {
       text: projectUrl,
       ecLevel: 'H',
-      fill: activePosterColors === POSTER_LIGHT_COLORS ? '#241e14' : '#17120a',
-      background: activePosterColors === POSTER_LIGHT_COLORS ? '#f4ead5' : '#f7f1df',
+      // 深色海报用暖金补蓝，浅色海报用深青补暖米色，同时保留足够明度差保证可扫描。
+      fill: activePosterColors === POSTER_LIGHT_COLORS ? '#195b61' : '#d6b64a',
+      background: activePosterColors === POSTER_LIGHT_COLORS ? '#f4ead5' : '#172528',
       radius: 0.08,
-      size: 176,
+      size: 142,
     },
     qrCanvas,
   )
 
+  // 卡片采用与二维码相反的明暗底色，二维码、文字和卡片共享同一条中轴线。
   ctx.fillStyle = activePosterColors === POSTER_LIGHT_COLORS ? '#1d2928' : '#f7f1df'
-  roundRect(ctx, cardX, cardY, cardWidth, cardHeight, 24)
+  roundRect(ctx, cardX, cardY, cardWidth, cardHeight, 22)
   ctx.fill()
-  ctx.drawImage(qrCanvas, cardX + 18, cardY + 18, 176, 176)
+  ctx.drawImage(qrCanvas, cardCenterX - 71, cardY + 14, 142, 142)
   ctx.textAlign = 'center'
-  ctx.font = font(25, 700)
+  ctx.font = font(23, 700)
   ctx.fillStyle = activePosterColors === POSTER_LIGHT_COLORS ? '#f4ead5' : '#17120a'
-  ctx.fillText('你是哪种类型？', cardX + 88, cardY + 229)
-  ctx.font = font(18)
-  ctx.fillStyle = activePosterColors === POSTER_LIGHT_COLORS ? '#b8c3bd' : '#6e6658'
-  ctx.fillText('扫码回到项目', cardX + 88, cardY + 252)
+  ctx.fillText('你是哪种类型？', cardCenterX, cardY + 192)
   ctx.textAlign = 'center'
 }
 
