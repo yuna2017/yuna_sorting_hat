@@ -14,6 +14,7 @@ import { createSessionSeed } from './lib/seededShuffle'
 import { createDrawSeed, drawBank } from './lib/drawQuestions'
 import { isComplete, resolveWinner } from './lib/scoring'
 import type { AnswerMap } from './lib/scoring'
+import { deriveProfile } from './lib/traits'
 import { readSharePayloadFromUrl } from './lib/shareCode'
 import hatHero from './assets/hat/hat_a_storybook.webp'
 import hatIdle from './assets/hat/hat_idle.webp'
@@ -119,6 +120,7 @@ export default function App() {
   }, [])
 
   const verdict = useMemo(() => resolveWinner(bank, answers), [bank, answers])
+  const profile = useMemo(() => deriveProfile(bank, answers), [bank, answers])
 
   // 换屏/换题时回到页顶，否则移动端会停在上一屏的滚动位置
   useEffect(() => {
@@ -199,7 +201,7 @@ export default function App() {
   if (phase === 'reveal') {
     // 分享链接直达结果时不会走到这里 —— 那条路径的初始 phase 就是 'result'，
     // 别人的结果不需要再演一次仪式。
-    return <RevealScreen verdict={verdict} onDone={handleRevealDone} />
+    return <RevealScreen verdict={verdict} dominantTrait={profile.dominant} onDone={handleRevealDone} />
   }
 
   return (

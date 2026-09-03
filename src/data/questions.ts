@@ -140,17 +140,17 @@ export const QUESTION_POOL: QuestionPool = {
             },
             {
               id: 'b',
-              text: '在楼道里喊一声，把还醒着的人聚到一层',
+              text: '在楼道里喊一声，把还没睡的人都叫到一楼来',
               whisper: '「你先找人。黑下来的时候，人比光更管用。」',
-              detail: '你没先去对付黑，而是先对付了各自待着。人凑到一块儿，剩下的事就有人接得上。',
+              detail: '你没先去找电，而是先把各自干等的人都凑到了一起。人一到齐，剩下的事就有人能接上。',
               p: 'ops',
               s: 'sec',
               traits: { connect: 2, guard: 1 },
             },
             {
               id: 'c',
-              text: '先弄清这栋楼平时怎么供电，再决定动不动手',
-              whisper: '「你想知道的不是什么时候来电，是它凭什么来。」',
+              text: '先弄清楚这栋楼平时怎么供电，再决定要不要动它',
+              whisper: '「先别管什么时候来电，你更想弄清楚它停掉的原因。」',
               detail: '你不急着上手，先要弄明白这套东西平时按什么规矩转，再决定自己的手往哪儿放。',
               p: 'pr',
               s: 'dev',
@@ -158,7 +158,7 @@ export const QUESTION_POOL: QuestionPool = {
             },
             {
               id: 'd',
-              text: '把手电固定在墙上，让整条走廊都看得见',
+              text: '把手电挂起来，让整条走廊都有光',
               whisper: '「你把一个人的手电，改成了一整条走廊的。」',
               detail: '你没有只顾自己看得见。同一样东西换个放法，用得上它的人就从一个变成了一群。',
               p: 'sec',
@@ -174,7 +174,7 @@ export const QUESTION_POOL: QuestionPool = {
           options: [
             {
               id: 'a',
-              text: '拿着它去楼里的每一扇门试',
+              text: '拿它去把楼里的每扇门都试一遍',
               whisper: '「你不猜它开哪扇，你一扇一扇去试。」',
               detail: '你不打算靠猜。一扇一扇试过去确实是笨办法，可等你试完，那答案就再没有含糊的地方了。',
               p: 'dev',
@@ -192,7 +192,7 @@ export const QUESTION_POOL: QuestionPool = {
             },
             {
               id: 'c',
-              text: '挂个牌子写上不知道，先放回原处',
+              text: '贴张纸条写明没人认，先放回原处',
               whisper: '「你不动它，只是让下一个人别再猜一遍。」',
               detail: '你没有解决它，但你让它不再是个谜团。下一个翻到抽屉的人，起点会比你高一点。',
               p: 'ops',
@@ -203,7 +203,7 @@ export const QUESTION_POOL: QuestionPool = {
               id: 'd',
               text: '拿着它问一圈，看有没有人认得出来',
               whisper: '「你先问人。这串钥匙总有人见过它。」',
-              detail: '你觉得答案在人身上而不在钥匙上。问对了一个人，剩下的事就只剩一句话的工夫。',
+              detail: '你觉得答案在见过它的人身上，不在钥匙本身。只要问对一个人，剩下的事就简单了。',
               p: 'pr',
               s: 'dev',
               traits: { connect: 2, insight: 1 },
@@ -220,7 +220,7 @@ export const QUESTION_POOL: QuestionPool = {
         {
           id: 'q2-1',
           title: '一扇不该开的门',
-          scene: '走廊尽头多出了一扇门。你很确定昨天它还不在那儿。门缝里透出一点光。',
+          scene: '晚自习结束后你回宿舍，楼道安静得过分，走廊尽头多出了一扇门。你很确定昨天它还在那儿，门缝里透出一点光。',
           options: [
             {
               id: 'a',
@@ -233,7 +233,7 @@ export const QUESTION_POOL: QuestionPool = {
             },
             {
               id: 'b',
-              text: '搬张椅子守在门口，等它自己有动静',
+              text: '搬把椅子守在门口，看它自己会不会有动静',
               whisper: '「你不去碰它。你等它先露出点什么来。」',
               detail: '你把自己放在它和别人中间，什么也不做，只是待着。等待在你这儿也是一种动作。',
               p: 'dev',
@@ -242,7 +242,7 @@ export const QUESTION_POOL: QuestionPool = {
             },
             {
               id: 'c',
-              text: '在门上留个记号，回头对照它变没变过',
+              text: '在门上留个记号，回头看看它有没有变',
               whisper: '「记号是给明天的你留的。你信的是对照。」',
               detail: '你不急着问它是什么，先留下一个能比对的痕迹。变化本身就是你要的那条线索。',
               p: 'pr',
@@ -251,7 +251,7 @@ export const QUESTION_POOL: QuestionPool = {
             },
             {
               id: 'd',
-              text: '先把认识的人都叫来，一起看这扇门',
+              text: '叫上认识的人，一起过来看这扇门',
               whisper: '「你不是不敢进去，你只是不想一个人进去。」',
               detail: '你把一件只属于自己的怪事，变成了一群人一起面对的事。人多了，门就没那么怪。',
               p: 'sec',
@@ -263,11 +263,11 @@ export const QUESTION_POOL: QuestionPool = {
         {
           id: 'q2-2',
           title: '多出来的那层',
-          scene: '宿舍楼的电梯今天多出一个按钮，标着这栋楼根本没有的层数。它一直亮着。',
+          scene: '宿舍楼的电梯今天多出一个按钮，上面标着一个这栋楼根本不存在的楼层。它一直亮着，可没人提到它。',
           options: [
             {
               id: 'a',
-              text: '按下去，看它把自己带到哪儿',
+              text: '直接按下去，看它会带你去哪儿',
               whisper: '「按钮亮着，你的手就已经伸过去了。」',
               detail: '你没有先问它安不安全。它亮着就等于在等人按下去，而你一点也不介意当那个人。',
               p: 'ops',
@@ -277,7 +277,7 @@ export const QUESTION_POOL: QuestionPool = {
             {
               id: 'b',
               text: '记下时间，看它明天还在不在',
-              whisper: '「你信的是它明天还在不在，不是今天。」',
+              whisper: '「今天先不按，等明天看它还在不在。」',
               detail: '你一点也不急着按。一样东西今天出现明天还在，跟它只出现过一次，完全是两回事。',
               p: 'pr',
               s: 'sec',
@@ -285,7 +285,7 @@ export const QUESTION_POOL: QuestionPool = {
             },
             {
               id: 'c',
-              text: '先按住不让别人上，自己守在门口',
+              text: '先拦住别人别上去，自己守住门口',
               whisper: '「你不进去，也不打算让别人先进去。」',
               detail: '你把自己挡在了它和别人中间。在还不知道那是什么之前，你觉得谁也不该往里走。',
               p: 'sec',
@@ -317,7 +317,7 @@ export const QUESTION_POOL: QuestionPool = {
           options: [
             {
               id: 'a',
-              text: '先自己动手做个粗糙的版本出来',
+              text: '先自己动手，做一个粗糙的版本',
               whisper: '「你不先说，你先做。做出来的东西自己会说话。」',
               detail: '你没有等一个说话的机会，先把想法变成了一件能看能摸的东西。它替你把话讲完了。',
               p: 'dev',
@@ -327,17 +327,17 @@ export const QUESTION_POOL: QuestionPool = {
             {
               id: 'b',
               text: '找一个人先讲一遍，看他听不听得懂',
-              whisper: '「你要的不是同意，是有人真的听懂了。」',
-              detail: '你要先找一个具体的人，把话原原本本说一遍。能不能讲通，比自己觉得好用得多。',
+              whisper: '「你不需要别人同意，只要有人真的听懂了就行。」',
+              detail: '你先找一个具体的人，把想法原原本本讲一遍。能不能讲明白，比你自己觉得它有多好更要紧。',
               p: 'pr',
               s: 'ops',
               traits: { connect: 2, insight: 1 },
             },
             {
               id: 'c',
-              text: '写下来放着，等它自己长得更结实一点',
+              text: '写下来放着，等它再成熟一点',
               whisper: '「你信时间。放一放还站得住的，才算数。」',
-              detail: '你不急着让它见人。一个想法能不能放住，本身就是你判断它值不值得做的方式。',
+              detail: '你不急着让它见人，想先看看它能不能立得住。立得住的，才值得你花时间往下做。',
               p: 'sec',
               s: 'dev',
               traits: { insight: 2, guard: 1 },
@@ -346,7 +346,7 @@ export const QUESTION_POOL: QuestionPool = {
               id: 'd',
               text: '先想清楚它会不会给别人添麻烦',
               whisper: '「想到的第一件事不是它多好，是它会碰到谁。」',
-              detail: '你先算的不是它能带来什么好处，而是它会落在谁的头上。这一步你从来不省。',
+              detail: '它有什么好处你会想，但你会先想它会不会麻烦到别人。这一步，你从来都是先想到的。',
               p: 'ops',
               s: 'sec',
               traits: { guard: 2, connect: 1 },
@@ -369,7 +369,7 @@ export const QUESTION_POOL: QuestionPool = {
             },
             {
               id: 'b',
-              text: '把相关的人叫齐，当面把它分清楚',
+              text: '把相关的人都叫齐，当面把责任分清楚',
               whisper: '「这次补上不算完，下次不能再空着。」',
               detail: '你要的不只是这一次补好。人到齐把话说开，是为了让下一回不再有人以为有别人在做。',
               p: 'pr',
@@ -378,7 +378,7 @@ export const QUESTION_POOL: QuestionPool = {
             },
             {
               id: 'c',
-              text: '先弄清它究竟是怎么被漏掉的',
+              text: '先弄明白它到底是怎么被漏掉的',
               whisper: '「漏了一次的地方，一定还会再漏一次。」',
               detail: '你真正在意的是它为什么会漏。同一个缝不堵住，换个人换件事，它还是照样会掉下去。',
               p: 'sec',
@@ -387,7 +387,7 @@ export const QUESTION_POOL: QuestionPool = {
             },
             {
               id: 'd',
-              text: '顺手换个做法，让它以后漏不掉',
+              text: '顺手换个做法，让它以后不再漏',
               whisper: '「你不补这一次，你改的是往后每一次。」',
               detail: '你不满足于只把这一次补好。做法一改，这个位置往后就再不需要谁特别记着它了。',
               p: 'ops',
@@ -419,7 +419,7 @@ export const QUESTION_POOL: QuestionPool = {
             },
             {
               id: 'b',
-              text: '把一直想做的东西做出个开头',
+              text: '把一直想做的东西先开个头',
               whisper: '「你不要休息，你要的是终于能动手了。」',
               detail: '空出来的时间你没有花在歇着上，而是花在一直想做却始终没开始的那件事上。',
               p: 'ops',
@@ -428,7 +428,7 @@ export const QUESTION_POOL: QuestionPool = {
             },
             {
               id: 'c',
-              text: '找几个人一起，把这一天填满',
+              text: '找几个人一起，把这天过得满满当当',
               whisper: '「一个人的一天太安静，你叫上了别人。」',
               detail: '你把一整天交给了别人。空着的时间在你这儿从来不是空的，而是可以和人一起用掉的。',
               p: 'dev',
@@ -437,9 +437,9 @@ export const QUESTION_POOL: QuestionPool = {
             },
             {
               id: 'd',
-              text: '什么都不做，把攒下的事情理清',
+              text: '什么都不做，先把积着的事理一理',
               whisper: '「什么都不做，是你为下一整周做的事。」',
-              detail: '你把这一天用来把之前欠下的事一件件放回原位。全部清干净了，你才觉得往后踏实。',
+              detail: '这一天空出来，你不想就这么耗掉，把积着的事一件件理清楚。收拾完了，心里才算踏实。',
               p: 'sec',
               s: 'pr',
               traits: { guard: 2, insight: 1 },
@@ -462,7 +462,7 @@ export const QUESTION_POOL: QuestionPool = {
             },
             {
               id: 'b',
-              text: '拿它把一直缺的那个环节补齐',
+              text: '拿它把社团一直缺的那个环节补齐',
               whisper: '「你把钱放在了一直在漏的那一处。」',
               detail: '你把钱放到了那个一直在漏的地方。补齐之后看不出新东西，但以后不会再跛脚。',
               p: 'ops',
@@ -471,7 +471,7 @@ export const QUESTION_POOL: QuestionPool = {
             },
             {
               id: 'c',
-              text: '花在能让更多人看到的地方',
+              text: '把钱花在让更多人能看到的地方',
               whisper: '「东西再好，没人知道也等于没有。」',
               detail: '你觉得做得再好没人知道也等于没有。这笔钱你花在了让人能看见它这一步上。',
               p: 'pr',
@@ -503,16 +503,16 @@ export const QUESTION_POOL: QuestionPool = {
           options: [
             {
               id: 'a',
-              text: '立刻把它指出来，让所有人都知道',
+              text: '马上把它指出来，让大家都知道',
               whisper: '「你没有先问该不该说出来，你先说了。」',
-              detail: '你没有先掂量说出来的代价。它不对就该有人知道，这件事在你这儿没有别的顺序。',
+              detail: '你没有先掂量说出来的代价。它不对就该有人知道，这句话你从一开始就没打算憋着。',
               p: 'sec',
               s: 'ops',
               traits: { guard: 2, connect: 1 },
             },
             {
               id: 'b',
-              text: '先自己查清楚，弄明白它为什么会这样',
+              text: '自己先查清楚，弄明白它为什么这样',
               whisper: '「错在哪儿你不着急，它凭什么错你要弄清。」',
               detail: '你更在意它为什么会变成这样。改掉它容易，弄明白它怎么来的才算真的处理了。',
               p: 'ops',
@@ -521,7 +521,7 @@ export const QUESTION_POOL: QuestionPool = {
             },
             {
               id: 'c',
-              text: '悄悄把它改好，不惊动任何人',
+              text: '悄悄把它改好，不让人察觉',
               whisper: '「你把它补好，没打算让谁知道那是你。」',
               detail: '你把它补好了，也没打算让人知道是你补的。事情对了就够，署不署名不重要。',
               p: 'dev',
@@ -542,12 +542,12 @@ export const QUESTION_POOL: QuestionPool = {
         {
           id: 'q5-2',
           title: '对不上的那两份',
-          scene: '两份记录同一件事的东西对不上号。两边的人都说自己那份从头到尾没改过。',
+          scene: '两张记录成员信息的表格对不上号，两边负责的人都说自己那份从头到尾没改过。',
           options: [
             {
               id: 'a',
-              text: '一行一行比，找出分岔的起点',
-              whisper: '「你要的不是谁对，是它从哪儿开岸的。」',
+              text: '一行一行比，找出是哪一行开始对不上的',
+              whisper: '「你要的不是谁对，是它从哪儿开始对不上的。」',
               detail: '你不想先判谁对。两份东西从哪一行开始分开，那一行才是真正值得追的地方。',
               p: 'ops',
               s: 'pr',
@@ -555,7 +555,7 @@ export const QUESTION_POOL: QuestionPool = {
             },
             {
               id: 'b',
-              text: '两边人叫到一起，当面对一遍',
+              text: '把两边的人都叫到一起，当面对一遍',
               whisper: '「纸上对不出来，你把人叫到了一起。」',
               detail: '你觉得光靠纸面对永远对不完。两边人坐到一块儿，差异往往一句话就能说清楚。',
               p: 'pr',
@@ -573,7 +573,7 @@ export const QUESTION_POOL: QuestionPool = {
             },
             {
               id: 'd',
-              text: '另开一份，把两边都归到里面',
+              text: '另起一份，把两边内容都并进去',
               whisper: '「你不在两份里选，你去写第三份。」',
               detail: '你不在现有的两份里挑。既然两份都不够用，那就重新开一份，把两边都装进去。',
               p: 'dev',
@@ -598,7 +598,7 @@ export const QUESTION_POOL: QuestionPool = {
               id: 'a',
               text: '先处理最容易出事的那一件',
               whisper: '「你先按住会烧起来的那一件，别的等等。」',
-              detail: '你按风险排序。哪一件放着会变糟就先动它，剩下的事再要紧也全排在它后面。',
+              detail: '你先看哪件放着会出事，就先动它。别的事再要紧，也只能排在后面，急也急不来。',
               p: 'ops',
               s: 'dev',
               traits: { guard: 3 },
@@ -614,7 +614,7 @@ export const QUESTION_POOL: QuestionPool = {
             },
             {
               id: 'c',
-              text: '先找出四件事里共用的那一步',
+              text: '先找找四件事有没有能一起做的一步',
               whisper: '「四件事你看成了一件。剩下的就顺了。」',
               detail: '你不急着开始，先去找四件事共用的那一步。一步做对，四件事就一起往前走了。',
               p: 'sec',
@@ -657,7 +657,7 @@ export const QUESTION_POOL: QuestionPool = {
             },
             {
               id: 'c',
-              text: '先找个能省一大截时间的做法',
+              text: '先找一个能省很多时间的办法',
               whisper: '「你不拼速度。你先去换一个做法。」',
               detail: '你没有马上埋头干。花上半小时去换一个做法，往往比埋头干三小时省得更多。',
               p: 'dev',
@@ -666,7 +666,7 @@ export const QUESTION_POOL: QuestionPool = {
             },
             {
               id: 'd',
-              text: '先在最难的那一块上凿开个口子',
+              text: '先在最难的那一块上开个口子',
               whisper: '「你先碰最硬的。它开了口别的就开了。」',
               detail: '你先去碰最硬的那一块。它换哪天都不会变容易，不如就在今晚把口子开出来。',
               p: 'pr',
@@ -685,11 +685,11 @@ export const QUESTION_POOL: QuestionPool = {
         {
           id: 'q7-1',
           title: '没有署名的信',
-          scene: '桌上多了一张纸条，写着一句只有你看得懂的话，末尾没有留名字。',
+          scene: '你回教室拿落下的东西，桌上多了一张纸条，写着一句只有你看得懂的话，末尾没有留名字。',
           options: [
             {
               id: 'a',
-              text: '顺着那句话找过去，看它指向哪儿',
+              text: '把这句话记下来，顺着它去找找源头',
               whisper: '「你先追那句话去哪儿，不追写它的人。」',
               detail: '你抓住的是那句话本身。它指向哪儿比谁写的更值得走一趟，人可以后面再说。',
               p: 'dev',
@@ -698,7 +698,7 @@ export const QUESTION_POOL: QuestionPool = {
             },
             {
               id: 'b',
-              text: '先想清楚这世上谁会知道这件事',
+              text: '先想清楚，知道这句话的人会是谁',
               whisper: '「话说了什么你先放下，谁说的你先想。」',
               detail: '你先想的是范围。知道这件事的人本来就不多，从这儿往回推比从话本身推更快。',
               p: 'sec',
@@ -707,7 +707,7 @@ export const QUESTION_POOL: QuestionPool = {
             },
             {
               id: 'c',
-              text: '原样放回去，等对方再来一次',
+              text: '原样放回去，等他把下一句也递过来',
               whisper: '「你什么也没动。你觉得下一步该他走。」',
               detail: '你把它放回原处，一个字也没有动。该接的那一步不在你这边，你就这么等着。',
               p: 'ops',
@@ -716,7 +716,7 @@ export const QUESTION_POOL: QuestionPool = {
             },
             {
               id: 'd',
-              text: '也留一张纸条，写上自己的回答',
+              text: '也回一张纸条，写上我想说的那句',
               whisper: '「你没找他，你回了他。用的是同样的方式。」',
               detail: '你用同样的方式回了他一句。你没有拆穿他，而是接住了他递过来的那个玩法。',
               p: 'pr',
@@ -728,11 +728,11 @@ export const QUESTION_POOL: QuestionPool = {
         {
           id: 'q7-2',
           title: '同一天又来了一次',
-          scene: '你发现今天是昨天的重复。所有人都不记得，只有你知道这一天已经过完一次。',
+          scene: '周二又到周二，你第三次被同一个闹钟叫醒，才发现今天还是昨天的重复。室友都不记得，只有你知道。',
           options: [
             {
               id: 'a',
-              text: '去把昨天没敢做的那件事做了',
+              text: '把昨天没敢动的那件事做了',
               whisper: '「昨天你没敢动的那件事，今天你先做了。」',
               detail: '昨天没敢做的那件事，今天你先把它做完了。既然这一天会重来，那它就是你唯一敢用的一次。',
               p: 'dev',
@@ -742,7 +742,7 @@ export const QUESTION_POOL: QuestionPool = {
             {
               id: 'b',
               text: '先去问身边的人，昨天发生过什么',
-              whisper: '「你先去问人。这一天你不打算一个人扈。」',
+              whisper: '「你先去问人。这一天你不打算一个人过。」',
               detail: '你先去问身边的人。一件只有自己知道的事太容易走偏，多一个人的说法才有对照的余地。',
               p: 'sec',
               s: 'ops',
@@ -750,7 +750,7 @@ export const QUESTION_POOL: QuestionPool = {
             },
             {
               id: 'c',
-              text: '记下今天每一处和昨天不一样的地方',
+              text: '记下今天跟昨天不一样的地方',
               whisper: '「你信的是差别。不一样的地方才是线索。」',
               detail: '你要的是那些不一样的地方。同一天里出现的差别，比这一天为什么重复更值得先记下来。',
               p: 'ops',
@@ -782,7 +782,7 @@ export const QUESTION_POOL: QuestionPool = {
           options: [
             {
               id: 'a',
-              text: '提一个谁都没想过的第三种做法',
+              text: '提一个谁都没想过的第三种办法',
               whisper: '「两条路都走不通，你就去修第三条。」',
               detail: '你不在两边里挑。既然那两条路现在都堵着，你就去找还没有人走过的那一条。',
               p: 'sec',
@@ -809,7 +809,7 @@ export const QUESTION_POOL: QuestionPool = {
             },
             {
               id: 'd',
-              text: '直接问一句最没人敢问的话',
+              text: '直接问出那句没人敢问的话',
               whisper: '「那句话谁都想到了。你把它说了出来。」',
               detail: '你把大家都想到却谁也不肯开口的那句话说了出来。屋里的空气从这儿开始动。',
               p: 'pr',
@@ -852,7 +852,7 @@ export const QUESTION_POOL: QuestionPool = {
             },
             {
               id: 'd',
-              text: '去问问带他来的人，他是什么样的',
+              text: '去问问带他来的人，他是什么样的人',
               whisper: '「你先弄清他是谁，再决定怎么走过去。」',
               detail: '你先去弄清他是个什么样的人。走过去说什么，取决于对面那个人，不取决于你想说什么。',
               p: 'ops',
@@ -875,7 +875,7 @@ export const QUESTION_POOL: QuestionPool = {
           options: [
             {
               id: 'a',
-              text: '带走那件自己亲手做出来的',
+              text: '带走那件自己亲手做出来的东西',
               whisper: '「你带走的是自己留下过的那个痕迹。」',
               detail: '你带走的是自己做出来的那一件。它能证明你待在这儿的那段时间，真的动过手。',
               p: 'pr',
@@ -914,7 +914,7 @@ export const QUESTION_POOL: QuestionPool = {
         {
           id: 'q9-2',
           title: '只剩一个名额',
-          scene: '一个出去的名额只剩最后一个，报名的人比名额多。名单要在今天定下来。',
+          scene: '社团里一个外出交流的名额只剩最后一个，报名的人比名额多。名单要在今天定下来。',
           options: [
             {
               id: 'a',
@@ -927,7 +927,7 @@ export const QUESTION_POOL: QuestionPool = {
             },
             {
               id: 'b',
-              text: '给一直在做事却没被看见的那个',
+              text: '给那个一直做事却没被看到的人',
               whisper: '「一直在做事的那个人，你替他记着。」',
               detail: '你把名额给了一直在做事却没被提起的那个人。做过的事总该有人记着，这一次由你来记。',
               p: 'ops',
@@ -945,7 +945,7 @@ export const QUESTION_POOL: QuestionPool = {
             },
             {
               id: 'd',
-              text: '想个办法，让没去的人也能沾上',
+              text: '想个办法，让没去的人也能得到点什么',
               whisper: '「名额只有一个，你想让它变成不止一个。」',
               detail: '你不接受只有一个人能得到。换个办法让没去的人也拿到点什么，名额就不再是零和的。',
               p: 'pr',
@@ -964,11 +964,11 @@ export const QUESTION_POOL: QuestionPool = {
         {
           id: 'q10-1',
           title: '想明白的那刻',
-          scene: '有件事你一直没想通。忽然有一天它通了。你回过头看，它最像哪一种？',
+          scene: '那道怎么都看不懂的题卡了你很久，问同学也没弄明白。有天早上忽然通了。那一刻最像下面哪一种？',
           options: [
             {
               id: 'a',
-              text: '像一张纸终于被翻到了背面',
+              text: '像那张纸终于被翻到了背面',
               whisper: '「那东西一点没变，你换了一边看它。」',
               detail: '对你来说想通就是换了个方向看同一件事。东西一点没变，看它的那一边变了。',
               p: 'ops',
@@ -977,7 +977,7 @@ export const QUESTION_POOL: QuestionPool = {
             },
             {
               id: 'b',
-              text: '像手里散着的零件忽然拼上了',
+              text: '像散落一地的零件忽然拼好了',
               whisper: '「零件一直都在，你只是找到了顺序。」',
               detail: '对你来说想通就是零件终于对上了。它们一直都在自己手里，缺的只是那个顺序。',
               p: 'sec',
@@ -1011,7 +1011,7 @@ export const QUESTION_POOL: QuestionPool = {
           options: [
             {
               id: 'a',
-              text: '好在它把一件繁的事变简单了',
+              text: '好在它把一件繁琐的事变简单了',
               whisper: '「你信的是简单。多余的冗余全去掉了。」',
               detail: '你满意的是它把一件繁琐的事变简单了。多余的东西全被去掉，剩下的那部分刚好能用。',
               p: 'pr',
@@ -1029,8 +1029,8 @@ export const QUESTION_POOL: QuestionPool = {
             },
             {
               id: 'c',
-              text: '好在很多人因为它跟你说过话',
-              whisper: '「它把人带到了你面前。这比它本身重。」',
+              text: '好在它让很多人愿意来跟你说话',
+              whisper: '「它让你认识了一批人，这可比东西本身值钱。」',
               detail: '你满意的是它把人带到了你面前。东西本身多好反而在其次，它让你认识了人。',
               p: 'dev',
               s: 'sec',
@@ -1038,7 +1038,7 @@ export const QUESTION_POOL: QuestionPool = {
             },
             {
               id: 'd',
-              text: '好在做它的时候你去了没去过的地方',
+              text: '好在你为了做它去了从没去过的地方',
               whisper: '「东西是其次的。你在意的是那段路。」',
               detail: '你满意的是做它的那段过程。东西最后成不成其次，你往前走了一段才是真的。',
               p: 'sec',
@@ -1057,7 +1057,7 @@ export const QUESTION_POOL: QuestionPool = {
         {
           id: 'q11-1',
           title: '岔开的四条路',
-          scene: '走到一处，前面岔开四条路。没有路牌，也看不见尽头到底有些什么。',
+          scene: '晚自习结束，你在教学楼和宿舍之间的岔口站定，四条路通向四方。没有路灯，也看不清尽头。',
           options: [
             {
               id: 'a',
@@ -1070,7 +1070,7 @@ export const QUESTION_POOL: QuestionPool = {
             },
             {
               id: 'b',
-              text: '在岔口等，看有没有人也到这儿',
+              text: '在岔口等等，看有没有人也会经过这里',
               whisper: '「你不急着走。你更想有个人一起走。」',
               detail: '你在岔口停下来等。一个人选哪条都是在猜，身边多一个人就多出另一种看法。',
               p: 'sec',
@@ -1088,7 +1088,7 @@ export const QUESTION_POOL: QuestionPool = {
             },
             {
               id: 'd',
-              text: '先在岔口立个路牌，写上自己看到的',
+              text: '先在岔口立个路牌，写明看到的情况',
               whisper: '「你还没选路，先给后面的人留了字。」',
               detail: '你在选路之前先给岔口立了一块牌子。后面的人走到这儿，就不必再从零开始猜了。',
               p: 'ops',
@@ -1100,7 +1100,7 @@ export const QUESTION_POOL: QuestionPool = {
         {
           id: 'q11-2',
           title: '一直往下的楼梯',
-          scene: '楼梯往下走不到尽头，每一层都一模一样。你已经走了不知道多久。',
+          scene: '放学后你想从图书馆找条近路回宿舍，楼梯却一路往下，怎么都到不了底，每一层还都一样。',
           options: [
             {
               id: 'a',
@@ -1113,7 +1113,7 @@ export const QUESTION_POOL: QuestionPool = {
             },
             {
               id: 'b',
-              text: '在这一层做个记号，看会不会再遇到',
+              text: '在这一层做个记号，看还会不会再遇到',
               whisper: '「你留下一个记号。你先要弄清在哪儿。」',
               detail: '你先留下一个记号。能不能再遇到它，比你又往下多走了多少层更能说明问题。',
               p: 'sec',
@@ -1131,7 +1131,7 @@ export const QUESTION_POOL: QuestionPool = {
             },
             {
               id: 'd',
-              text: '不再往下，转过身往回走一遍',
+              text: '不再往下走了，转身往回走一遍',
               whisper: '「你转身往回走。往下不一定是出去。」',
               detail: '你转身往回走。既然往下走一直没有结果，往回走至少是一条你还没试过的路。',
               p: 'dev',
@@ -1199,7 +1199,7 @@ export const QUESTION_POOL: QuestionPool = {
           options: [
             {
               id: 'a',
-              text: '正在把一个只有自己相信的东西做出来',
+              text: '正在做一件只有自己相信的东西',
               whisper: '「一年以后你手里得有一件真的东西。」',
               detail: '你希望一年以后手里有一件真做出来的东西。开头只有自己相信也没关系，做出来就行。',
               p: 'sec',
@@ -1208,7 +1208,7 @@ export const QUESTION_POOL: QuestionPool = {
             },
             {
               id: 'b',
-              text: '正在搞清一件很久没人搞清的事',
+              text: '正在弄清一件很久没人弄明白的事',
               whisper: '「一年以后你在搞清一件没人搞清的事。」',
               detail: '你希望一年以后正在搞清一件拖了很久的事。它不好看，但搞清了就再不需要重来。',
               p: 'ops',
@@ -1226,7 +1226,7 @@ export const QUESTION_POOL: QuestionPool = {
             },
             {
               id: 'd',
-              text: '正在看着一件自己接下来的事稳稳当当地转',
+              text: '正守着自己接手的那摊事，让它稳稳地运转下去',
               whisper: '「一年以后你接的那件事得稳稳当当地转。」',
               detail: '你希望一年以后自己接下的那件事一直稳稳当当地转着。没出事就是你要的那张成绩单。',
               p: 'dev',

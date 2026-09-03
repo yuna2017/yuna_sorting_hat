@@ -43,6 +43,9 @@ jobs:
         env:
           VITE_BASE: /yuna_sorting_hat/
           VITE_PUBLIC_PATH: /yuna_sorting_hat/
+          # Poster QR launch gate (placeholder).
+          # After the question bank is frozen and the Pages domain is confirmed,
+          # uncomment and set e.g.:  VITE_PUBLIC_ORIGIN: https://yuna2017.github.io
 
       - uses: actions/configure-pages@v5
         with:

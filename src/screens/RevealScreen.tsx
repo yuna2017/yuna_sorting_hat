@@ -3,11 +3,15 @@ import { DeptCard } from '../components/DeptCard'
 import { SortingHat } from '../components/SortingHat'
 import { DEPARTMENTS } from '../data/departments'
 import { prefersReducedMotion } from '../lib/motion'
+import { hatRememberLine } from '../lib/hatVoice'
 import magicCircle from '../assets/auxillary/magic_circle.webp'
 import type { Verdict } from '../lib/scoring'
+import type { TraitId } from '../data/constants'
 
 interface RevealScreenProps {
   verdict: Verdict
+  /** 主导特质：揭晓前帽子用它说一句「记得你」的话。 */
+  dominantTrait: TraitId
   /** 仪式结束（或被跳过）后进入结果页。 */
   onDone: () => void
 }
@@ -30,7 +34,7 @@ const REDUCED_DONE = 450
  * 分院仪式只负责延迟揭晓，不参与判定。
  * verdict 已在 App 中计算完成，仪式结束后直接进入同一个结果页。
  */
-export function RevealScreen({ verdict, onDone }: RevealScreenProps) {
+export function RevealScreen({ verdict, dominantTrait, onDone }: RevealScreenProps) {
   const reduced = prefersReducedMotion()
   const [stage, setStage] = useState<RevealStage>('silence')
   const doneRef = useRef(false)
@@ -96,6 +100,10 @@ export function RevealScreen({ verdict, onDone }: RevealScreenProps) {
                 className="mt-8 font-display text-[0.85rem] tracking-[0.16em] text-gold-soft"
               >
                 The hat is thinking...
+              </p>
+              {/* 帽子思考时，先「记得你」再说结论 */}
+              <p className="mt-3 max-w-[16rem] text-center text-[0.8rem] leading-relaxed text-parchment-dim/90">
+                {hatRememberLine(dominantTrait)}
               </p>
             </div>
           )}

@@ -3,6 +3,7 @@ import { RadarChart } from '../components/RadarChart'
 import { ScoreBars } from '../components/ScoreBars'
 import { ShareBar } from '../components/ShareBar'
 import { TraitBars } from '../components/TraitBars'
+import { TraitRadar } from '../components/TraitRadar'
 import { DepartmentStoryPanel } from '../components/DepartmentStoryPanel'
 import { DEPARTMENTS, DEPT_LIST } from '../data/departments'
 import { TRAITS } from '../data/traits'
@@ -256,6 +257,11 @@ export function ResultScreen({
         <section className="mt-6 w-full rounded-2xl border border-night-600/70 bg-night-800/55 p-5 sm:p-6">
           <h2 className="text-center text-sm tracking-[0.16em] text-parchment-dim">你的五个倾向</h2>
 
+          {/* 五特质画像雷达：与上方四部门雷达并列展示，互不替代 */}
+          <div className="mx-auto mt-3 max-w-[15rem]">
+            <TraitRadar profile={profile} />
+          </div>
+
           <p className="mt-3 text-center text-[0.82rem] leading-relaxed text-parchment/90">
             其中
             <span className="mx-1 text-gold-soft">{TRAITS[profile.dominant].name}</span>
@@ -282,8 +288,11 @@ export function ResultScreen({
         {/* ── 第五层：关于这个部门。未填写时整块不渲染，不留半截空白。 ── */}
         {dept.intro !== null && (
           <section className="mt-6 w-full rounded-2xl border border-night-600/70 bg-night-800/40 p-5">
-            <h2 className="text-sm tracking-[0.16em] text-parchment-dim">关于{dept.name}</h2>
-            <p className="mt-2.5 text-sm leading-relaxed text-parchment/90">{dept.intro}</p>
+            <h2 className="text-sm tracking-[0.16em] text-parchment-dim">帽子眼里的{dept.name}</h2>
+            <p className="mt-2 text-[0.75rem] tracking-[0.06em] text-parchment-dim/70">
+              帽子翻开关于{dept.name}的记录——
+            </p>
+            <p className="mt-1.5 text-sm leading-relaxed text-parchment/90">{dept.intro}</p>
 
             {dept.doing.length > 0 && (
               <>
@@ -308,7 +317,7 @@ export function ResultScreen({
 
             {dept.suitedFor !== null && (
               <p className="mt-4 text-[0.85rem] leading-relaxed text-parchment-dim">
-                <span className="text-parchment-dim/70">适合：</span>
+                <span className="text-parchment-dim/70">帽子觉得适合：</span>
                 {dept.suitedFor}
               </p>
             )}

@@ -4,6 +4,7 @@ import { OptionDetailCard } from '../components/OptionDetailCard'
 import { ProgressBar } from '../components/ProgressBar'
 import type { OptionId, Question } from '../data/questions'
 import { seedForQuestion, seededShuffle } from '../lib/seededShuffle'
+import { hatMoodLine } from '../lib/hatVoice'
 
 interface QuizScreenProps {
   question: Question
@@ -70,6 +71,13 @@ export function QuizScreen({
 
       <main className="mx-auto flex w-full max-w-lg flex-1 flex-col px-5 py-6 sm:px-6 sm:py-8">
         <div key={question.id} className="rise-in flex flex-1 flex-col">
+          {/* 帽子旁白：随进度换话，让帽子有「角色感」；第一题留白 */}
+          {hatMoodLine(questionIndex) !== null && (
+            <p className="mb-3 text-center text-[0.8rem] leading-relaxed text-parchment-dim/80">
+              {hatMoodLine(questionIndex)}
+            </p>
+          )}
+
           {/* 视觉层级刻意做成「标题 → 选项」为主，场景描述为辅：
               场景是氛围铺垫，不是要读者细品的正文。它此前带一条金色左边线，
               而深底上的金色 = 「重点框」信号，注意力会被吸在描述上、
