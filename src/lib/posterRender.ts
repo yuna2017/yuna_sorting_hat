@@ -168,14 +168,17 @@ function drawProjectQrCard(ctx: CanvasRenderingContext2D, projectUrl: string): v
   const cardHeight = 178
   const cardCenterX = cardX + cardWidth / 2
   const qrSize = 136
+  const isLightPoster = activePosterColors === POSTER_LIGHT_COLORS
+  const cardBackground = isLightPoster ? '#203b3a' : '#e8dfc5'
+  const qrFill = isLightPoster ? '#f0c75e' : '#b54f70'
   const qrCanvas = document.createElement('canvas')
   QrCreator.render(
     {
       text: projectUrl,
       ecLevel: 'H',
-      // 深色海报用暖金补蓝，浅色海报用深青补暖米色，同时保留足够明度差保证可扫描。
-      fill: activePosterColors === POSTER_LIGHT_COLORS ? '#195b61' : '#d6b64a',
-      background: activePosterColors === POSTER_LIGHT_COLORS ? '#f4ead5' : '#172528',
+      // 二维码留白必须与卡片同色，否则卡片与二维码会出现两块不同的底。
+      fill: qrFill,
+      background: cardBackground,
       radius: 0.08,
       size: qrSize,
     },
@@ -183,14 +186,14 @@ function drawProjectQrCard(ctx: CanvasRenderingContext2D, projectUrl: string): v
   )
 
   // 卡片只包住二维码，说明文字留在卡片外，避免视觉上挤成一块。
-  ctx.fillStyle = activePosterColors === POSTER_LIGHT_COLORS ? '#1d2928' : '#f7f1df'
+  ctx.fillStyle = cardBackground
   roundRect(ctx, cardX, cardY, cardWidth, cardHeight, 18)
   ctx.fill()
   ctx.drawImage(qrCanvas, cardCenterX - qrSize / 2, cardY + (cardHeight - qrSize) / 2, qrSize, qrSize)
   ctx.textAlign = 'center'
   ctx.font = font(22, 700)
-  ctx.fillStyle = activePosterColors === POSTER_LIGHT_COLORS ? '#f4ead5' : '#17120a'
-  ctx.fillText('你是哪种类型？', cardCenterX, cardY + cardHeight + 42)
+  ctx.fillStyle = isLightPoster ? '#203b3a' : '#8f3e5a'
+  ctx.fillText('你是哪种类型？', cardCenterX, cardY + cardHeight + 38)
   ctx.textAlign = 'center'
 }
 
