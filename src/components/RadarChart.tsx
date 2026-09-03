@@ -16,7 +16,10 @@ const CY = 112
 const MAX_R = 72
 const LABEL_R = 90
 export const RADAR_REFERENCE_MAX = 0.5
-const RINGS = [0.125, 0.25, 0.375, 0.5]
+/* 网格环用「半径比例」标注：radius = MAX_R * scale。
+   值按 value/0.5 映射到半径，所以 scale=1 → 归一化 0.5（即「50 分」参考线=外圈）。
+   5 环铺满整个数据区，避免多边形冲到网格之外显得稀疏。 */
+const RINGS = [0.2, 0.4, 0.6, 0.8, 1]
 
 /** 轴角度：dev 上、sec 右、ops 下、pr 左。 */
 const ANGLES: Record<DeptId, number> = {
@@ -63,7 +66,7 @@ export function RadarChart({ normalized, winner, className = '' }: RadarChartPro
         ).join('，')
       }
     >
-      {/* 网格环：实线 hairline，压得很低不抢戏 */}
+      {/* 网格环：实线 hairline，压得很低不抢戏；外圈=「50 分」参考线，稍亮 */}
       {RINGS.map((scale) => (
         <polygon
           key={scale}
@@ -71,7 +74,7 @@ export function RadarChart({ normalized, winner, className = '' }: RadarChartPro
           fill="none"
           stroke="var(--color-parchment)"
           strokeWidth="1"
-          opacity={scale === RADAR_REFERENCE_MAX ? 0.26 : 0.12}
+          opacity={scale === 1 ? 0.26 : 0.12}
         />
       ))}
 
