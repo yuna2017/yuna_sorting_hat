@@ -15,29 +15,41 @@ import { TRAIT_ORDER } from '../data/constants'
  */
 
 /**
- * 答题中段的帽子旁白：按题号（1 起）逐题一句，共 11 句，第 0 题（第一屏）留白。
- * 每句都是短促的「帽子角色话」：前期打量、中期试探、后期笃定，最后一句收在揭晓前。
- * 零随机 —— 同一题号永远同一句；措辞不做心理诊断、不点名部门。
+ * 答题中段的帽子旁白：按题号（1 起）分段，不同进度阶段有各自的「话语池」。
+ * 池内 2~3 句，按该题在阶段内的序号确定性循环取 —— 有变化、但仍零随机
+ * （同一题号永远同一句）。阶段划分：early(1-3)→mid(4-6)→late(7-9)→final(10-11)。
+ * 措辞不做心理诊断、不点名部门。
  */
-const MOOD_LINES = [
-  '「嗯……有点意思。」',
-  '「先别急，我还在看你。」',
-  '「你们这一届，想法好像不少。」',
-  '「你又往这个方向走了。」',
-  '「你开始有自己的一套了。」',
-  '「嗯，我大概知道你在想什么。」',
-  '「还有几题，我快看清楚了。」',
-  '「你选的，越来越像是同一个人选的。」',
-  '「行，我心里差不多有数了。」',
-  '「果然。」',
-  '「这一场，我心里已经有答案了。」',
-] as const
+type MoodStage = 'early' | 'mid' | 'late' | 'final'
+
+const MOOD_POOLS: Record<MoodStage, readonly string[]> = {
+  early: ['「嗯……有点意思。」', '「先别急，我还在看你。」', '「你们这一届，想法好像不少。」'],
+  mid: ['「你又往这个方向走了。」', '「你开始有自己的一套了。」', '「嗯，我大概知道你在想什么。」'],
+  late: ['「还有几题，我快看清楚了。」', '「你选的，越来越像是同一个人选的。」', '「行，我心里差不多有数了。」'],
+  final: ['「果然。」', '「这一场，我心里已经有答案了。」'],
+}
+
+/** 供测试/调试：确认每个进度阶段都有话语池、且池内不止一句。 */
+export const HAT_MOOD_POOLS: Readonly<Record<MoodStage, readonly string[]>> = MOOD_POOLS
+
+const STAGE_START: Record<MoodStage, number> = { early: 1, mid: 4, late: 7, final: 10 }
+
+function moodStage(questionIndex: number): MoodStage | null {
+  if (questionIndex <= 0) return null
+  if (questionIndex <= 3) return 'early'
+  if (questionIndex <= 6) return 'mid'
+  if (questionIndex <= 9) return 'late'
+  return 'final'
+}
 
 /** 按题号（0 起）给出帽子的进度旁白；第一题留白，不打扰开场。 */
 export function hatMoodLine(questionIndex: number): string | null {
-  if (questionIndex <= 0) return null
-  const line = MOOD_LINES[questionIndex - 1]
-  return line === undefined ? MOOD_LINES[MOOD_LINES.length - 1] ?? null : line
+  const stage = moodStage(questionIndex)
+  if (stage === null) return null
+  const pool = MOOD_POOLS[stage]
+  const localIndex = questionIndex - STAGE_START[stage]
+  const line = pool[localIndex % pool.length]
+  return line === undefined ? pool[pool.length - 1] ?? null : line
 }
 
 /** 揭晓前，按主导特质说一句「我记住了你」的话。 */

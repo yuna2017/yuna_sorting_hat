@@ -1,4 +1,5 @@
 import { TRAIT_ORDER } from '../data/constants'
+import type { TraitId } from '../data/constants'
 import { TRAITS } from '../data/traits'
 import type { TraitProfile } from '../lib/traits'
 
@@ -39,17 +40,19 @@ function ringPolygon(scale: number): string {
  * （docs/特质体系.md §3）。
  *
  * 设计取舍：
- *  · 归一化直接映射到半径（不按 0.5 封顶），>50% 的特质仍能拉开差距；
- *  · 0.5 参考环加亮，方便读「这份画像在五轴上的位置」；
+ *  · 值按 0.5 参考轴放大：value/0.5 映射到半径（与四部门雷达 RADAR_REFERENCE_MAX 一致，
+ *    50% 即到参考线/顶到外圈），形状撑得开、和上方雷达观感统一；
+ *  · 0.5 参考环加亮（即「50 分」那根线）；
  *  · 主导特质顶点更大、标签更亮，颜色跟随部门强调色做整体换肤；
- *  · 每根轴标签带百分比（如「洞察 65%」），低值特质也一眼可读；
- *    精确趋势仍可对照下方 TraitBars。
+ *  · 每根轴标签带真实百分比（如「创造 50%」），精确值以标签为准，形状看相对比例。
  */
 export function TraitRadar({ profile, className = '' }: TraitRadarProps) {
-  const shape = TRAIT_ORDER.map((trait, i) => {
+  /* 半径：真实百分比 ÷ 0.5，封顶 1（50%=外圈、100%顶到外圈）。 */
+  const radiusFor = (trait: TraitId) => {
     const value = Math.min(Math.max(profile.normalized[trait], 0.02), 1)
-    return pointAt(i, MAX_R * value).join(',')
-  }).join(' ')
+    return MAX_R * Math.min(value / REFERENCE, 1)
+  }
+  const shape = TRAIT_ORDER.map((trait, i) => pointAt(i, radiusFor(trait)).join(',')).join(' ')
 
   return (
     <svg
@@ -103,10 +106,9 @@ export function TraitRadar({ profile, className = '' }: TraitRadarProps) {
         filter="drop-shadow(0 0 8px color-mix(in srgb, var(--dept-accent) 75%, transparent)) drop-shadow(0 0 18px color-mix(in srgb, var(--dept-accent) 55%, transparent))"
       />
 
-      {/* 顶点标记：主导特质更大 */}
+      {/* 顶点标记：主导特质更大。位置与数据多边形一致（按 0.5 参考轴放大）。 */}
       {TRAIT_ORDER.map((trait, i) => {
-        const value = Math.min(Math.max(profile.normalized[trait], 0.02), 1)
-        const [x, y] = pointAt(i, MAX_R * value)
+        const [x, y] = pointAt(i, radiusFor(trait))
         const isDominant = trait === profile.dominant
         return (
           <circle
