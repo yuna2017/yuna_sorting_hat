@@ -10,7 +10,10 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "simulate": "vitest run src/lib/simulate.test.ts --reporter=verbose",
-    "check:content": "vitest run src/lib/validateContent.test.ts --reporter=verbose"
+    "check:content": "vitest run src/lib/validateContent.test.ts --reporter=verbose",
+    "verify": "npm run verify:quality && npm run build",
+    "check:browser": "node shoot.mjs && node check-depts.mjs",
+    "verify:quality": "npm test && npm run check:content && npm run simulate"
   },
   "dependencies": {
     "qr-creator": "1.0.0",
@@ -23,9 +26,18 @@
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.4",
     "@vitejs/plugin-react": "^6.1.0",
+    "playwright": "^1.62.1",
     "tailwindcss": "^4.3.3",
     "typescript": "^7.0.2",
     "vite": "^8.2.2",
     "vitest": "^4.1.11"
+  },
+  "license": "GPL-3.0-or-later",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yuna2017/yuna_sorting_hat.git"
+  },
+  "engines": {
+    "node": ">=22"
   }
 }

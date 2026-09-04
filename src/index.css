@@ -170,43 +170,6 @@ body {
   );
 }
 
-/* ───────────────────── 分享弹窗 ───────────────────── */
-.share-modal-overlay {
-  animation: modal-overlay-in 0.22s ease-out both;
-}
-
-.share-modal-panel {
-  animation: modal-panel-in 0.28s cubic-bezier(0.2, 0.8, 0.2, 1) both;
-}
-
-/* 老 Safari（<17）不支持 dvh：面板已改为顶部对齐、由外层容器滚动，
-   这条兜底保留给未来可能回来的 dvh 用法 */
-@supports not (height: 1dvh) {
-  .share-modal-panel {
-    max-height: 90vh;
-  }
-}
-
-@keyframes modal-overlay-in {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-/* 面板：从顶部下方浮入（面板贴近顶部对齐，向下入场与位置呼应） */
-@keyframes modal-panel-in {
-  from {
-    opacity: 0;
-    transform: translateY(-24px) scale(0.985);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
 
 
 /* 打字机光标 */
@@ -749,6 +712,386 @@ body {
 
 @media (prefers-reduced-motion: reduce) {
   .reveal-magic-circle {
+    animation: none;
+  }
+}
+
+/* ───────────────────── 结果页：移动端优先的连续阅读布局 ───────────────────── */
+.result-screen {
+  isolation: isolate;
+  overflow-x: clip;
+  overflow-y: visible;
+}
+
+.result-screen::before,
+.result-screen::after {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  content: '';
+}
+
+.result-screen::before {
+  opacity: 0.44;
+  background-image:
+    radial-gradient(circle at 12% 18%, rgb(255 255 255 / 0.9) 0 1.2px, transparent 1.8px),
+    radial-gradient(circle at 78% 34%, rgb(232 207 131 / 0.9) 0 1.2px, transparent 1.9px),
+    radial-gradient(circle at 44% 82%, rgb(255 255 255 / 0.72) 0 1px, transparent 1.7px);
+  background-size: 220px 340px, 310px 460px, 180px 280px;
+  animation: result-particle-drift 26s linear infinite, result-particle-twinkle 6s ease-in-out infinite alternate;
+}
+
+.result-screen::after {
+  opacity: 0.28;
+  background-image:
+    radial-gradient(ellipse 30% 20% at 18% 20%, rgb(var(--dept-glow) / 0.42), transparent 72%),
+    radial-gradient(ellipse 26% 18% at 82% 64%, rgb(212 175 55 / 0.3), transparent 72%);
+  filter: blur(14px);
+  animation: result-particle-glow 9s ease-in-out infinite alternate;
+}
+
+.result-background {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  object-fit: cover;
+  object-position: top center;
+  opacity: 0.18;
+  pointer-events: none;
+  user-select: none;
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, rgb(0 0 0 / 0.72) 48%, transparent 100%);
+  mask-image: linear-gradient(to bottom, #000 0%, rgb(0 0 0 / 0.72) 48%, transparent 100%);
+}
+
+.result-content {
+  box-sizing: border-box;
+  width: min(100%, 42rem);
+  min-width: 0;
+}
+
+.result-hero {
+  min-width: 0;
+  scroll-margin-top: 1rem;
+}
+
+.result-hero-art {
+  animation: result-art-float 8.5s ease-in-out infinite;
+}
+
+.result-hero-actions a {
+  min-width: 0;
+}
+
+.result-primary-action {
+  border: 1px solid rgb(var(--dept-glow) / 0.8);
+  background: linear-gradient(135deg, rgb(var(--dept-glow) / 0.9), rgb(var(--dept-glow) / 0.58));
+  color: #fff9e7;
+  box-shadow: 0 0.75rem 2rem rgb(var(--dept-glow) / 0.2);
+  transition: transform 180ms ease, filter 180ms ease, box-shadow 180ms ease;
+}
+
+.result-primary-action:hover {
+  filter: brightness(1.08);
+  box-shadow: 0 0.9rem 2.4rem rgb(var(--dept-glow) / 0.32);
+  transform: translateY(-1px);
+}
+
+.result-section {
+  box-sizing: border-box;
+  min-width: 0;
+  scroll-margin-top: 1rem;
+  backdrop-filter: blur(5px);
+}
+
+.result-chart-wrap {
+  width: min(100%, 22rem);
+  margin-inline: auto;
+}
+
+.result-details > summary {
+  min-height: 2.75rem;
+}
+
+.result-details > summary:focus-visible {
+  outline-offset: 5px;
+}
+
+.result-details-icon {
+  display: inline-block;
+  transition: transform 220ms ease;
+}
+
+.result-details[open] .result-details-icon {
+  transform: rotate(45deg);
+}
+
+.result-details-content {
+  animation: result-details-open 320ms ease-out both;
+}
+
+.poster-preview-frame {
+  box-shadow: 0 1rem 2.5rem rgb(0 0 0 / 0.2);
+}
+
+.poster-preview-image {
+  animation: poster-preview-reveal 900ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+@keyframes poster-preview-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.96);
+    filter: blur(4px) saturate(0.82);
+  }
+  68% {
+    opacity: 1;
+    transform: translateY(-3px) scale(1.01);
+    filter: blur(0) saturate(1.04);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+}
+
+.result-footer {
+  padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+}
+
+.chart-reveal .radar-shape {
+  transform: scale(0.04);
+  transform-box: fill-box;
+  transform-origin: center;
+  opacity: 0.03;
+}
+
+.chart-reveal.is-visible .radar-shape {
+  animation: radar-expand 2.2s cubic-bezier(0.2, 0.8, 0.2, 1) 120ms both;
+}
+
+.chart-reveal .radar-point {
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+  transform: scale(0.1);
+}
+
+.chart-reveal.is-visible .radar-point {
+  animation: radar-point-pop 700ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.chart-reveal.is-visible .radar-point-dev { animation-delay: 620ms; }
+.chart-reveal.is-visible .radar-point-sec { animation-delay: 760ms; }
+.chart-reveal.is-visible .radar-point-ops { animation-delay: 900ms; }
+.chart-reveal.is-visible .radar-point-pr { animation-delay: 1040ms; }
+
+/* 首次进入图表时给用户完整的阅读时间；离开后再次进入，使用更短的回看动画。 */
+.chart-reveal.is-visible.is-repeat .radar-shape {
+  animation-duration: 900ms;
+  animation-delay: 40ms;
+}
+
+.chart-reveal.is-visible.is-repeat .radar-point {
+  animation-duration: 420ms;
+}
+
+.chart-reveal.is-visible.is-repeat .radar-point-dev { animation-delay: 120ms; }
+.chart-reveal.is-visible.is-repeat .radar-point-sec { animation-delay: 190ms; }
+.chart-reveal.is-visible.is-repeat .radar-point-ops { animation-delay: 260ms; }
+.chart-reveal.is-visible.is-repeat .radar-point-pr { animation-delay: 330ms; }
+
+.score-bar-fill {
+  width: var(--bar-width);
+  transform-origin: left center;
+}
+
+.chart-reveal:not(.is-visible) .score-bar-fill {
+  width: 0 !important;
+}
+
+.chart-reveal.is-visible .score-bar-fill {
+  animation: score-bar-grow 1.8s cubic-bezier(0.2, 0.8, 0.2, 1) 180ms both;
+}
+
+.score-bars.is-visible li:nth-child(2) .score-bar-fill,
+.trait-bars.is-visible li:nth-child(2) .score-bar-fill {
+  animation-delay: 260ms;
+}
+
+.score-bars.is-visible li:nth-child(3) .score-bar-fill,
+.trait-bars.is-visible li:nth-child(3) .score-bar-fill {
+  animation-delay: 430ms;
+}
+
+.score-bars.is-visible li:nth-child(4) .score-bar-fill,
+.trait-bars.is-visible li:nth-child(4) .score-bar-fill {
+  animation-delay: 600ms;
+}
+
+.score-bars.is-visible li:nth-child(5) .score-bar-fill,
+.trait-bars.is-visible li:nth-child(5) .score-bar-fill {
+  animation-delay: 770ms;
+}
+
+.chart-reveal.is-visible.is-repeat .score-bar-fill {
+  animation-duration: 900ms;
+  animation-delay: 80ms;
+}
+
+.score-bars.is-visible.is-repeat li:nth-child(2) .score-bar-fill,
+.trait-bars.is-visible.is-repeat li:nth-child(2) .score-bar-fill {
+  animation-delay: 150ms;
+}
+
+.score-bars.is-visible.is-repeat li:nth-child(3) .score-bar-fill,
+.trait-bars.is-visible.is-repeat li:nth-child(3) .score-bar-fill {
+  animation-delay: 220ms;
+}
+
+.score-bars.is-visible.is-repeat li:nth-child(4) .score-bar-fill,
+.trait-bars.is-visible.is-repeat li:nth-child(4) .score-bar-fill {
+  animation-delay: 290ms;
+}
+
+.score-bars.is-visible.is-repeat li:nth-child(5) .score-bar-fill,
+.trait-bars.is-visible.is-repeat li:nth-child(5) .score-bar-fill {
+  animation-delay: 360ms;
+}
+
+@keyframes result-particle-drift {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(3%, 4%, 0);
+  }
+}
+
+@keyframes result-particle-twinkle {
+  from {
+    opacity: 0.36;
+  }
+  to {
+    opacity: 0.72;
+  }
+}
+
+@keyframes result-particle-glow {
+  from {
+    transform: translate3d(-1%, -1%, 0) scale(0.98);
+    opacity: 0.12;
+  }
+  to {
+    transform: translate3d(1%, 2%, 0) scale(1.04);
+    opacity: 0.28;
+  }
+}
+
+@keyframes result-art-float {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-0.6deg);
+  }
+  50% {
+    transform: translateY(-5px) rotate(0.6deg);
+  }
+}
+
+@keyframes result-details-open {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes radar-expand {
+  0% {
+    opacity: 0.04;
+    transform: scale(0.04);
+  }
+  72% {
+    opacity: 1;
+    transform: scale(1.08);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes radar-point-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.1);
+  }
+  70% {
+    opacity: 1;
+    transform: scale(1.35);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes score-bar-grow {
+  from {
+    width: 0;
+  }
+  to {
+    width: var(--bar-width);
+  }
+}
+
+@media (min-width: 700px) {
+  .result-content {
+    width: min(100%, 46rem);
+  }
+
+  .result-hero-art {
+    width: 14rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .result-screen::before,
+  .result-screen::after,
+  .result-hero-art {
+    animation: none;
+  }
+
+  .poster-preview-image {
+    animation: none;
+    filter: none;
+    transform: none;
+  }
+
+  .chart-reveal .radar-shape,
+  .chart-reveal.is-visible .radar-shape {
+    opacity: 1;
+    transform: none;
+    animation: none;
+  }
+
+  .chart-reveal .radar-point,
+  .chart-reveal.is-visible .radar-point {
+    opacity: 1;
+    transform: none;
+    animation: none;
+  }
+
+  .chart-reveal:not(.is-visible) .score-bar-fill,
+  .chart-reveal.is-visible .score-bar-fill {
+    width: var(--bar-width) !important;
     animation: none;
   }
 }

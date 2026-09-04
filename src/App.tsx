@@ -1,4 +1,4 @@
-import { type ReactNode, useCallback, useEffect, useMemo, useState } from 'react'
+import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { CoverScreen } from './screens/CoverScreen'
 import { OpeningScreen } from './screens/OpeningScreen'
 import { QuizScreen } from './screens/QuizScreen'
@@ -15,7 +15,6 @@ import { createDrawSeed, drawBank } from './lib/drawQuestions'
 import { isComplete, resolveWinner } from './lib/scoring'
 import type { AnswerMap } from './lib/scoring'
 import { readSharePayloadFromUrl } from './lib/shareCode'
-import hatHero from './assets/hat/hat_a_storybook.webp'
 import hatIdle from './assets/hat/hat_idle.webp'
 import hatThinking from './assets/hat/hat_thinking.webp'
 import hatDecided from './assets/hat/hat_decide.webp'
@@ -25,23 +24,26 @@ import devImg from './assets/dept/dev.webp'
 import secImg from './assets/dept/sec.webp'
 import opsImg from './assets/dept/ops.webp'
 import prImg from './assets/dept/pr.webp'
-
-const PRELOAD_ASSETS = [
-  hatHero,
-  hatIdle,
-  hatThinking,
-  hatDecided,
-  magicCircle,
-  resultBackground,
-  devImg,
-  secImg,
-  opsImg,
-  prImg,
-]
+import posterQr from './assets/share/qrcode.webp'
+import yunaLogo from './assets/share/yuna_logo.svg'
 
 /** 'reveal' 是答完最后一题后的分院仪式，只延迟揭晓，不参与判定。 */
 type Phase = 'cover' | 'opening' | 'quiz' | 'reveal' | 'result'
 type ThemeMode = 'system' | 'light' | 'dark'
+
+const DEPARTMENT_IMAGES = { dev: devImg, sec: secImg, ops: opsImg, pr: prImg } as const
+
+/**
+ * 只提前准备下一段流程需要的素材，不在封面一次性下载整套图片。
+ * ahead 资源使用 low 优先级，避免和当前页面争抢网络和解码资源。
+ */
+const AHEAD_ASSETS: Record<Phase, readonly string[]> = {
+  cover: [hatIdle],
+  opening: [hatThinking, hatDecided, magicCircle],
+  quiz: [resultBackground],
+  reveal: [resultBackground],
+  result: [posterQr, yunaLogo],
+}
 
 /** 昵称的 sessionStorage 键。只存这一项，且仅本会话有效。 */
 const NICKNAME_KEY = 'yuna-sorting-hat:nickname'
@@ -158,19 +160,27 @@ export default function App() {
     else window.sessionStorage.setItem(NICKNAME_KEY, value)
   }, [])
 
+  const verdict = useMemo(() => resolveWinner(bank, answers), [bank, answers])
+
+  const preloadedRef = useRef<Set<string>>(new Set())
+
   useEffect(() => {
     if (typeof window === 'undefined') return
 
-    const preloadImage = (src: string) => {
-      const img = new window.Image()
-      img.decoding = 'async'
-      img.src = src
+    const sources = new Set(AHEAD_ASSETS[phase])
+    if (phase === 'reveal' || phase === 'result') {
+      sources.add(DEPARTMENT_IMAGES[verdict.winner])
     }
 
-    PRELOAD_ASSETS.forEach(preloadImage)
-  }, [])
-
-  const verdict = useMemo(() => resolveWinner(bank, answers), [bank, answers])
+    sources.forEach((src) => {
+      if (preloadedRef.current.has(src)) return
+      preloadedRef.current.add(src)
+      const img = new window.Image()
+      img.decoding = 'async'
+      img.fetchPriority = 'low'
+      img.src = src
+    })
+  }, [phase, verdict.winner])
 
   // 换屏/换题时回到页顶，否则移动端会停在上一屏的滚动位置
   useEffect(() => {

@@ -55,7 +55,7 @@ for (const c of CASES) {
   const headings = await page.locator('h2').allInnerTexts()
   const has = (t) => headings.some((h) => h.includes(t))
   const introOk = has(`关于${c.name}`)
-  const actionOk = has(`对${c.name}感兴趣？`)
+  const actionOk = has(`想进一步了解${c.name}？`)
   const explainOk = has('帽子在你身上看见了什么？')
   const shareOk = has('分享你的结果')
 
@@ -64,8 +64,11 @@ for (const c of CASES) {
   const badLinks = await page.evaluate(() => {
     const out = []
     for (const a of document.querySelectorAll('section a[href]')) {
+      const rawHref = a.getAttribute('href') ?? ''
+      // 结果页内部锚点与海报 blob 下载链接不是外部导航，不需要 noopener。
+      if (rawHref.startsWith('#') || rawHref.startsWith('blob:')) continue
       const rel = a.getAttribute('rel') ?? ''
-      if (!/^https?:/.test(a.href)) out.push(`非 http(s) 链接: ${a.getAttribute('href')}`)
+      if (!/^https?:/.test(a.href)) out.push(`非 http(s) 链接: ${rawHref}`)
       else if (!rel.includes('noopener')) out.push(`缺 rel=noopener: ${a.href}`)
     }
     return out

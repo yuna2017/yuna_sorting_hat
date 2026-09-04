@@ -2,7 +2,7 @@ import type { DeptId } from '../data/constants'
 import { DEPARTMENTS } from '../data/departments'
 import magicCircle from '../assets/auxillary/magic_circle.webp'
 import yunaLogo from '../assets/share/yuna_logo.svg'
-import groupQrAsset from '../assets/share/qrcode.png'
+import groupQrAsset from '../assets/share/qrcode.webp'
 import type { PosterTheme } from './posterRender'
 
 export interface PosterImages {
@@ -17,16 +17,25 @@ export interface PosterImages {
  * 单张加载。decode() 而不是只等 onload —— canvas 的 drawImage 需要像素已解码，
  * 否则首帧可能画出空白（Safari 上尤其明显）。
  */
-async function loadImage(src: string): Promise<HTMLImageElement | null> {
-  try {
-    const img = new Image()
-    img.decoding = 'async'
-    img.src = src
-    await img.decode()
-    return img
-  } catch {
-    return null
-  }
+const imageCache = new Map<string, Promise<HTMLImageElement | null>>()
+
+function loadImage(src: string): Promise<HTMLImageElement | null> {
+  const cached = imageCache.get(src)
+  if (cached !== undefined) return cached
+
+  const promise = (async () => {
+    try {
+      const img = new Image()
+      img.decoding = 'async'
+      img.src = src
+      await img.decode()
+      return img
+    } catch {
+      return null
+    }
+  })()
+  imageCache.set(src, promise)
+  return promise
 }
 
 export async function loadPosterImages(

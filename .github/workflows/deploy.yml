@@ -30,19 +30,15 @@ jobs:
 
       - run: npm ci
 
-      # 题库不变量与计分引擎的权威闸门 —— 挂了就不该上线
-      - run: npm test
+      # 与部署地址无关的质量闸门，测试环境保持 posterOrigin=null。
+      - run: npm run verify:quality
 
-      # 部门资料、行动入口和公开 URL 的结构检查
-      - run: npm run check:content
-
-      # 资源与页面 base 默认为 /yuna_sorting_hat/，与仓库名一致。
-      # 显式传入 VITE_BASE 与 VITE_PUBLIC_PATH，保证 GitHub Pages 上的资源
-      # 路径与海报二维码路径一致；若将来改仓库名或上自定义域名，改这两行即可。
+      # 正式域名使用根路径；只在构建阶段注入海报二维码地址。
       - run: npm run build
         env:
-          VITE_BASE: /yuna_sorting_hat/
-          VITE_PUBLIC_PATH: /yuna_sorting_hat/
+          VITE_BASE: /
+          VITE_PUBLIC_PATH: /
+          VITE_PUBLIC_ORIGIN: https://ysh.yuna.team
 
       - uses: actions/configure-pages@v5
         with:

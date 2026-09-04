@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react'
 import type { DeptId, NormalizedScores } from '../data/constants'
 import { DEPT_ORDER } from '../data/constants'
 import { DEPARTMENTS } from '../data/departments'
@@ -8,9 +9,6 @@ interface RadarChartProps {
   className?: string
 }
 
-/* 几何：四轴指向 上/右/下/左。
-   viewBox 特意做宽（300×236）—— 左右两个中文轴标签需要横向余量，
-   否则窄屏上会被裁掉（这是 4 轴雷达最常见的翻车点）。 */
 const CX = 150
 const CY = 112
 const MAX_R = 72
@@ -18,7 +16,6 @@ const LABEL_R = 90
 export const RADAR_REFERENCE_MAX = 0.5
 const RINGS = [0.125, 0.25, 0.375, 0.5]
 
-/** 轴角度：dev 上、sec 右、ops 下、pr 左。 */
 const ANGLES: Record<DeptId, number> = {
   dev: -Math.PI / 2,
   sec: 0,
@@ -35,17 +32,39 @@ function ringPolygon(scale: number): string {
   return DEPT_ORDER.map((dept) => pointAt(dept, MAX_R * scale).join(',')).join(' ')
 }
 
-/**
- * 四轴雷达图 —— 「人格形状」。
- *
- * 设计取舍（依 dataviz 方法）：
- *  · 只有一组数据，所以不需要图例，标题即命名；
- *  · 图内**不标任何数字** —— 精确读数交给下方的 ScoreBars，
- *    避免「每个点都挂个数」的噪音；
- *  · 网格与轴用**实线** hairline（虚线会被误读成阈值/预测）；
- *  · 多边形只用冠军部门的强调色（emphasis 形式：一个是主角，其余是背景）。
- */
+function useInView<T extends Element>() {
+  const ref = useRef<T | null>(null)
+  const [visible, setVisible] = useState(false)
+  const [playCount, setPlayCount] = useState(0)
+
+  useEffect(() => {
+    const element = ref.current
+    if (element === null) return
+    if (typeof IntersectionObserver === 'undefined') {
+      setVisible(true)
+      return
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry?.isIntersecting) {
+          setPlayCount((count) => count + 1)
+          setVisible(true)
+        } else {
+          setVisible(false)
+        }
+      },
+      { threshold: 0.5 },
+    )
+    observer.observe(element)
+    return () => observer.disconnect()
+  }, [])
+
+  return { ref, visible, playCount }
+}
+
 export function RadarChart({ normalized, winner, className = '' }: RadarChartProps) {
+  const { ref, visible, playCount } = useInView<SVGSVGElement>()
   const shape = DEPT_ORDER.map((dept) => {
     const value = Math.min(Math.max(normalized[dept], 0.02), RADAR_REFERENCE_MAX)
     return pointAt(dept, MAX_R * (value / RADAR_REFERENCE_MAX)).join(',')
@@ -53,8 +72,9 @@ export function RadarChart({ normalized, winner, className = '' }: RadarChartPro
 
   return (
     <svg
+      ref={ref}
       viewBox="0 0 300 236"
-      className={`w-full ${className}`}
+      className={`chart-reveal w-full ${visible ? 'is-visible' : ''} ${playCount > 1 ? 'is-repeat' : ''} ${className}`}
       role="img"
       aria-label={
         '四部门契合度雷达图：' +
@@ -63,7 +83,6 @@ export function RadarChart({ normalized, winner, className = '' }: RadarChartPro
         ).join('，')
       }
     >
-      {/* 网格环：实线 hairline，压得很低不抢戏 */}
       {RINGS.map((scale) => (
         <polygon
           key={scale}
@@ -75,7 +94,6 @@ export function RadarChart({ normalized, winner, className = '' }: RadarChartPro
         />
       ))}
 
-      {/* 轴辐 */}
       {DEPT_ORDER.map((dept) => {
         const [x, y] = pointAt(dept, MAX_R)
         return (
@@ -92,9 +110,9 @@ export function RadarChart({ normalized, winner, className = '' }: RadarChartPro
         )
       })}
 
-      {/* 数据多边形 */}
       <polygon
         points={shape}
+        className="radar-shape"
         fill="var(--dept-accent)"
         fillOpacity="0.22"
         stroke="var(--dept-accent)"
@@ -103,7 +121,6 @@ export function RadarChart({ normalized, winner, className = '' }: RadarChartPro
         filter="drop-shadow(0 0 8px color-mix(in srgb, var(--dept-accent) 75%, transparent)) drop-shadow(0 0 18px color-mix(in srgb, var(--dept-accent) 55%, transparent))"
       />
 
-      {/* 顶点标记 */}
       {DEPT_ORDER.map((dept) => {
         const value = Math.min(Math.max(normalized[dept], 0.02), RADAR_REFERENCE_MAX)
         const [x, y] = pointAt(dept, MAX_R * (value / RADAR_REFERENCE_MAX))
@@ -111,6 +128,7 @@ export function RadarChart({ normalized, winner, className = '' }: RadarChartPro
         return (
           <circle
             key={dept}
+            className={`radar-point radar-point-${dept}`}
             cx={x}
             cy={y}
             r={isWinner ? 4.5 : 3}
@@ -121,7 +139,6 @@ export function RadarChart({ normalized, winner, className = '' }: RadarChartPro
         )
       })}
 
-      {/* 轴标签：文字用文本色，绝不用数据色 —— 身份由位置与下方的色点承担 */}
       {DEPT_ORDER.map((dept) => {
         const [x, y] = pointAt(dept, LABEL_R)
         const anchor =

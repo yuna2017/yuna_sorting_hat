@@ -108,7 +108,7 @@ const sections = await page.locator('h2').allInnerTexts()
 const wanted = [
   '帽子在你身上看见了什么？',
   '四部门契合度',
-  '你的五个倾向',
+  '完整行为画像',
   '关于',
   '感兴趣？',
   '分享你的结果',
@@ -121,41 +121,11 @@ console.log(
 )
 
 console.log('分享：')
-/* 自动打开：结果页尾部加了约半页空白，滚到页面最底部时
-   「打开分享窗口」按钮会到达画面约 1/3 处，弹窗应自动打开（每次加载仅一次）。 */
-await page
-  .getByRole('button', { name: '再测一次' })
-  .scrollIntoViewIfNeeded()
-await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight))
-await page.waitForTimeout(500)
-let autoOpened = (await page.getByRole('dialog').count()) === 1
-if (!autoOpened) {
-  // 兜底：某些环境下滚动事件迟到，再等一拍
-  await page.waitForTimeout(800)
-  autoOpened = (await page.getByRole('dialog').count()) === 1
-}
-console.log(`  ${autoOpened ? '✓' : '✗'} 滚动到底后分享弹窗自动打开`)
-const modalVisible = autoOpened || (await page.getByRole('dialog').isVisible())
-console.log(`  ${modalVisible ? '✓' : '✗'} 分享弹窗打开`)
-
-/* 自动打开只能一次：手动关闭后再滚动，不允许再弹 */
-await page.keyboard.press('Escape')
-await page.waitForTimeout(300)
-await page.evaluate(() => window.scrollTo(0, 0))
-await page.waitForTimeout(200)
-await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight))
-await page.waitForTimeout(500)
-const autoOnce = (await page.getByRole('dialog').count()) === 0
-console.log(`  ${autoOnce ? '✓' : '✗'} 自动打开只发生一次（关闭后再滚不再弹）`)
-
-/* 手动打开路径仍然可用 */
-await page.getByRole('button', { name: '打开分享窗口' }).click()
-await page.waitForTimeout(300)
-/* 默认应是图片模式：海报预览直接出现，无需切 tab */
+// 图片模式直接展示在结果页中：海报是传播主角，不再通过弹窗打断阅读。
+const poster = page.locator('img[data-poster-preview="ready"]')
 let posterReady = false
 let posterDimensions = false
 try {
-  const poster = page.locator('img[data-poster-preview="ready"]')
   await poster.waitFor({ timeout: 15000 })
   posterReady = true
   posterDimensions = await poster.evaluate(
@@ -175,58 +145,18 @@ await page.getByRole('button', { name: '复制结果链接' }).click()
 await page.waitForTimeout(300)
 const copied = await page.getByRole('button', { name: /已复制链接/ }).isVisible()
 const clipboard = await page.evaluate(() => navigator.clipboard.readText().catch(() => ''))
-// 种子是随机生成的，只校验格式（base36，1~7 位），不校验具体值
 const codeOk = new RegExp(
   `\\?v=${BANK_VERSION}&s=[0-9a-z]{1,7}&a=[abcd]{${QUESTION_COUNT}}$`,
 ).test(clipboard)
 console.log(`  ${copied ? '✓' : '✗'} 复制后按钮变为「已复制」`)
 console.log(`  ${codeOk ? '✓' : '✗'} 剪贴板里是可复现的结果链接：${clipboard || '(空)'}`)
 
-/* 弹窗面板应贴近视口顶部，而不是居中或沉底 */
-const panelTop = await page
-  .getByRole('dialog')
-  .locator('.share-modal-panel')
-  .evaluate((el) => el.getBoundingClientRect().top)
-const panelNearTop = panelTop < 160
-console.log(
-  `${panelNearTop ? '✓' : '✗'} 弹窗面板贴近顶部（panelTop=${Math.round(panelTop)}px < 160）`,
-)
-
-/* 横屏高度通常只有 390px：面板不能把内容硬挤出视口，
-   应在自身范围内滚动，并且滚到底后仍能访问保存按钮。 */
-await page.getByRole('tab', { name: '图片模式' }).click()
-await page.locator('img[data-poster-preview="ready"]').waitFor({ timeout: 15000 })
-await page.setViewportSize({ width: 844, height: 390 })
-await page.waitForTimeout(350)
-const landscapePanel = page.locator('.share-modal-panel')
-const landscapeScroll = await landscapePanel.evaluate((el) => ({
-  clientHeight: el.clientHeight,
-  scrollHeight: el.scrollHeight,
-  overflowY: getComputedStyle(el).overflowY,
-}))
-const landscapeBounded = landscapeScroll.clientHeight < landscapeScroll.scrollHeight && landscapeScroll.overflowY === 'auto'
-await landscapePanel.evaluate((el) => {
-  el.scrollTop = el.scrollHeight
-})
-const landscapeBottomAction = await landscapePanel
-  .getByRole('link', { name: '保存图片' })
-  .evaluate((el) => {
-    const panel = el.closest('.share-modal-panel')?.getBoundingClientRect()
-    const rect = el.getBoundingClientRect()
-    return panel !== undefined && rect.top >= panel.top && rect.bottom <= panel.bottom
-  })
-const landscapeOk = landscapeBounded && landscapeBottomAction
-console.log(
-  `  ${landscapeOk ? '✓' : '✗'} 横屏面板可内部滚动到底（${landscapeScroll.clientHeight}/${landscapeScroll.scrollHeight}，保存按钮=${landscapeBottomAction ? '可见' : '不可见'}）`,
-)
-
-/* 窄屏溢出故意在弹窗打开时测：面板是新增的定宽容器，
-   又装着海报预览和长链接，是当前最容易顶宽的一屏。 */
-console.log('\n窄屏横向溢出（分享弹窗打开）：')
+/* 移动端和横屏都不能出现横向溢出。 */
+console.log('\n窄屏横向溢出：')
 let overflowFailures = 0
 for (const width of VIEWPORTS) {
   await page.setViewportSize({ width, height: 780 })
-  await page.waitForTimeout(350)
+  await page.waitForTimeout(250)
   const o = await page.evaluate(() => ({
     scrollW: document.documentElement.scrollWidth,
     clientW: document.documentElement.clientWidth,
@@ -235,22 +165,26 @@ for (const width of VIEWPORTS) {
   if (!ok) overflowFailures++
   console.log(`  ${ok ? '✓' : '✗'} ${width}px  scrollWidth=${o.scrollW} clientWidth=${o.clientW}`)
 }
+await page.setViewportSize({ width: 844, height: 390 })
+await page.waitForTimeout(250)
+const landscapeOverflow = await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1)
+console.log(`  ${landscapeOverflow ? '✓' : '✗'} 横屏 844×390 不溢出`)
+const scrollState = await page.evaluate(() => {
+  const result = document.querySelector('.result-screen')
+  const nestedScrollers = Array.from(document.querySelectorAll('*')).filter((el) => {
+    const style = getComputedStyle(el)
+    return (style.overflowY === 'auto' || style.overflowY === 'scroll') && el.scrollHeight > el.clientHeight
+  })
+  return {
+    resultOverflowY: result === null ? 'missing' : getComputedStyle(result).overflowY,
+    nestedScrollers: nestedScrollers.length,
+  }
+})
+const singleScrollContainer = scrollState.resultOverflowY !== 'auto' && scrollState.resultOverflowY !== 'scroll' && scrollState.nestedScrollers === 0
+console.log(`  ${singleScrollContainer ? '✓' : '✗'} 结果页只有浏览器主滚动条（${scrollState.resultOverflowY}，内部滚动容器=${scrollState.nestedScrollers}）`)
+await page.setViewportSize({ width: 390, height: 844 })
+await page.close()
 
-// 弹窗可关闭：Esc 关闭，且分享区回到仅触发按钮
-await page.setViewportSize({ width: 320, height: 780 })
-await page.keyboard.press('Escape')
-await page.waitForTimeout(300)
-const modalClosed = (await page.getByRole('dialog').count()) === 0
-const shareTriggerBack = await page.getByRole('button', { name: '打开分享窗口' }).isVisible()
-// 关闭后必须解掉滚动锁，否则结果页再也滚不动
-const scrollUnlocked = await page.evaluate(
-  () => getComputedStyle(document.body).overflow !== 'hidden',
-)
-console.log(`  ${modalClosed ? '✓' : '✗'} Esc 可关闭分享弹窗`)
-console.log(`  ${shareTriggerBack ? '✓' : '✗'} 分享区回到触发按钮`)
-console.log(`  ${scrollUnlocked ? '✓' : '✗'} 关闭后背景滚动已解锁`)
-await page.waitForTimeout(200)
-await shot('6-result-320')
 await page.close()
 
 // ---- 减少动态偏好：仪式必须被压缩，不能让人干等 ----
@@ -339,14 +273,8 @@ const pass =
   overflowFailures === 0 &&
   missingSections.length === 0 &&
   inReveal &&
-  modalVisible &&
-  autoOpened &&
-  autoOnce &&
-  panelNearTop &&
-  landscapeOk &&
-  modalClosed &&
-  shareTriggerBack &&
-  scrollUnlocked &&
+  landscapeOverflow &&
+  singleScrollContainer &&
   copied &&
   codeOk &&
   posterReady &&

@@ -6,7 +6,7 @@ interface OpeningScreenProps {
 }
 
 /**
- * 开场独白，文案取自 docs/页面细节.md。
+ * 开场独白，文案取自 docs/设计文档.md §2。
  *
  * 四段用 \n\n 拼成单串、配 whitespace-pre-line 渲染 ——
  * 与一行帽子低语共用同一个 useTypewriter，不做两套实现。

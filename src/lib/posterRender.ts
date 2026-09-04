@@ -315,7 +315,7 @@ function drawTraitBars(
   fillTrackedCenter(ctx, '你的五个倾向', centerX, top + 26, 5)
 
   const rects = traitBarRects(data.traitBars, box)
-  // 并列的倾向一起高亮 —— docs/特质体系.md §4.3 要求文案承认并列
+  // 并列的倾向一起高亮 —— docs/题库规范.md §4 要求文案承认并列
   const highlighted = new Set([data.dominantTraitName, ...data.tiedTraitNames])
 
   for (const rect of rects) {
