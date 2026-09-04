@@ -470,7 +470,7 @@ export function ResultScreen({
           </p>
 
           <p className="font-display mt-5 text-[0.6rem] tracking-[0.3em] text-parchment-dim/45">
-            YUNA 社团 · {CAMPAIGN.label}
+            燕山大学大学生网络信息协会 · {CAMPAIGN.label}
           </p>
 
           <p className="mt-6 text-[0.7rem] text-parchment-dim/55">

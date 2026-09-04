@@ -1,6 +1,8 @@
 # 内容许可证
 
-除非文件或 `NOTICE.md` 另有说明，本项目中由 YUNA 网络与信息协会拥有或确认获授权的图片、立绘、logo、二维码视觉、部门文案、页面文案和其他非代码内容，按 [Creative Commons Attribution-ShareAlike 4.0 International（CC BY-SA 4.0）](https://creativecommons.org/licenses/by-sa/4.0/) 授权。
+本项目为燕山大学大学生网络信息协会的协会资产。
+
+除非文件或 `NOTICE.md` 另有说明，本项目中由燕山大学大学生网络信息协会（YUNA）拥有或确认获授权的图片、立绘、logo、二维码视觉、部门文案、页面文案和其他非代码内容，按 [Creative Commons Attribution-ShareAlike 4.0 International（CC BY-SA 4.0）](https://creativecommons.org/licenses/by-sa/4.0/) 授权。
 
 使用、改编或再发布这些内容时，需要：
 

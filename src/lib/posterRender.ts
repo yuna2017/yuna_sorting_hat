@@ -137,7 +137,7 @@ function drawMasthead(ctx: CanvasRenderingContext2D, data: PosterData): number {
 
   ctx.font = font(30)
   ctx.fillStyle = activePosterColors.parchmentDim
-  ctx.fillText('燕山大学网络与信息协会', POSTER_PAD_X, 96)
+  ctx.fillText('燕山大学大学生网络信息协会', POSTER_PAD_X, 96)
 
   // 主标题不因右侧二维码改变中心点，始终对齐整张海报的中轴线。
   ctx.font = font(76, 600, FONT_DISPLAY)

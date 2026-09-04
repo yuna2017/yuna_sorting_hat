@@ -18,10 +18,10 @@ export function CoverScreen({ onStart, nickname, onNicknameChange }: CoverScreen
         </div>
 
         <div className="flex flex-col items-center gap-2">
-          {/* 层级：社团名是语境（小、弱），「分部帽」才是标题（大、亮）。
+          {/* 层级：协会名称是语境（小、弱），「分部帽」才是标题（大、亮）。
               比挤在一行再靠「·」断开更稳，也不会出现孤零零的分隔点。 */}
           <p className="text-[0.82rem] tracking-[0.12em] text-parchment-dim sm:text-sm">
-            燕山大学网络与信息协会
+            燕山大学大学生网络信息协会
           </p>
 
           <h1 className="font-display text-[2.6rem] leading-none font-semibold text-parchment sm:text-5xl">
@@ -76,7 +76,7 @@ export function CoverScreen({ onStart, nickname, onNicknameChange }: CoverScreen
 
       <div className="flex flex-col items-center gap-1.5">
         <p className="font-display text-[0.62rem] tracking-[0.3em] text-parchment-dim/55">
-          YUNA 社团 · {CAMPAIGN.label}
+          燕山大学大学生网络信息协会 · {CAMPAIGN.label}
         </p>
         <p className="text-[0.6rem] leading-relaxed tracking-[0.14em] text-parchment-dim/40">
           名称仅用作生成结果与报告
