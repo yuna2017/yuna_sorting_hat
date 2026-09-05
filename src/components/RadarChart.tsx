@@ -14,7 +14,9 @@ const CY = 112
 const MAX_R = 72
 const LABEL_R = 90
 export const RADAR_REFERENCE_MAX = 0.5
-const RINGS = [0.125, 0.25, 0.375, 0.5]
+/* 网格环按「半径比例」画：数据以 value/0.5 映射到半径，所以 scale=1 → 归一化 0.5
+   （即 50 分参考线 = 外圈）。5 环铺满数据区，多边形不会被网格甩在外面。 */
+const RINGS = [0.2, 0.4, 0.6, 0.8, 1]
 
 const ANGLES: Record<DeptId, number> = {
   dev: -Math.PI / 2,
@@ -90,7 +92,7 @@ export function RadarChart({ normalized, winner, className = '' }: RadarChartPro
           fill="none"
           stroke="var(--color-parchment)"
           strokeWidth="1"
-          opacity={scale === RADAR_REFERENCE_MAX ? 0.26 : 0.12}
+          opacity={scale === 1 ? 0.26 : 0.12}
         />
       ))}
 

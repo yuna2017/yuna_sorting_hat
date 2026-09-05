@@ -307,8 +307,10 @@ export function ResultScreen({
               。
             </p>
 
-            <div className="mt-4">
-              <TraitRadar profile={profile} />
+            <div className="mt-4 flex justify-center">
+              <div className="w-full max-w-[17rem]">
+                <TraitRadar profile={profile} />
+              </div>
             </div>
 
             <div className="mt-4">
