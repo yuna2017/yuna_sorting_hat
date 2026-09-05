@@ -71,25 +71,28 @@ export function QuizScreen({
 
       <main className="mx-auto flex w-full max-w-lg flex-1 flex-col px-5 py-6 sm:px-6 sm:py-8">
         <div key={question.id} className="quiz-content rise-in flex flex-1 flex-col">
-          {/* 帽子进度旁白：随题号分阶段从话语池取句，第一题留白 */}
-          {hatMoodLine(questionIndex) !== null && (
-            <p className="mb-3 text-center text-[0.8rem] leading-relaxed text-parchment-dim/80">
-              {hatMoodLine(questionIndex)}
-            </p>
-          )}
+          {/* 题干区（帽子旁白 + 标题 + 场景）作为左列整体：
+             横版时它固定居中，选项说明卡的展开只在右列内部消化，不会牵动它。 */}
+          <div className="quiz-prompt">
+            {hatMoodLine(questionIndex) !== null && (
+              <p className="mb-3 text-center text-[0.8rem] leading-relaxed text-parchment-dim/80 sm:text-left">
+                {hatMoodLine(questionIndex)}
+              </p>
+            )}
 
-          {/* 视觉层级刻意做成「标题 → 选项」为主，场景描述为辅：
-              场景是氛围铺垫，不是要读者细品的正文。它此前带一条金色左边线，
-              而深底上的金色 = 「重点框」信号，注意力会被吸在描述上、
-              反而不看选项 —— 所以这里不给它任何强调装饰。
-              弱化靠的是字号与字重的对比，而不是继续调暗：
-              调暗会伤对比度，正文仍需 parchment-dim 这一档（约 8.7:1）。 */}
-          <h2 className="text-[1.28rem] leading-snug font-semibold text-gold-soft sm:text-[1.4rem]">
-            {question.title}
-          </h2>
-          <p className="mt-2 text-[0.875rem] leading-relaxed text-parchment-dim sm:text-[0.9rem]">
-            {question.scene}
-          </p>
+            {/* 视觉层级刻意做成「标题 → 选项」为主，场景描述为辅：
+               场景是氛围铺垫，不是要读者细品的正文。它此前带一条金色左边线，
+               而深底上的金色 = 「重点框」信号，注意力会被吸在描述上、
+               反而不看选项 —— 所以这里不给它任何强调装饰。
+               弱化靠的是字号与字重的对比，而不是继续调暗：
+               调暗会伤对比度，正文仍需 parchment-dim 这一档（约 8.7:1）。 */}
+            <h2 className="text-[1.28rem] leading-snug font-semibold text-gold-soft sm:text-[1.4rem]">
+              {question.title}
+            </h2>
+            <p className="mt-2 text-[0.875rem] leading-relaxed text-parchment-dim sm:text-[0.9rem]">
+              {question.scene}
+            </p>
+          </div>
 
           <ul className="mt-7 flex flex-col gap-2.5">
             {shuffled.map((option, i) => {

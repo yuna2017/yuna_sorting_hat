@@ -630,30 +630,30 @@ body {
   }
 
   .quiz-content {
-    display: grid;
-    /* 左列题干固定、右列选项区独立滚动：grid 总高固定为可视区，
-       说明卡在右列内部展开不会改变行高，题干不会随之跳动。 */
-    grid-template-areas:
-      'title options'
-      'scene options';
-    grid-template-columns: minmax(18rem, 0.85fr) minmax(28rem, 1.15fr);
-    grid-template-rows: auto minmax(0, 1fr);
-    column-gap: clamp(3rem, 8vw, 9rem);
-    min-height: calc(100dvh - 12.5rem);
+    /* className 上带着 flex flex-col flex-1，桌面必须显式翻回 row、
+       取消 flex 撑高（flex:none）、定高，并用 margin-block:auto 垂直居中。
+       右列 ul 在定高内独立滚动 → 选项展开不影响左列题干。 */
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(3rem, 8vw, 9rem);
+    flex: none;
+    width: 100%;
+    height: calc(100dvh - 14rem);
+    min-height: 0;
+    margin-block: auto;
   }
 
-  .quiz-content > h2 {
-    grid-area: title;
-    align-self: end;
-  }
-
-  .quiz-content > p {
-    grid-area: scene;
+  .quiz-prompt {
+    flex: 0 1 24rem;
+    max-width: 26rem;
   }
 
   .quiz-content > ul {
-    grid-area: options;
-    align-self: stretch;
+    flex: 1 1 30rem;
+    max-width: 42rem;
+    height: 100%;
     min-height: 0;
     margin-top: 0;
     overflow-y: auto;
