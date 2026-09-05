@@ -567,13 +567,14 @@ body {
   }
 
   .opening-screen {
+    /* 背景层必须保持全屏：starfield 挂在它身上，限宽会让宽屏左右露出无背景区。
+       两栏内容用 auto 列 + justify-content:center 居中即可。 */
     display: grid;
-    grid-template-columns: minmax(18rem, 0.8fr) minmax(26rem, 1.2fr);
+    grid-template-columns: minmax(12rem, auto) minmax(20rem, auto);
     grid-template-rows: 1fr auto;
     column-gap: clamp(3rem, 10vw, 12rem);
+    justify-content: center;
     align-content: center;
-    width: min(70rem, 100%);
-    margin-inline: auto;
     text-align: left;
   }
 
