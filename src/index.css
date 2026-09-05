@@ -84,27 +84,26 @@
   }
 
   :root:not([data-theme='dark']) .starfield {
+    /* 与显式 [data-theme='light'] 的纸张材质一致：浅色不是白底，
+       而是整页铺满斜纹、网格与柔光，避免默认跟随系统浅色时变成大片空白。 */
     background-image:
-      radial-gradient(ellipse 90% 55% at 50% -10%, #ffffff 0%, transparent 70%),
-      radial-gradient(ellipse 70% 50% at 15% 105%, #e8edf5 0%, transparent 72%),
-      radial-gradient(1.4px 1.4px at 18% 22%, #aeb8c8 50%, transparent 51%),
-      radial-gradient(1.2px 1.2px at 72% 15%, #c6a94c 50%, transparent 51%),
-      radial-gradient(1px 1px at 41% 61%, #aeb8c8 50%, transparent 51%),
-      radial-gradient(1.6px 1.6px at 87% 47%, #aeb8c8 50%, transparent 51%),
-      radial-gradient(1px 1px at 63% 78%, #c6a94c 50%, transparent 51%),
-      radial-gradient(1.2px 1.2px at 29% 87%, #aeb8c8 50%, transparent 51%),
-      radial-gradient(1px 1px at 8% 52%, #aeb8c8 50%, transparent 51%),
-      radial-gradient(1.3px 1.3px at 94% 82%, #c6a94c 50%, transparent 51%);
+      linear-gradient(115deg, rgb(255 255 255 / 0.78), transparent 42%),
+      radial-gradient(ellipse 72% 42% at 85% 0%, rgb(205 180 100 / 0.23), transparent 72%),
+      radial-gradient(ellipse 48% 34% at 8% 18%, rgb(205 180 100 / 0.1), transparent 70%),
+      radial-gradient(ellipse 62% 48% at 0% 100%, rgb(119 155 204 / 0.13), transparent 70%),
+      repeating-linear-gradient(135deg, transparent 0 119px, rgb(154 116 16 / 0.055) 120px, transparent 121px),
+      repeating-linear-gradient(0deg, transparent 0 31px, rgb(46 57 74 / 0.025) 32px),
+      repeating-linear-gradient(90deg, transparent 0 31px, rgb(46 57 74 / 0.018) 32px);
     background-color: var(--color-night-900);
   }
 
   :root:not([data-theme='dark']) .starfield-deep {
     background-image:
-      radial-gradient(ellipse 80% 50% at 50% 40%, #e9edf5 0%, transparent 72%),
-      radial-gradient(1.2px 1.2px at 22% 26%, #aeb8c8 50%, transparent 51%),
-      radial-gradient(1px 1px at 78% 20%, #c6a94c 50%, transparent 51%),
-      radial-gradient(1.4px 1.4px at 60% 72%, #aeb8c8 50%, transparent 51%),
-      radial-gradient(1px 1px at 33% 80%, #c6a94c 50%, transparent 51%);
+      radial-gradient(ellipse 62% 48% at 50% 42%, rgb(255 255 255 / 0.9), transparent 72%),
+      radial-gradient(ellipse 56% 40% at 92% 86%, rgb(205 180 100 / 0.15), transparent 72%),
+      repeating-linear-gradient(135deg, transparent 0 139px, rgb(154 116 16 / 0.045) 140px, transparent 141px),
+      repeating-linear-gradient(0deg, transparent 0 35px, rgb(46 57 74 / 0.035) 36px),
+      repeating-linear-gradient(90deg, transparent 0 35px, rgb(46 57 74 / 0.025) 36px);
     background-color: #f7f8fb;
   }
 }
