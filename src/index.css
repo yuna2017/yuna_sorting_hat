@@ -649,15 +649,19 @@ body {
     display: flex;
     flex-direction: column;
     justify-content: center;
-    flex: 0 1 30rem;
-    min-width: min(24rem, 100%);
-    max-width: 38rem;
+    /* 与右列按 0.85 : 1.15 铺满(原 grid 比例),不留右侧空白 */
+    flex: 0.85 1 0;
+    min-width: 0;
     min-height: 0;
   }
 
+  /* 题目描述(场景)与标题拉开一点,避免贴太近 */
+  .quiz-prompt h2 + p {
+    margin-top: 1rem;
+  }
+
   .quiz-content > ul {
-    flex: 1 1 34rem;
-    max-width: 52rem;
+    flex: 1.15 1 0;
     min-width: 0;
     height: 100%;
     min-height: 0;
