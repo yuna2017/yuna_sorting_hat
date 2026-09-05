@@ -627,25 +627,52 @@ body {
     max-width: 78rem;
     width: 100%;
     padding-inline: clamp(2rem, 7vw, 8rem);
+    overflow: hidden;
+    min-height: 0;
   }
 
   .quiz-content {
-    display: grid;
-    grid-template-columns: minmax(18rem, 0.85fr) minmax(28rem, 1.15fr);
-    align-content: center;
-    column-gap: clamp(3rem, 8vw, 9rem);
+    /* 桌面：固定可视高的左右双栏。左列题干区与右列选项解耦：
+       题切换或说明卡展开都不改变列高 → 题干不伸缩、页与页之间不跳。 */
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    justify-content: center;
+    gap: clamp(3rem, 8vw, 9rem);
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    margin-top: 0;
   }
 
-  .quiz-content > h2,
-  .quiz-content > p {
-    grid-column: 1;
+  .quiz-prompt {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    flex: 0 1 30rem;
+    min-width: min(24rem, 100%);
+    max-width: 38rem;
+    min-height: 0;
   }
 
   .quiz-content > ul {
-    grid-column: 2;
-    grid-row: 1 / span 3;
-    align-self: center;
+    flex: 1 1 34rem;
+    max-width: 52rem;
+    min-width: 0;
+    height: 100%;
+    min-height: 0;
     margin-top: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  /* 右列矮时整体垂直居中；超高(说明卡展开)时上下弹性塌缩为 0，
+     列表从顶排并可正常滚到头尾。 */
+  .quiz-content > ul > li:first-child {
+    margin-top: auto;
+  }
+  .quiz-content > ul > li:last-child {
+    margin-bottom: auto;
   }
 
   .quiz-screen header > div,

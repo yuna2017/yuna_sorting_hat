@@ -71,8 +71,9 @@ export function QuizScreen({
 
       <main className="mx-auto flex w-full max-w-lg flex-1 flex-col px-5 py-6 sm:px-6 sm:py-8">
         <div key={question.id} className="quiz-content rise-in flex flex-1 flex-col">
-          {/* 帽子进度旁白：随题号分阶段从话语池取句，第一题留白 */}
-          {hatMoodLine(questionIndex) !== null && (
+          {/* 左列(题干区)包成整体:桌面横屏在固定高内居中,不随右列变化;字号/间距/低语居中保持原样 */}
+          <div className="quiz-prompt">
+            {hatMoodLine(questionIndex) !== null && (
             <p className="mb-3 text-center text-[0.8rem] leading-relaxed text-parchment-dim/80">
               {hatMoodLine(questionIndex)}
             </p>
@@ -87,9 +88,10 @@ export function QuizScreen({
           <h2 className="text-[1.28rem] leading-snug font-semibold text-gold-soft sm:text-[1.4rem]">
             {question.title}
           </h2>
-          <p className="mt-2 text-[0.875rem] leading-relaxed text-parchment-dim sm:text-[0.9rem]">
-            {question.scene}
-          </p>
+            <p className="mt-2 text-[0.875rem] leading-relaxed text-parchment-dim sm:text-[0.9rem]">
+              {question.scene}
+            </p>
+          </div>
 
           <ul className="mt-7 flex flex-col gap-2.5">
             {shuffled.map((option, i) => {
