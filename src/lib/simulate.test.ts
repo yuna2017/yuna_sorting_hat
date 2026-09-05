@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest'
 import { DEPT_ORDER, PRIMARY_WEIGHT, SECONDARY_WEIGHT } from '../data/constants'
 import { drawBank } from './drawQuestions'
 import { formatSimulationReport, simulateBank } from './simulate'
+import { resolveWinner } from './scoring'
+import type { AnswerMap } from './scoring'
 
 /** 固定种子抽出一场题目，让均分基线可复现。 */
 const QUESTION_BANK = drawBank(1)
@@ -34,5 +36,38 @@ describe('题库分布模拟', () => {
       expect(report.averageScores[dept]).toBeGreaterThan(EXPECTED_AVERAGE * (1 - TOLERANCE))
       expect(report.averageScores[dept]).toBeLessThan(EXPECTED_AVERAGE * (1 + TOLERANCE))
     }
+  })
+
+  it('单一部门倾向策略：每题的 p 都投给同一部门时，该部门必胜', () => {
+    for (const dept of DEPT_ORDER) {
+      const answers: AnswerMap = {}
+      for (const q of QUESTION_BANK.questions) {
+        const fav = q.options.find((o) => o.p === dept)
+        if (fav !== undefined) answers[q.id] = fav.id
+      }
+      const verdict = resolveWinner(QUESTION_BANK, answers)
+      expect(verdict.winner, `${dept} 倾向策略应稳拿该部门`).toBe(dept)
+    }
+  })
+
+  it('边界策略：全选同一选项编号时，结果确定且可复现（零随机）', () => {
+    const ids = ['a', 'b', 'c', 'd'] as const
+    const results = ids.map((letter) => {
+      const answers: AnswerMap = {}
+      for (const q of QUESTION_BANK.questions) {
+        const option = q.options.find((o) => o.id === letter)
+        if (option === undefined) throw new Error(`题 ${q.id} 缺少选项 ${letter}`)
+        answers[q.id] = option.id
+      }
+      const first = resolveWinner(QUESTION_BANK, answers)
+      const second = resolveWinner(QUESTION_BANK, answers)
+      expect(second.winner).toBe(first.winner)
+      expect(second.tiedWith).toEqual(first.tiedWith)
+      expect(second.scores).toEqual(first.scores)
+      expect(second.tieBreakStage).toBe(first.tieBreakStage)
+      return first.winner
+    })
+    // 四个位置不该全落在同一部门 —— 否则选项等于没有区分度
+    expect(new Set(results).size).toBeGreaterThan(1)
   })
 })

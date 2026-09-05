@@ -4,6 +4,7 @@ import { OptionDetailCard } from '../components/OptionDetailCard'
 import { ProgressBar } from '../components/ProgressBar'
 import type { OptionId, Question } from '../data/questions'
 import { seedForQuestion, seededShuffle } from '../lib/seededShuffle'
+import { hatMoodLine } from '../lib/hatVoice'
 
 interface QuizScreenProps {
   question: Question
@@ -70,6 +71,14 @@ export function QuizScreen({
 
       <main className="mx-auto flex w-full max-w-lg flex-1 flex-col px-5 py-6 sm:px-6 sm:py-8">
         <div key={question.id} className="quiz-content rise-in flex flex-1 flex-col">
+          {/* 左列(题干区)包成整体:桌面横屏在固定高内居中,不随右列变化;字号/间距/低语居中保持原样 */}
+          <div className="quiz-prompt">
+            {hatMoodLine(questionIndex) !== null && (
+            <p className="mb-3 text-center text-[0.8rem] leading-relaxed text-parchment-dim/80">
+              {hatMoodLine(questionIndex)}
+            </p>
+          )}
+
           {/* 视觉层级刻意做成「标题 → 选项」为主，场景描述为辅：
               场景是氛围铺垫，不是要读者细品的正文。它此前带一条金色左边线，
               而深底上的金色 = 「重点框」信号，注意力会被吸在描述上、
@@ -79,9 +88,10 @@ export function QuizScreen({
           <h2 className="text-[1.28rem] leading-snug font-semibold text-gold-soft sm:text-[1.4rem]">
             {question.title}
           </h2>
-          <p className="mt-2 text-[0.875rem] leading-relaxed text-parchment-dim sm:text-[0.9rem]">
-            {question.scene}
-          </p>
+            <p className="mt-2 text-[0.875rem] leading-relaxed text-parchment-dim sm:text-[0.9rem]">
+              {question.scene}
+            </p>
+          </div>
 
           <ul className="mt-7 flex flex-col gap-2.5">
             {shuffled.map((option, i) => {

@@ -3,6 +3,7 @@ import { RadarChart } from '../components/RadarChart'
 import { ScoreBars } from '../components/ScoreBars'
 import { ShareBar } from '../components/ShareBar'
 import { TraitBars } from '../components/TraitBars'
+import { TraitRadar } from '../components/TraitRadar'
 import { DEPARTMENTS, DEPT_LIST } from '../data/departments'
 import { TRAITS } from '../data/traits'
 import { CAMPAIGN } from '../data/campaign'
@@ -305,6 +306,12 @@ export function ResultScreen({
               )}
               。
             </p>
+
+            <div className="mt-4 flex justify-center">
+              <div className="w-full max-w-[17rem]">
+                <TraitRadar profile={profile} />
+              </div>
+            </div>
 
             <div className="mt-4">
               <TraitBars profile={profile} />

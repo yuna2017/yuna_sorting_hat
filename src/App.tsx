@@ -14,6 +14,7 @@ import { createSessionSeed } from './lib/seededShuffle'
 import { createDrawSeed, drawBank } from './lib/drawQuestions'
 import { isComplete, resolveWinner } from './lib/scoring'
 import type { AnswerMap } from './lib/scoring'
+import { deriveProfile } from './lib/traits'
 import { readSharePayloadFromUrl } from './lib/shareCode'
 import hatIdle from './assets/hat/hat_idle.webp'
 import hatThinking from './assets/hat/hat_thinking.webp'
@@ -161,6 +162,7 @@ export default function App() {
   }, [])
 
   const verdict = useMemo(() => resolveWinner(bank, answers), [bank, answers])
+  const profile = useMemo(() => deriveProfile(bank, answers), [bank, answers])
 
   const preloadedRef = useRef<Set<string>>(new Set())
 
@@ -271,7 +273,7 @@ export default function App() {
     // 别人的结果不需要再演一次仪式。
     return (
       <ThemeShell>
-        <RevealScreen verdict={verdict} onDone={handleRevealDone} />
+        <RevealScreen verdict={verdict} dominantTrait={profile.dominant} onDone={handleRevealDone} />
       </ThemeShell>
     )
   }
