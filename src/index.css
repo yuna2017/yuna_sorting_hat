@@ -632,17 +632,20 @@ body {
   }
 
   .quiz-content {
-    /* 桌面：固定可视高的左右双栏。左列题干区与右列选项解耦：
-       题切换或说明卡展开都不改变列高 → 题干不伸缩、页与页之间不跳。 */
+    /* 桌面：直接定高(不依赖 main 高度链),main 内垂直居中;
+       两列撑满此高 → 左列题干稳定居中,右列内容可上下居中。 */
     display: flex;
     flex-direction: row;
     align-items: stretch;
     justify-content: center;
     gap: clamp(3rem, 8vw, 9rem);
     width: 100%;
-    height: 100%;
+    /* 必须 flex:none:className 带 flex-1,否则高度被 flex 分配、
+       子级 ul 的 height:100% 解析不到确定高度 */
+    flex: none;
+    height: calc(100dvh - 10rem);
     min-height: 0;
-    margin-top: 0;
+    margin-block: auto;
   }
 
   .quiz-prompt {
