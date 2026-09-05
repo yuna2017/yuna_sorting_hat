@@ -6,7 +6,7 @@ import { chosenOption, type AnswerMap } from './scoring'
 /**
  * 人格画像链路。与 scoring.ts 的部门判定**完全解耦** ——
  * 这里只算特质，不碰 winner；那里只算部门，不碰 traits。
- * 见 docs/特质体系.md §1。
+ * 见 docs/题库规范.md §4。
  *
  * 与部门判定同样的红线：全程零随机，同一份答案永远得到同一画像，
  * 否则分享链接无法复现。

@@ -4,7 +4,6 @@ import { ScoreBars } from '../components/ScoreBars'
 import { ShareBar } from '../components/ShareBar'
 import { TraitBars } from '../components/TraitBars'
 import { TraitRadar } from '../components/TraitRadar'
-import { DepartmentStoryPanel } from '../components/DepartmentStoryPanel'
 import { DEPARTMENTS, DEPT_LIST } from '../data/departments'
 import { TRAITS } from '../data/traits'
 import { CAMPAIGN } from '../data/campaign'
@@ -17,10 +16,7 @@ import { deriveProfile } from '../lib/traits'
 import resultBackground from '../assets/auxillary/result_background.webp'
 
 interface ResultScreenProps {
-  /**
-   * 这一场实际答的题。必须由 App 传入，不能自己去 import 题池 ——
-   * 满分、证据、身份判定都按「这 12 道题」算，拿池子里全部题目当分母会全线偏低。
-   */
+  /** 这一场实际答的题。所有结果解释都只基于本场抽到的题。 */
   bank: QuestionBank
   /** 抽题种子。分享链接必须带上它，别人才能重建出同一组题。 */
   drawSeed: number
@@ -33,11 +29,7 @@ interface ResultScreenProps {
   onRestart: () => void
 }
 
-/**
- * 用分部帽的口吻解释结果，不把内部计分过程直接暴露给用户。
- * 证据仍来自用户刚才选过的选项，但呈现为性格倾向和瞬间回忆，
- * 而不是“答了几题、命中了多少次”的测评报告。
- */
+/** 用分部帽的口吻解释结果，不把内部计分过程直接暴露给用户。 */
 const REASON_COPY = {
   dev: {
     decisive: '你总是愿意先动手，把一个想法推到真的能用。',
@@ -61,7 +53,7 @@ const REASON_COPY = {
   },
 } as const
 
-/** 招新入口的排序与主次。join 是转化终点，永远排第一且用主按钮。 */
+/** 招新入口的排序与主次。join 是转化终点，永远排第一。 */
 const ACTION_ORDER = ['join', 'more', 'works'] as const
 
 function shareUrlOf(bank: QuestionBank, drawSeed: number, answers: AnswerMap): string {
@@ -105,10 +97,13 @@ export function ResultScreen({
     return null
   }
   const pendingLabel = CAMPAIGN.status === 'closed' ? '本期暂未开放' : '入口待公布'
+  const primaryAction = liveActions.find((action) => action.kind === 'join') ?? liveActions[0]
 
   return (
-    // data-dept 一翻，雷达多边形／量条／辉光／边框整体换肤，零 JS 配色逻辑
-    <div data-dept={verdict.winner} className="screen-enter result-screen starfield relative min-h-dvh overflow-hidden px-5 py-10 sm:px-6">
+    <div
+      data-dept={verdict.winner}
+      className="screen-enter result-screen starfield relative min-h-dvh overflow-x-hidden px-4 pb-[calc(2rem+env(safe-area-inset-bottom))] pt-[max(1.5rem,env(safe-area-inset-top))] sm:px-6 sm:py-10"
+    >
       <img
         aria-hidden="true"
         src={resultBackground}
@@ -117,43 +112,84 @@ export function ResultScreen({
         className="result-background"
         alt=""
       />
-      <div className="relative z-10 mx-auto flex max-w-lg flex-col items-center">
-        {/* ── 第一层：结果 ── */}
-        <p className="font-display text-[0.62rem] tracking-[0.36em] text-parchment-dim/70">
-          THE HAT HAS DECIDED
-        </p>
 
-        <div className="mt-6 w-44 sm:w-52">
-          <DeptCard dept={dept} />
-        </div>
-
-        <h1
-          className="mt-5 font-display text-3xl font-semibold sm:text-4xl"
-          style={{ color: 'var(--dept-accent)' }}
-        >
-          {dept.name}
-        </h1>
-        <p className="font-display mt-1.5 text-[0.68rem] tracking-[0.3em] text-parchment-dim/80 uppercase">
-          {dept.latinName}
-        </p>
-
-        <div className="rule-gold mt-5 w-28" />
-
-        <p className="mt-5 max-w-sm text-center text-[1.02rem] leading-relaxed text-parchment">
-          {dept.slogan}
-        </p>
-
-        {dept.tagline !== null && (
-          <p className="mt-2 max-w-sm text-center text-[0.85rem] leading-relaxed text-parchment-dim">
-            {dept.tagline}
+      <div className="result-content relative z-10 mx-auto flex w-full max-w-xl flex-col items-center">
+        {/* ── 结果主视觉 ── */}
+        <section className="result-hero w-full text-center" aria-labelledby="result-title">
+          <p className="font-display text-[0.62rem] tracking-[0.36em] text-parchment-dim/70">
+            THE HAT HAS DECIDED
           </p>
-        )}
 
-        {/* ── 第二层：解释 ──
-            此前结果页从部门名直接跳到雷达图，用户拿不到「为什么是我」。
-            证据全部来自刚才自己的选择，不引入新判定。 */}
-        <section className="mt-8 w-full rounded-2xl border border-night-600/70 bg-night-800/40 p-5">
-          <h2 className="text-sm tracking-[0.16em] text-parchment-dim">帽子在你身上看见了什么？</h2>
+          <div className="result-hero-art mx-auto mt-5 w-44 sm:w-56">
+            <DeptCard dept={dept} />
+          </div>
+
+          <h1
+            id="result-title"
+            className="mt-4 font-display text-3xl font-semibold sm:text-4xl"
+            style={{ color: 'var(--dept-accent)' }}
+          >
+            {dept.name}
+          </h1>
+          <p className="font-display mt-1.5 text-[0.68rem] tracking-[0.3em] text-parchment-dim/80 uppercase">
+            {dept.latinName}
+          </p>
+
+          <div className="rule-gold mx-auto mt-5 w-28" />
+
+          <p className="mx-auto mt-5 max-w-md text-[1.02rem] leading-relaxed text-parchment">
+            {dept.slogan}
+          </p>
+
+          {dept.tagline !== null && (
+            <p className="mx-auto mt-2 max-w-lg text-[0.86rem] leading-relaxed text-parchment-dim">
+              {dept.tagline}
+            </p>
+          )}
+
+          <div className="result-hero-actions mx-auto mt-6 flex w-full max-w-md flex-col gap-2.5 sm:flex-row sm:justify-center">
+            {primaryAction !== undefined && actionHref(primaryAction) !== null && (
+              <a
+                href={actionHref(primaryAction) ?? undefined}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="result-primary-action flex min-h-[2.9rem] flex-1 items-center justify-center rounded-lg px-5 text-sm tracking-[0.08em]"
+              >
+                {primaryAction.label}
+              </a>
+            )}
+            <a
+              href="#department-info"
+              className="flex min-h-[2.9rem] flex-1 items-center justify-center rounded-lg border border-night-500/75 px-5 text-sm text-parchment/90 transition-colors hover:border-gold/60 hover:text-gold-soft"
+            >
+              先了解{dept.name}
+            </a>
+          </div>
+
+          <ul className="mt-5 flex flex-wrap justify-center gap-2" aria-label="部门关键词">
+            {dept.keywords.map((kw) => (
+              <li
+                key={kw}
+                className="rounded-full border px-3 py-1 text-xs text-parchment/90"
+                style={{ borderColor: 'rgb(var(--dept-glow) / 0.4)' }}
+              >
+                {kw}
+              </li>
+            ))}
+          </ul>
+
+          <p className="mt-4 text-xs text-parchment-dim/70">
+            若在霍格沃兹，这里是
+            <span className="mx-1 text-gold-soft">{dept.house}</span>
+            <span className="font-display tracking-wider">({dept.houseLatin})</span>
+          </p>
+        </section>
+
+        {/* ── 为什么是这个部门 ── */}
+        <section className="result-section mt-9 w-full rounded-2xl border border-night-600/70 bg-night-800/45 p-5 sm:p-6" aria-labelledby="explanation-title">
+          <h2 id="explanation-title" className="text-sm tracking-[0.16em] text-parchment-dim">
+            帽子在你身上看见了什么？
+          </h2>
 
           <p className="mt-2.5 text-sm leading-relaxed text-parchment/90">
             {REASON_COPY[dept.id][strength]}
@@ -171,29 +207,25 @@ export function ResultScreen({
                 帽子记住了这些瞬间：
               </p>
               <ul className="mt-2.5 flex flex-col gap-2.5">
-                {explanation.evidence.map((e) => (
-                <li
-                  key={e.questionId}
-                  className="border-l-2 pl-3"
-                  style={{ borderColor: 'rgb(var(--dept-glow) / 0.45)' }}
-                >
-                  <p className="text-[0.72rem] tracking-[0.08em] text-parchment-dim/70">
-                    {e.questionTitle}
-                  </p>
-                  {/* break-words：选项是整句中文，窄屏必须允许在任意字符处断行 */}
-                  <p className="text-[0.82rem] leading-relaxed break-words text-parchment/90">
-                    {e.choice}
-                  </p>
-                </li>
+                {explanation.evidence.slice(0, 3).map((e) => (
+                  <li
+                    key={e.questionId}
+                    className="border-l-2 pl-3"
+                    style={{ borderColor: 'rgb(var(--dept-glow) / 0.45)' }}
+                  >
+                    <p className="text-[0.72rem] tracking-[0.08em] text-parchment-dim/70">
+                      {e.questionTitle}
+                    </p>
+                    <p className="break-words text-[0.82rem] leading-relaxed text-parchment/90">
+                      {e.choice}
+                    </p>
+                  </li>
                 ))}
               </ul>
             </>
           )}
 
           {hesitated ? (
-            // 同低语：中文不用 italic（伪斜会把笔画拉歪、更显细），
-            // 且这行本来就小，字色提到 /85 保住可读性。
-            // 措辞是「争过」而非「并列」—— 胜者已经过决胜，结果是确定的。
             <p className="mt-3.5 text-[0.8rem] leading-relaxed text-parchment-dim/85">
               「帽子在你头上停顿了很久……
               {verdict.tiedWith.map((d) => DEPARTMENTS[d].name).join('、')}
@@ -208,106 +240,104 @@ export function ResultScreen({
           )}
         </section>
 
-        {/* ── 第三层：关键词 ── */}
-        <ul className="mt-6 flex flex-wrap justify-center gap-2">
-          {dept.keywords.map((kw) => (
-            <li
-              key={kw}
-              className="rounded-full border px-3 py-1 text-xs text-parchment/90"
-              style={{ borderColor: 'rgb(var(--dept-glow) / 0.4)' }}
-            >
-              {kw}
-            </li>
-          ))}
-        </ul>
+        {/* ── 方向摘要 ── */}
+        <section className="result-section result-section--data mt-6 w-full rounded-2xl border border-night-600/70 bg-night-800/55 p-5 sm:p-6" aria-labelledby="scores-title">
+          <div className="flex items-end justify-between gap-3">
+            <div>
+              <p className="text-[0.68rem] tracking-[0.2em] text-gold-soft/75">YOUR DIRECTION</p>
+              <h2 id="scores-title" className="mt-1 text-base font-medium text-parchment">
+                四部门契合度
+              </h2>
+            </div>
+            <p className="text-right text-[0.72rem] leading-relaxed text-parchment-dim/65">
+              分数只用于参考
+            </p>
+          </div>
 
-        {/* 学院氛围点缀 */}
-        <p className="mt-4 text-xs text-parchment-dim/70">
-          若在霍格沃兹，这里是
-          <span className="mx-1 text-gold-soft">{dept.house}</span>
-          <span className="font-display tracking-wider">({dept.houseLatin})</span>
-        </p>
-
-        {/* ── 第四层：数据。雷达图从「结果页主角」降为参考区 ── */}
-        <section className="mt-8 w-full rounded-2xl border border-night-600/70 bg-night-800/55 p-5 sm:p-6">
-          <h2 className="text-center text-sm tracking-[0.16em] text-parchment-dim">
-            四部门契合度
-          </h2>
-
-          <div className="mt-3">
+          <div className="result-chart-wrap mt-3">
             <RadarChart normalized={verdict.normalized} winner={verdict.winner} />
           </div>
 
-          <div className="mt-4">
-            <ScoreBars
-              normalized={verdict.normalized}
-              scores={verdict.scores}
-              maxScore={verdict.maxScore}
-              winner={verdict.winner}
-            />
-          </div>
-
-          <p className="mt-4 text-center text-[0.7rem] leading-relaxed text-parchment-dim/60">
-            百分比 = 该部门得分 ÷ 单部门满分 {verdict.maxScore}
+          <p className="mt-3 text-center text-[0.78rem] leading-relaxed text-parchment-dim/75">
+            雷达图先给你看整体方向；详细分数可以按需展开。
           </p>
+
+          <details className="result-details result-score-details mt-4 rounded-xl border border-night-600/70 bg-night-900/25 px-3.5 py-3">
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-[0.82rem] text-parchment-dim [&::-webkit-details-marker]:hidden">
+              <span>查看详细契合度</span>
+              <span aria-hidden="true" className="result-details-icon text-gold-soft">＋</span>
+            </summary>
+
+            <div className="result-details-content">
+              <div className="mt-4">
+                <ScoreBars
+                  normalized={verdict.normalized}
+                  scores={verdict.scores}
+                  maxScore={verdict.maxScore}
+                  winner={verdict.winner}
+                />
+              </div>
+
+              <p className="mt-4 text-center text-[0.7rem] leading-relaxed text-parchment-dim/60">
+                结果只用于自我探索，不代表能力高低。
+              </p>
+            </div>
+          </details>
         </section>
 
-        {/* ── 第四层之二：五个倾向。与部门契合度同层但独立 ──
-            部门推荐来自 p/s，倾向来自 traits，两条链路解耦（docs/特质体系.md §3）。 */}
-        <section className="mt-6 w-full rounded-2xl border border-night-600/70 bg-night-800/55 p-5 sm:p-6">
-          <h2 className="text-center text-sm tracking-[0.16em] text-parchment-dim">你的五个倾向</h2>
+        {/* ── 完整行为画像：默认展开，让用户先看到自己的行为倾向 ── */}
+        <details open className="result-section result-details mt-6 w-full rounded-2xl border border-night-600/70 bg-night-800/45 p-5 sm:p-6">
+          <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-sm tracking-[0.12em] text-parchment-dim [&::-webkit-details-marker]:hidden">
+            <h2 className="font-body text-sm font-normal tracking-[0.12em] text-parchment-dim">查看完整行为画像</h2>
+            <span aria-hidden="true" className="result-details-icon text-gold-soft">＋</span>
+          </summary>
 
-          {/* 五特质画像雷达：与上方四部门雷达并列展示，互不替代 */}
-          <div className="mx-auto mt-3 max-w-[16.5rem]">
-            <TraitRadar profile={profile} />
-          </div>
-
-          <p className="mt-3 text-center text-[0.82rem] leading-relaxed text-parchment/90">
-            其中
-            <span className="mx-1 text-gold-soft">{TRAITS[profile.dominant].name}</span>
-            最突出
-            {profile.tiedWith.length > 0 && (
-              <>
-                ，不过
-                {profile.tiedWith.map((trait) => TRAITS[trait].name).join('、')}
-                和它分得很近
-              </>
-            )}
-            。
-          </p>
-
-          <div className="mt-4">
-            <TraitBars profile={profile} />
-          </div>
-
-          <p className="mt-4 text-center text-[0.7rem] leading-relaxed text-parchment-dim/60">
-            百分比 = 该倾向实得 ÷ 这套题里它的理论上限。这里只描述你更倾向怎么做，不评价能力高低。
-          </p>
-        </section>
-
-        {/* ── 第五层：关于这个部门。未填写时整块不渲染，不留半截空白。 ── */}
-        {dept.intro !== null && (
-          <section className="mt-6 w-full rounded-2xl border border-night-600/70 bg-night-800/40 p-5">
-            <h2 className="text-sm tracking-[0.16em] text-parchment-dim">帽子眼里的{dept.name}</h2>
-            <p className="mt-2 text-[0.75rem] tracking-[0.06em] text-parchment-dim/70">
-              帽子翻开关于{dept.name}的记录——
+          <div className="result-details-content">
+            <p className="mt-4 text-[0.82rem] leading-relaxed text-parchment/90">
+              其中
+              <span className="mx-1 text-gold-soft">{TRAITS[profile.dominant].name}</span>
+              最突出
+              {profile.tiedWith.length > 0 && (
+                <>
+                  ，不过
+                  {profile.tiedWith.map((trait) => TRAITS[trait].name).join('、')}
+                  和它分得很近
+                </>
+              )}
+              。
             </p>
-            <p className="mt-1.5 text-sm leading-relaxed text-parchment/90">{dept.intro}</p>
+
+            <div className="mt-4">
+              <TraitRadar profile={profile} />
+            </div>
+
+            <div className="mt-4">
+              <TraitBars profile={profile} />
+            </div>
+
+            <p className="mt-4 text-center text-[0.7rem] leading-relaxed text-parchment-dim/60">
+              这里只描述你更倾向怎么做，不评价能力高低。
+            </p>
+          </div>
+        </details>
+
+        {/* ── 部门介绍 ── */}
+        {dept.intro !== null && (
+          <section id="department-info" className="result-section mt-6 w-full rounded-2xl border border-night-600/70 bg-night-800/40 p-5 sm:p-6" aria-labelledby="about-title">
+            <h2 id="about-title" className="text-sm tracking-[0.16em] text-parchment-dim">
+              关于{dept.name}
+            </h2>
+            <p className="mt-2.5 text-sm leading-relaxed text-parchment/90">{dept.intro}</p>
 
             {dept.doing.length > 0 && (
               <>
-                <h3 className="mt-4 text-[0.78rem] tracking-[0.1em] text-parchment-dim">
+                <h3 className="mt-5 text-[0.78rem] tracking-[0.1em] text-parchment-dim">
                   你进来会做什么
                 </h3>
-                <ul className="mt-2 flex flex-col gap-1.5">
+                <ul className="mt-2.5 flex flex-col gap-2">
                   {dept.doing.map((item) => (
-                    <li
-                      key={item}
-                      className="flex gap-2 text-[0.85rem] leading-relaxed text-parchment/90"
-                    >
-                      <span aria-hidden="true" className="shrink-0 text-gold-soft/70">
-                        ·
-                      </span>
+                    <li key={item} className="flex gap-2 text-[0.85rem] leading-relaxed text-parchment/90">
+                      <span aria-hidden="true" className="shrink-0 text-gold-soft/70">·</span>
                       <span className="break-words">{item}</span>
                     </li>
                   ))}
@@ -316,34 +346,19 @@ export function ResultScreen({
             )}
 
             {dept.suitedFor !== null && (
-              <p className="mt-4 text-[0.85rem] leading-relaxed text-parchment-dim">
-                <span className="text-parchment-dim/70">帽子觉得适合：</span>
+              <p className="mt-5 text-[0.85rem] leading-relaxed text-parchment-dim">
+                <span className="text-parchment-dim/70">适合：</span>
                 {dept.suitedFor}
-              </p>
-            )}
-
-            {/* 占位稿要自己承认是占位稿，但只在开发期说 ——
-                招新页上挂一句「草稿」比内容本身更劝退。 */}
-            {dept.contentDraft && import.meta.env.DEV && (
-              <p className="mt-4 rounded-lg border border-gold/30 bg-gold/5 px-3 py-2 text-[0.72rem] leading-relaxed text-gold-soft/85">
-                开发提示：本部门介绍仍是占位草稿，上线前请社团核对，并把 contentDraft 改为
-                false。
               </p>
             )}
           </section>
         )}
 
-        {/* 可选体验：只读自己的选择，不参与计分和分享。 */}
-        <DepartmentStoryPanel department={dept.id} />
-
-        {/* ── 第七层：行动。招新转化的终点，不能让用户看完不知道去哪。 ── */}
+        {/* ── 行动入口 ── */}
         {actions.length > 0 && (
-          <section
-            className="mt-6 w-full rounded-2xl border p-5"
-            style={{ borderColor: 'rgb(var(--dept-glow) / 0.32)' }}
-          >
-            <h2 className="text-sm tracking-[0.16em] text-parchment-dim">
-              对{dept.name}感兴趣？
+          <section className="result-section result-actions mt-6 w-full rounded-2xl border p-5 sm:p-6" style={{ borderColor: 'rgb(var(--dept-glow) / 0.32)' }} aria-labelledby="actions-title">
+            <h2 id="actions-title" className="text-sm tracking-[0.16em] text-parchment-dim">
+              想进一步了解{dept.name}？
             </h2>
 
             {liveActions.length > 0 && (
@@ -353,12 +368,10 @@ export function ResultScreen({
                     <a
                       href={actionHref(action) ?? undefined}
                       target="_blank"
-                      /* noopener 必须显式写：新窗口拿到 window.opener 就能篡改本页，
-                         而这些 URL 由社团后续填入、不全在我们控制下。 */
                       rel="noopener noreferrer"
-                      className={`flex min-h-[2.75rem] items-center justify-center gap-2 rounded-lg px-4 text-sm transition-colors ${
+                      className={`flex min-h-[2.85rem] items-center justify-center gap-2 rounded-lg px-4 text-sm transition-colors ${
                         action.kind === 'join'
-                          ? 'border border-gold/55 bg-gold/10 tracking-[0.08em] text-gold-soft hover:border-gold hover:bg-gold/18'
+                          ? 'result-primary-action tracking-[0.08em]'
                           : 'border border-night-500/70 text-parchment/90 hover:border-gold/60 hover:text-gold-soft'
                       }`}
                     >
@@ -368,20 +381,15 @@ export function ResultScreen({
                       )}
                     </a>
                   </li>
-                  ))}
+                ))}
               </ul>
             )}
 
             {pendingActions.length > 0 && (
               <>
-                {/* 没有 URL 的入口渲染成静态条目而不是 <a>：
-                    一个点进去 404 的招新按钮比没有按钮更糟。 */}
                 <ul className="mt-3 flex flex-col gap-2">
                   {pendingActions.map((action) => (
-                    <li
-                      key={action.label}
-                      className="flex min-h-[2.75rem] flex-wrap items-center justify-center rounded-lg border border-dashed border-night-500/60 px-4 text-center text-[0.82rem] leading-snug text-parchment-dim/70"
-                    >
+                    <li key={action.label} className="flex min-h-[2.75rem] flex-wrap items-center justify-center rounded-lg border border-dashed border-night-500/60 px-4 text-center text-[0.82rem] leading-snug text-parchment-dim/70">
                       <span className="break-words">{action.label}</span>
                       <span className="ml-1.5 text-[0.72rem]">（{action.status === 'closed' ? '本期暂未开放' : pendingLabel}）</span>
                     </li>
@@ -395,11 +403,13 @@ export function ResultScreen({
           </section>
         )}
 
-        {/* ── 第八层：探索其他部门。结果只是一个方向，给用户保留主动选择的入口。 ── */}
-        <section className="mt-6 w-full rounded-2xl border border-night-600/70 bg-night-800/40 p-5">
-          <h2 className="text-sm tracking-[0.16em] text-parchment-dim">对其他部门感兴趣？</h2>
+        {/* ── 探索其他部门 ── */}
+        <section className="result-section mt-6 w-full rounded-2xl border border-night-600/70 bg-night-800/40 p-5 sm:p-6" aria-labelledby="other-departments-title">
+          <h2 id="other-departments-title" className="text-sm tracking-[0.16em] text-parchment-dim">
+            对其他部门也感兴趣？
+          </h2>
           <p className="mt-2 text-[0.8rem] leading-relaxed text-parchment-dim/75">
-            分部帽给出的只是一个方向，也可以看看其他部门，找到真正想去的地方。
+            分部帽给出的是一个方向，你也可以看看其他部门，找到真正想去的地方。
           </p>
 
           <ul className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-3">
@@ -436,7 +446,7 @@ export function ResultScreen({
           </ul>
         </section>
 
-        {/* ── 第九层：传播 ── */}
+        {/* ── 分享：海报默认可见 ── */}
         {shareUrl !== '' && (
           <ShareBar
             url={shareUrl}
@@ -451,24 +461,35 @@ export function ResultScreen({
           />
         )}
 
-        {/* ── 第十层：重新体验 ── */}
-        <button
-          type="button"
-          onClick={onRestart}
-          className="mt-8 min-h-[2.75rem] rounded-full border border-gold/45 px-8 text-sm tracking-[0.16em] text-gold-soft/90 transition-all duration-300 hover:border-gold hover:bg-gold/12 active:scale-[0.98]"
-        >
-          再测一次
-        </button>
+        <footer className="result-footer mt-8 flex w-full flex-col items-center text-center">
+          <button
+            type="button"
+            onClick={onRestart}
+            className="min-h-[2.85rem] rounded-full border border-gold/45 px-8 text-sm tracking-[0.16em] text-gold-soft/90 transition-all duration-300 hover:border-gold hover:bg-gold/12 active:scale-[0.98]"
+          >
+            再测一次
+          </button>
 
-        {/* 免责一句：雷达图 + 百分比很容易被读成心理测评，
-            这里明确它只是娱乐，压掉「伪科学感」。 */}
-        <p className="mt-6 max-w-xs text-center text-[0.72rem] leading-relaxed text-parchment-dim/55">
-          分部帽看见的是你此刻流露出的倾向。它可以给出一个方向，但真正想去哪里，仍由你自己决定。
-        </p>
+          <p className="mt-5 max-w-md text-[0.72rem] leading-relaxed text-parchment-dim/60">
+            分部帽看见的是你此刻流露出的倾向。它可以给出一个方向，但真正想去哪里，仍由你自己决定。
+          </p>
 
-        <p className="font-display mt-6 text-[0.6rem] tracking-[0.3em] text-parchment-dim/45">
-          YUNA 社团 · {CAMPAIGN.label}
-        </p>
+          <p className="font-display mt-5 text-[0.6rem] tracking-[0.3em] text-parchment-dim/45">
+            燕山大学大学生网络信息协会 · {CAMPAIGN.label}
+          </p>
+
+          <p className="mt-6 text-[0.7rem] text-parchment-dim/55">
+            想继续探索燕大生活？{' '}
+            <a
+              href="https://game.yuna.team/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-gold-soft/75 underline decoration-gold/30 underline-offset-4 transition-colors hover:text-gold-soft"
+            >
+              进入燕山大学人生模拟器
+            </a>
+          </p>
+        </footer>
       </div>
     </div>
   )

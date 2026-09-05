@@ -5,7 +5,6 @@ import { renderPoster, type PosterTheme } from '../lib/posterRender'
 import { POSTER_HEIGHT, POSTER_WIDTH } from '../lib/posterLayout'
 import type { QuestionBank } from '../data/questions'
 import type { AnswerMap, Verdict } from '../lib/scoring'
-import { CAMPAIGN } from '../data/campaign'
 
 interface SharePosterPanelProps {
   bank: QuestionBank
@@ -62,6 +61,8 @@ export function SharePosterPanel({
   useEffect(() => {
     let cancelled = false
     let objectUrl: string | null = null
+    let firstFrame = 0
+    let secondFrame = 0
 
     const run = async () => {
       setState('rendering')
@@ -88,10 +89,16 @@ export function SharePosterPanel({
       }
     }
 
-    void run()
+    // 先让结果页完成两帧绘制，再开始 1080×1920 canvas 工作。
+    // 分享区在页面后半段，用户看不到延迟，但首屏不会和海报生成争抢主线程。
+    firstFrame = window.requestAnimationFrame(() => {
+      secondFrame = window.requestAnimationFrame(() => void run())
+    })
 
     return () => {
       cancelled = true
+      window.cancelAnimationFrame(firstFrame)
+      window.cancelAnimationFrame(secondFrame)
       // 不回收会随每次重绘泄漏一整张 1080×1920 PNG
       if (objectUrl !== null) URL.revokeObjectURL(objectUrl)
     }
@@ -148,7 +155,7 @@ export function SharePosterPanel({
         ) : (
           <div
             /* 占位比例与海报一致，避免图片就绪时整页跳动 */
-            className="relative mx-auto w-full max-w-[19rem] overflow-hidden rounded-xl border border-night-600/70 bg-night-900/60"
+            className="poster-preview-frame relative mx-auto w-full max-w-[19rem] overflow-hidden rounded-xl border border-night-600/70 bg-night-900/60"
             style={{ aspectRatio: `${POSTER_WIDTH} / ${POSTER_HEIGHT}` }}
           >
             {imageUrl !== null && (
@@ -158,7 +165,7 @@ export function SharePosterPanel({
                 width={POSTER_WIDTH}
                 height={POSTER_HEIGHT}
                 data-poster-preview={state}
-                className="h-full w-full object-contain"
+                className="poster-preview-image h-full w-full object-contain"
               />
             )}
             {state === 'rendering' && (
@@ -198,11 +205,6 @@ export function SharePosterPanel({
         </>
       )}
 
-      {CAMPAIGN.posterOrigin === null && (
-        <p className="mt-3 rounded-lg border border-night-500/60 bg-night-900/40 px-3 py-2 text-[0.72rem] leading-relaxed text-parchment-dim/75">
-          开发预览：公开地址尚未确定（campaign.posterOrigin 为 null），海报暂不含二维码。
-        </p>
-      )}
     </>
   )
 }

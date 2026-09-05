@@ -44,6 +44,7 @@ describe('buildPosterData', () => {
       'nickname',
       'campaignLabel',
       'shareUrl',
+      'projectUrl',
     ])
     expect(Object.keys(data).filter((k) => !allowed.has(k))).toEqual([])
 

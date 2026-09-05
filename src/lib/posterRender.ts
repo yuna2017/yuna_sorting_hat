@@ -1,4 +1,5 @@
 import { POSTER_COLORS as POSTER_DARK_COLORS, POSTER_LIGHT_COLORS } from '../data/constants'
+import QrCreator from 'qr-creator'
 import type { DeptId } from '../data/constants'
 import { mulberry32 } from './seededShuffle'
 import type { PosterData } from './poster'
@@ -128,18 +129,20 @@ function drawBackdrop(ctx: CanvasRenderingContext2D): void {
 }
 
 /** 顶部标识区。返回下一个可用的 y。 */
-function drawMasthead(ctx: CanvasRenderingContext2D): number {
+function drawMasthead(ctx: CanvasRenderingContext2D, data: PosterData): number {
   const centerX = POSTER_WIDTH / 2
 
-  ctx.textAlign = 'center'
+  ctx.textAlign = 'left'
   ctx.textBaseline = 'alphabetic'
 
   ctx.font = font(30)
   ctx.fillStyle = activePosterColors.parchmentDim
-  fillTrackedCenter(ctx, '燕山大学网络与信息协会', centerX, 96, 5)
+  ctx.fillText('燕山大学大学生网络信息协会', POSTER_PAD_X, 96)
 
+  // 主标题不因右侧二维码改变中心点，始终对齐整张海报的中轴线。
   ctx.font = font(76, 600, FONT_DISPLAY)
   ctx.fillStyle = activePosterColors.parchment
+  ctx.textAlign = 'center'
   ctx.fillText('分部帽', centerX, 198)
 
   const ruleGradient = ctx.createLinearGradient(centerX - 130, 0, centerX + 130, 0)
@@ -153,7 +156,45 @@ function drawMasthead(ctx: CanvasRenderingContext2D): number {
   ctx.fillStyle = activePosterColors.goldSoft
   fillTrackedCenter(ctx, 'YUNA SORTING HAT', centerX, 278, 10)
 
+  if (data.projectUrl !== null) drawProjectQrCard(ctx, data.projectUrl)
+
   return 344
+}
+
+function drawProjectQrCard(ctx: CanvasRenderingContext2D, projectUrl: string): void {
+  const cardWidth = 178
+  const cardX = POSTER_WIDTH - POSTER_PAD_X - cardWidth
+  const cardY = 72
+  const cardHeight = 178
+  const cardCenterX = cardX + cardWidth / 2
+  const qrSize = 136
+  const isLightPoster = activePosterColors === POSTER_LIGHT_COLORS
+  const cardBackground = isLightPoster ? '#203b3a' : '#e8dfc5'
+  const qrFill = isLightPoster ? '#f0c75e' : '#b54f70'
+  const qrCanvas = document.createElement('canvas')
+  QrCreator.render(
+    {
+      text: projectUrl,
+      ecLevel: 'H',
+      // 二维码留白必须与卡片同色，否则卡片与二维码会出现两块不同的底。
+      fill: qrFill,
+      background: cardBackground,
+      radius: 0.08,
+      size: qrSize,
+    },
+    qrCanvas,
+  )
+
+  // 卡片只包住二维码，说明文字留在卡片外，避免视觉上挤成一块。
+  ctx.fillStyle = cardBackground
+  roundRect(ctx, cardX, cardY, cardWidth, cardHeight, 18)
+  ctx.fill()
+  ctx.drawImage(qrCanvas, cardCenterX - qrSize / 2, cardY + (cardHeight - qrSize) / 2, qrSize, qrSize)
+  ctx.textAlign = 'center'
+  ctx.font = font(22, 700)
+  ctx.fillStyle = isLightPoster ? '#203b3a' : '#8f3e5a'
+  ctx.fillText('你是哪种类型？', cardCenterX, cardY + cardHeight + 38)
+  ctx.textAlign = 'center'
 }
 
 /** 立绘与背后的魔法阵。返回下一个可用的 y。 */
@@ -274,7 +315,7 @@ function drawTraitBars(
   fillTrackedCenter(ctx, '你的五个倾向', centerX, top + 26, 5)
 
   const rects = traitBarRects(data.traitBars, box)
-  // 并列的倾向一起高亮 —— docs/特质体系.md §4.3 要求文案承认并列
+  // 并列的倾向一起高亮 —— docs/题库规范.md §4 要求文案承认并列
   const highlighted = new Set([data.dominantTraitName, ...data.tiedTraitNames])
 
   for (const rect of rects) {
@@ -380,9 +421,9 @@ function drawQrCard(ctx: CanvasRenderingContext2D, images: PosterImages, top: nu
   ctx.lineTo(POSTER_WIDTH - topRadius, cardY)
   ctx.quadraticCurveTo(POSTER_WIDTH, cardY, POSTER_WIDTH, cardY + topRadius)
   ctx.lineTo(POSTER_WIDTH, POSTER_HEIGHT - 32)
-  ctx.quadraticCurveTo(POSTER_WIDTH, POSTER_HEIGHT, POSTER_WIDTH - 32, POSTER_HEIGHT)
-  ctx.lineTo(32, POSTER_HEIGHT)
-  ctx.quadraticCurveTo(0, POSTER_HEIGHT, 0, POSTER_HEIGHT - 32)
+  ctx.lineTo(POSTER_WIDTH, POSTER_HEIGHT)
+  ctx.lineTo(0, POSTER_HEIGHT)
+  ctx.lineTo(0, POSTER_HEIGHT - 32)
   ctx.closePath()
   ctx.fillStyle = activePosterColors === POSTER_LIGHT_COLORS ? '#1d2928' : '#f7f1df'
   ctx.globalAlpha = 1
@@ -438,7 +479,7 @@ export function renderPoster(
   const accent = activePosterColors.dept[data.deptId]
 
   drawBackdrop(ctx)
-  const afterMast = drawMasthead(ctx)
+  const afterMast = drawMasthead(ctx, data)
   const afterArt = drawArtwork(ctx, images, accent, afterMast + 18)
   const afterVerdict = drawVerdict(ctx, data, accent, afterArt + 30)
   const afterTraits = drawTraitBars(ctx, data, accent, afterVerdict + 18)

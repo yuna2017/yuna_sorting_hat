@@ -108,8 +108,8 @@ const sections = await page.locator('h2').allInnerTexts()
 const wanted = [
   '帽子在你身上看见了什么？',
   '四部门契合度',
-  '你的五个倾向',
-  '帽子眼里的',
+  '完整行为画像',
+  '关于',
   '感兴趣？',
   '分享你的结果',
 ]
@@ -121,23 +121,11 @@ console.log(
 )
 
 console.log('分享：')
-await page.getByRole('button', { name: '复制结果链接' }).click()
-await page.waitForTimeout(300)
-const copied = await page.getByRole('button', { name: /已复制链接/ }).isVisible()
-const clipboard = await page.evaluate(() => navigator.clipboard.readText().catch(() => ''))
-// 种子是随机生成的，只校验格式（base36，1~7 位），不校验具体值
-const codeOk = new RegExp(
-  `\\?v=${BANK_VERSION}&s=[0-9a-z]{1,7}&a=[abcd]{${QUESTION_COUNT}}$`,
-).test(clipboard)
-console.log(`  ${copied ? '✓' : '✗'} 复制后按钮变为「已复制」`)
-console.log(`  ${codeOk ? '✓' : '✗'} 剪贴板里是可复现的结果链接：${clipboard || '(空)'}`)
-
-console.log('图片分享：')
-await page.getByRole('tab', { name: '图片模式' }).click()
+// 图片模式直接展示在结果页中：海报是传播主角，不再通过弹窗打断阅读。
+const poster = page.locator('img[data-poster-preview="ready"]')
 let posterReady = false
 let posterDimensions = false
 try {
-  const poster = page.locator('img[data-poster-preview="ready"]')
   await poster.waitFor({ timeout: 15000 })
   posterReady = true
   posterDimensions = await poster.evaluate(
@@ -146,15 +134,29 @@ try {
 } catch {
   // 保留失败状态，最终汇总会让脚本退出 1
 }
-console.log(`  ${posterReady ? '✓' : '✗'} 图片模式生成完成`)
+console.log(`  ${posterReady ? '✓' : '✗'} 默认图片模式，海报生成完成`)
 console.log(`  ${posterDimensions ? '✓' : '✗'} 海报尺寸为 1080×1920`)
 await page.screenshot({ path: `${OUT}/7-share-image.png`, fullPage: true })
 
+/* 网页模式仍是可切换的备选，复制链路在这验 */
+await page.getByRole('tab', { name: '网页模式' }).click()
+await page.waitForTimeout(200)
+await page.getByRole('button', { name: '复制结果链接' }).click()
+await page.waitForTimeout(300)
+const copied = await page.getByRole('button', { name: /已复制链接/ }).isVisible()
+const clipboard = await page.evaluate(() => navigator.clipboard.readText().catch(() => ''))
+const codeOk = new RegExp(
+  `\\?v=${BANK_VERSION}&s=[0-9a-z]{1,7}&a=[abcd]{${QUESTION_COUNT}}$`,
+).test(clipboard)
+console.log(`  ${copied ? '✓' : '✗'} 复制后按钮变为「已复制」`)
+console.log(`  ${codeOk ? '✓' : '✗'} 剪贴板里是可复现的结果链接：${clipboard || '(空)'}`)
+
+/* 移动端和横屏都不能出现横向溢出。 */
 console.log('\n窄屏横向溢出：')
 let overflowFailures = 0
 for (const width of VIEWPORTS) {
   await page.setViewportSize({ width, height: 780 })
-  await page.waitForTimeout(350)
+  await page.waitForTimeout(250)
   const o = await page.evaluate(() => ({
     scrollW: document.documentElement.scrollWidth,
     clientW: document.documentElement.clientWidth,
@@ -162,8 +164,27 @@ for (const width of VIEWPORTS) {
   const ok = o.scrollW <= o.clientW + 1
   if (!ok) overflowFailures++
   console.log(`  ${ok ? '✓' : '✗'} ${width}px  scrollWidth=${o.scrollW} clientWidth=${o.clientW}`)
-  if (width === 320) await shot('6-result-320')
 }
+await page.setViewportSize({ width: 844, height: 390 })
+await page.waitForTimeout(250)
+const landscapeOverflow = await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1)
+console.log(`  ${landscapeOverflow ? '✓' : '✗'} 横屏 844×390 不溢出`)
+const scrollState = await page.evaluate(() => {
+  const result = document.querySelector('.result-screen')
+  const nestedScrollers = Array.from(document.querySelectorAll('*')).filter((el) => {
+    const style = getComputedStyle(el)
+    return (style.overflowY === 'auto' || style.overflowY === 'scroll') && el.scrollHeight > el.clientHeight
+  })
+  return {
+    resultOverflowY: result === null ? 'missing' : getComputedStyle(result).overflowY,
+    nestedScrollers: nestedScrollers.length,
+  }
+})
+const singleScrollContainer = scrollState.resultOverflowY !== 'auto' && scrollState.resultOverflowY !== 'scroll' && scrollState.nestedScrollers === 0
+console.log(`  ${singleScrollContainer ? '✓' : '✗'} 结果页只有浏览器主滚动条（${scrollState.resultOverflowY}，内部滚动容器=${scrollState.nestedScrollers}）`)
+await page.setViewportSize({ width: 390, height: 844 })
+await page.close()
+
 await page.close()
 
 // ---- 减少动态偏好：仪式必须被压缩，不能让人干等 ----
@@ -252,6 +273,8 @@ const pass =
   overflowFailures === 0 &&
   missingSections.length === 0 &&
   inReveal &&
+  landscapeOverflow &&
+  singleScrollContainer &&
   copied &&
   codeOk &&
   posterReady &&

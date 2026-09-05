@@ -6,7 +6,7 @@ interface OpeningScreenProps {
 }
 
 /**
- * 开场独白，文案取自 docs/页面细节.md。
+ * 开场独白，文案取自 docs/设计文档.md §2。
  *
  * 四段用 \n\n 拼成单串、配 whitespace-pre-line 渲染 ——
  * 与一行帽子低语共用同一个 useTypewriter，不做两套实现。
@@ -26,10 +26,12 @@ export function OpeningScreen({ onContinue }: OpeningScreenProps) {
 
   return (
     <div
-      className="screen-enter starfield flex min-h-dvh flex-col items-center justify-center gap-6 px-6 py-9"
+      className="screen-enter opening-screen starfield flex min-h-dvh flex-col items-center justify-center gap-6 px-6 py-9"
       onClick={done ? undefined : skip}
     >
-      <SortingHat state="idle" className="w-20 shrink-0 sm:w-24" />
+      <div className="opening-art">
+        <SortingHat state="idle" className="w-20 shrink-0 sm:w-24" />
+      </div>
 
       <div className="flex min-h-[13rem] w-full max-w-md items-start justify-center sm:min-h-[14rem]">
         {/* 动画节点对读屏隐藏，另挂完整文本，避免逐字被念成乱码 */}

@@ -4,7 +4,7 @@ export type OptionId = 'a' | 'b' | 'c' | 'd'
 
 /**
  * 选项的人格特质权重。权重之和恒为 OPTION_TRAIT_BUDGET，权重为 0 的特质不写这个键。
- * 见 docs/特质体系.md §4.1。
+ * 见 docs/题库规范.md §4。
  */
 export type OptionTraits = Partial<Record<TraitId, number>>
 
@@ -62,7 +62,7 @@ export interface QuestionBank {
 }
 
 /**
- * 槽位题型。与 docs/特质体系.md §5 的题型矩阵一一对应。
+ * 槽位题型。与 docs/题库规范.md §1 的题型矩阵一一对应。
  * 用 as const 联合而非 enum —— tsconfig 开了 erasableSyntaxOnly，enum 不允许。
  */
 export const SLOT_KINDS = ['scenario', 'fantasy', 'resource', 'priority', 'abstract', 'decider'] as const
@@ -110,11 +110,11 @@ export interface QuestionPool {
  *
  * ---
  * **当前状态：v3 槽位化已落地，每槽 2 道候选，24 道题池已满。**
- * 按 docs/特质体系.md §5 的槽位矩阵，q1～q12 十二个槽各有 2 道候选，
+ * 按 docs/题库规范.md §1 的槽位矩阵，q1～q12 十二个槽各有 2 道候选，
  * 每场答题从每槽各抽 1 道，共 12 题（见 lib/drawQuestions.ts）。
  * 槽位号与矩阵一一对应 —— 补候选时不用重排 id，也不会让 q12 的决胜身份漂移。
  * 候选题 id 用「槽位号-序号」（q1-1、q1-2）—— 它是答案表的键，必须全池唯一。
- * v1 的 10 道旧题、v2 的固定 3 题都已废除，原文仍在 git 历史与 docs/题目.md。
+ * v1 的 10 道旧题、v2 的固定 3 题都已废除，原文仍在 git 历史与 docs/题库规范.md。
  */
 export const QUESTION_POOL: QuestionPool = {
   version: 3,

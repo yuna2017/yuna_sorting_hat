@@ -25,7 +25,7 @@ export interface Violation {
 const EXPECTED_OPTION_COUNT = DEPT_ORDER.length
 
 /**
- * 字数区间，来自 docs/题目填写规范.md。
+ * 字数区间，来自 docs/题库规范.md §6。
  * 本轮从「注释里的规范」升级为可执行校验 —— 写在注释里的规范没人会跑。
  */
 const LENGTH_LIMITS = {
@@ -58,7 +58,7 @@ const SUBSET_SAMPLE_COUNT = 512
 
 /**
  * 隐私模式黑名单。题面是公开内容，出现真实联系方式会随 GitHub Pages 一起公开
- * 并进入 Git 历史，事后清理成本极高。见 docs/注意事项.md。
+ * 并进入 Git 历史，事后清理成本极高。见 docs/设计文档.md §1。
  */
 const PRIVACY_PATTERNS: ReadonlyArray<{ name: string; re: RegExp }> = [
   { name: '手机号', re: /1[3-9]\d{9}/ },
@@ -121,7 +121,7 @@ function traitsOfQuestion(q: Question): Set<TraitId> {
  *   3. 4 个副推 s 也恰好覆盖四个部门，且没有 p === s，即无固定点置换（derangement）。
  * 满足后，每个部门理论满分自动等于 抽题数 × PRIMARY_WEIGHT。
  *
- * 特质轨（docs/特质体系.md §7）另有：权重和恒为 3、权重取值 1～3、每题特质铺开度。
+ * 特质轨（docs/题库规范.md §4）另有：权重和恒为 3、权重取值 1～3、每题特质铺开度。
  * 加上文案字数、禁用词与隐私模式。
  */
 function validateQuestion(q: Question, forbidden: readonly string[]): Violation[] {

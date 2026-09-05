@@ -10,7 +10,7 @@ export interface Trait {
 /**
  * 五个人格特质的对外文案。
  *
- * 红线（docs/注意事项.md）：结果不用于心理诊断、能力评定或录取筛选，
+ * 红线（docs/设计文档.md §1）：结果不用于心理诊断、能力评定或录取筛选，
  * 所以这里只能写「你倾向于怎么做」，不能写「你擅长/不擅长什么」。
  */
 export const TRAITS: Record<TraitId, Trait> = {

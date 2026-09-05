@@ -52,7 +52,7 @@ export function QuizScreen({
   }
 
   return (
-    <div className="screen-enter starfield flex min-h-dvh flex-col">
+    <div className="screen-enter quiz-screen starfield flex min-h-dvh flex-col">
       {/* 进度常驻：滚动时也知道自己走到哪 */}
       <header className="sticky top-0 z-10 border-b border-night-600/60 bg-night-900/85 px-5 py-3 backdrop-blur-sm sm:px-6">
         <div className="mx-auto flex max-w-lg items-center gap-4">
@@ -70,8 +70,8 @@ export function QuizScreen({
       </header>
 
       <main className="mx-auto flex w-full max-w-lg flex-1 flex-col px-5 py-6 sm:px-6 sm:py-8">
-        <div key={question.id} className="rise-in flex flex-1 flex-col">
-          {/* 帽子旁白：随进度换话，让帽子有「角色感」；第一题留白 */}
+        <div key={question.id} className="quiz-content rise-in flex flex-1 flex-col">
+          {/* 帽子进度旁白：随题号分阶段从话语池取句，第一题留白 */}
           {hatMoodLine(questionIndex) !== null && (
             <p className="mb-3 text-center text-[0.8rem] leading-relaxed text-parchment-dim/80">
               {hatMoodLine(questionIndex)}
