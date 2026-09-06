@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react'
 import { TRAIT_ORDER } from '../data/constants'
 import type { TraitId } from '../data/constants'
 import { TRAITS } from '../data/traits'
@@ -6,6 +7,38 @@ import type { TraitProfile } from '../lib/traits'
 interface TraitRadarProps {
   profile: TraitProfile
   className?: string
+}
+
+/* 与四部门雷达同款入场动效：进入视口触发、再次进入用更短的重复动画。
+   与 RadarChart 里 useInView 行为一致，只是本地实现避免改动已恢复的 yuna2017 版。 */
+function useInView<T extends Element>() {
+  const ref = useRef<T | null>(null)
+  const [visible, setVisible] = useState(false)
+  const [playCount, setPlayCount] = useState(0)
+
+  useEffect(() => {
+    const element = ref.current
+    if (element === null) return
+    if (typeof IntersectionObserver === 'undefined') {
+      setVisible(true)
+      return
+    }
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry?.isIntersecting) {
+          setPlayCount((count) => count + 1)
+          setVisible(true)
+        } else {
+          setVisible(false)
+        }
+      },
+      { threshold: 0.5 },
+    )
+    observer.observe(element)
+    return () => observer.disconnect()
+  }, [])
+
+  return { ref, visible, playCount }
 }
 
 /* 几何：五轴均分一周，首轴「探索」朝上。
@@ -47,6 +80,7 @@ function ringPolygon(scale: number): string {
  *  · 每根轴标签带真实百分比（如「创造 50%」），精确值以标签为准，形状看相对比例。
  */
 export function TraitRadar({ profile, className = '' }: TraitRadarProps) {
+  const { ref, visible, playCount } = useInView<SVGSVGElement>()
   /* 半径：真实百分比 ÷ 0.5，封顶 1（50%=外圈、100%顶到外圈）。 */
   const radiusFor = (trait: TraitId) => {
     const value = Math.min(Math.max(profile.normalized[trait], 0.02), 1)
@@ -56,8 +90,9 @@ export function TraitRadar({ profile, className = '' }: TraitRadarProps) {
 
   return (
     <svg
+      ref={ref}
       viewBox="0 0 300 246"
-      className={`w-full ${className}`}
+      className={`chart-reveal w-full ${visible ? 'is-visible' : ''} ${playCount > 1 ? 'is-repeat' : ''} ${className}`}
       role="img"
       aria-label={
         '分部帽画像雷达图：' +
@@ -95,9 +130,10 @@ export function TraitRadar({ profile, className = '' }: TraitRadarProps) {
         )
       })}
 
-      {/* 数据多边形 */}
+      {/* 数据多边形：复用 .radar-shape 入场动画 */}
       <polygon
         points={shape}
+        className="radar-shape"
         fill="var(--dept-accent)"
         fillOpacity="0.22"
         stroke="var(--dept-accent)"
@@ -106,13 +142,15 @@ export function TraitRadar({ profile, className = '' }: TraitRadarProps) {
         filter="drop-shadow(0 0 8px color-mix(in srgb, var(--dept-accent) 75%, transparent)) drop-shadow(0 0 18px color-mix(in srgb, var(--dept-accent) 55%, transparent))"
       />
 
-      {/* 顶点标记：主导特质更大。位置与数据多边形一致（按 0.5 参考轴放大）。 */}
+      {/* 顶点标记：主导特质更大。复用 .radar-point 依次弹出动画(内联延迟,不与部门 delay 类冲突) */}
       {TRAIT_ORDER.map((trait, i) => {
         const [x, y] = pointAt(i, radiusFor(trait))
         const isDominant = trait === profile.dominant
         return (
           <circle
             key={trait}
+            className="radar-point"
+            style={{ animationDelay: `${620 + i * 140}ms` }}
             cx={x}
             cy={y}
             r={isDominant ? 4.5 : 3}
