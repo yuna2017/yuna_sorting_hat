@@ -50,3 +50,14 @@ screenshots-prod/
 
 # 立绘评审素材：提示词、参考图与验证截图，体积大且只在本地用
 review-assets/
+
+# 本地临时产物 / 比对与展示脚本 / 截图
+.tmp-diff/
+screenshots-fresh/
+.npm-cache/
+.look/
+diff-*.mjs
+diff-*.ps1
+blame-*.mjs
+show-hat.mjs
+check-poster.mjs

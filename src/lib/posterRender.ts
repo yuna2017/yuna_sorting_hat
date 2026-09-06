@@ -391,10 +391,15 @@ function drawFlavor(
   return y
 }
 
-/** 底部：招新群二维码与结果二维码，加页脚。 */
+/** 底部：招新群二维码与结果二维码，加页脚。
+   页脚文字必须画在群卡矩形（POSTER_HEIGHT-300 起）的**上方**，
+   否则同底会被实色卡盖住、看起来像挡字。 */
 function drawFooter(ctx: CanvasRenderingContext2D, images: PosterImages): void {
   const centerX = POSTER_WIDTH / 2
-  const footerY = POSTER_HEIGHT - 74
+  const blockTop = POSTER_HEIGHT - 300
+  const footerY = blockTop - 30
+
+  drawQrCard(ctx, images, blockTop)
 
   ctx.textAlign = 'center'
   ctx.font = font(24, 400, FONT_DISPLAY)
@@ -402,10 +407,6 @@ function drawFooter(ctx: CanvasRenderingContext2D, images: PosterImages): void {
   ctx.globalAlpha = 0.7
   fillTrackedCenter(ctx, 'YUNA · 2026 招新季', centerX, footerY, 6)
   ctx.globalAlpha = 1
-
-  const blockTop = POSTER_HEIGHT - 300
-
-  drawQrCard(ctx, images, blockTop)
 }
 
 /** 底部横向群信息卡片：左侧 logo，中间文字，右侧二维码。 */
